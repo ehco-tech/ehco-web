@@ -120,7 +120,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <meta name="google-adsense-account" content="ca-pub-1708240738390806" />
+        <meta name="google-adsense-account" content="ca-pub-1952429442154119" />
         <meta name="referrer" content="no-referrer" />
         <meta name="yandex-verification" content="d95a704c62f53c58" />
         <meta name="naver-site-verification" content="264ce0fdcec0f8516f15473b626bad62bc29202e" />
