@@ -1,4 +1,4 @@
-# run_full_update.py (Revised with Imports)
+# run_full_update.py (Revised with UpdateTracker Integration)
 
 import asyncio
 import argparse
@@ -10,7 +10,6 @@ from setup_firebase_deepseek import NewsManager
 from predefined_public_figure_extractor import PredefinedPublicFigureExtractor
 
 # --- Import Updater Classes from Their Respective Files ---
-# Note: You might need to adjust filenames if they differ slightly
 from UPDATE_article_categorizer import (
     PublicFigureSummaryCategorizer as ArticleCategorizer,
 )
@@ -18,15 +17,18 @@ from UPDATE_wiki_content import PublicFigureWikiUpdater as WikiContentUpdater
 from UPDATE_timeline import CurationEngine
 from compact_overview import CompactOverview
 from compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
-
 from related_figures import RelatedFiguresUpdater
 
+# --- Import the new UpdateTracker ---
+from update_tracker import UpdateTracker
 
-# The orchestrator class remains the same, but it's now much clearer
-# what it's coordinating because the implementations are hidden in other files.
+
+# The orchestrator class with UpdateTracker integration
 class MasterUpdater:
     def __init__(self):
-        self.db = NewsManager().db
+        self.news_manager = NewsManager()
+        self.db = self.news_manager.db
+        self.update_tracker = UpdateTracker(db=self.db)
 
     async def get_all_figure_ids(self) -> List[str]:
         """Fetches all document IDs from the 'selected-figures' collection."""
@@ -42,43 +44,79 @@ class MasterUpdater:
         """
         Runs the complete, ordered update and compaction pipeline for a single figure.
         """
-        print(f"\n{'='*25}\n🚀 STARTING FULL UPDATE FOR: {figure_id.upper()}\n{'='*25}")
+        print(f"\n{'='*25}\nðŸš€ STARTING FULL UPDATE FOR: {figure_id.upper()}\n{'='*25}")
 
         # STEP 1: Categorize new article summaries
-        print("\n--- STEP 1 of 5: Categorizing new articles ---")
+        print("\n--- STEP 1 of 6: Categorizing new articles ---")
         categorizer = ArticleCategorizer()
-        await categorizer.process_summaries(
-            figure_id=figure_id
-        )  # Call the correct method
+        categorization_result = await categorizer.process_summaries(figure_id=figure_id)
+        
+        # Track significant article categorizations
+        if categorization_result and hasattr(categorization_result, 'new_articles') and categorization_result.new_articles:
+            for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
+                await self.update_tracker.add_news_update(
+                    figure_id=figure_id,
+                    headline=article.get('title', 'New Article'),
+                    summary=article.get('summary', 'No summary available'),
+                    source=article.get('source', 'Unknown source'),
+                    source_url=article.get('url', None)
+                )
 
         # STEP 2: Update Wiki Content with new summaries
-        print("\n--- STEP 2 of 5: Updating wiki content ---")
+        print("\n--- STEP 2 of 6: Updating wiki content ---")
         wiki_updater = WikiContentUpdater()
-        await wiki_updater.update_all_wiki_content(
-            specific_figure_id=figure_id
-        )  # Call the correct method
+        wiki_result = await wiki_updater.update_all_wiki_content(specific_figure_id=figure_id)
+        
+        # Track wiki updates
+        if wiki_result and hasattr(wiki_result, 'updated_sections'):
+            for section in wiki_result.updated_sections:
+                await self.update_tracker.add_wiki_update(
+                    figure_id=figure_id,
+                    section_title=section.get('title', 'Profile Update'),
+                    update_summary=section.get('summary', 'Profile information was updated')
+                )
 
         # STEP 3: Update Curated Timeline and mark articles as processed
-        print("\n--- STEP 3 of 5: Updating curated timeline ---")
+        print("\n--- STEP 3 of 6: Updating curated timeline ---")
         curation_engine = CurationEngine(figure_id=figure_id)
-        await curation_engine.run_incremental_update()
+        timeline_result = await curation_engine.run_incremental_update()
+        
+        # Track timeline updates
+        if timeline_result and hasattr(timeline_result, 'new_events'):
+            for event in timeline_result.new_events[:5]:  # Limit to 5 most significant
+                await self.update_tracker.add_timeline_update(
+                    figure_id=figure_id,
+                    event_title=event.get('title', 'Timeline Update'),
+                    event_description=event.get('description', 'New event added to timeline'),
+                    event_date=event.get('date', 'Unknown date'),
+                    source=event.get('source', None)
+                )
 
         # STEP 4: Compact Wiki/Overview documents
-        print("\n--- STEP 4 of 5: Compacting wiki overviews ---")
+        print("\n--- STEP 4 of 6: Compacting wiki overviews ---")
         overview_compactor = CompactOverview()
         await overview_compactor.compact_figure_overview(figure_id=figure_id)
 
         # STEP 5: Compact Timeline event summaries and descriptions
-        print("\n--- STEP 5 of 5: Compacting timeline events ---")
+        print("\n--- STEP 5 of 6: Compacting timeline events ---")
         timeline_compactor = TimelineCompactor(figure_id=figure_id)
         await timeline_compactor.run_update()
 
-        # --- 3. ADD THE NEW STEP 6 ---
+        # STEP 6: Update related figures count
         print("\n--- STEP 6 of 6: Updating related figures count ---")
         # The 'related_updater' was created outside and passed in for efficiency
-        related_updater.update_for_figure(figure_id)
+        related_result = related_updater.update_for_figure(figure_id)
 
-        print(f"\n{'='*25}\n✅ FULL UPDATE COMPLETE FOR: {figure_id.upper()}\n{'='*25}")
+        # Create a general update for the entire process completion
+        await self.update_tracker.add_update(
+            figure_id=figure_id,
+            update_type='system',
+            title='Profile Fully Updated',
+            description=f'Complete refresh of {figure_id} profile with latest information',
+            additional_data={'update_steps': 6}
+        )
+
+        print(f"\n{'='*25}\nâœ… FULL UPDATE COMPLETE FOR: {figure_id.upper()}\n{'='*25}")
 
     async def close_db_manager(self):
         # A helper to close the underlying manager if needed, though each class handles its own.
@@ -162,7 +200,7 @@ async def main():
                 print(f"\n--- Processing Updated Figure {i+1}/{len(figure_ids)} ---")
                 await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
             
-            print("\n\n🎉 Complete update process finished! 🎉")
+            print("\n\nðŸŽ‰ Complete update process finished! ðŸŽ‰")
         else:
             print("\nIngestion complete. No new figures with articles were found.")
             print("No processing needed.")
@@ -203,7 +241,7 @@ async def main():
             print(f"\n\n--- Processing Figure {i+1}/{len(all_ids)} ---")
             await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
         
-        print("\n\n🎉 All figures have been processed! 🎉")
+        print("\n\nðŸŽ‰ All figures have been processed! ðŸŽ‰")
         
     elif args.process_updated:
         print("--- Running in PROCESS-UPDATED mode ---")
@@ -222,7 +260,7 @@ async def main():
                 print(f"\n\n--- Processing Figure {i+1}/{len(ids_to_process)} ---")
                 await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
             
-            print("\n\n🎉 All updated figures have been processed! 🎉")
+            print("\n\nðŸŽ‰ All updated figures have been processed! ðŸŽ‰")
 
         except FileNotFoundError:
             print("ERROR: 'figures_to_update.json' not found.")
