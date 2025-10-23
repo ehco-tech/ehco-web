@@ -60,8 +60,8 @@ class UpdateTracker:
         Returns:
             The ID of the newly created update document
         """
-        # Get figure data for the update
-        figure_doc = await self.db.collection('selected-figures').document(figure_id).get()
+        # Get figure data for the update - removed await as Firestore Python SDK uses synchronous API
+        figure_doc = self.db.collection('selected-figures').document(figure_id).get()
         figure_data = figure_doc.to_dict()
         
         if not figure_data:
@@ -101,15 +101,16 @@ class UpdateTracker:
             'timestamp', '>=', yesterday_timestamp
         )
         
-        existing_docs = await query.get()
+        # Get query results - removed await
+        existing_docs = query.get()
         
         # If a similar update already exists, don't create a duplicate
-        if existing_docs:
+        if len(existing_docs) > 0:
             print(f"Skipping duplicate update: {title} (hash: {hash_id})")
             return existing_docs[0].id
             
-        # Create the new update document
-        new_doc_ref = await self.updates_collection.add(update_doc)
+        # Create the new update document - removed await
+        new_doc_ref = self.updates_collection.add(update_doc)[0]  # Returns a tuple (doc_ref, timestamp)
         print(f"Created new update: {title} (id: {new_doc_ref.id})")
         
         return new_doc_ref.id
@@ -231,7 +232,8 @@ class UpdateTracker:
             'timestamp', direction=firestore.Query.DESCENDING
         ).limit(limit)
         
-        docs = await query.get()
+        # Get query results - removed await
+        docs = query.get()
         
         updates = []
         for doc in docs:
@@ -256,7 +258,8 @@ class UpdateTracker:
             'visible', '==', True
         ).order_by('timestamp', direction=firestore.Query.DESCENDING).limit(limit)
         
-        docs = await query.get()
+        # Get query results - removed await
+        docs = query.get()
         
         updates = []
         for doc in docs:
