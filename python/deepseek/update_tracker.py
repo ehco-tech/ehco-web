@@ -112,7 +112,7 @@ class UpdateTracker:
                 return existing_docs[0].id
                 
             # Create the new update document
-            new_doc_ref = self.updates_collection.add(update_doc)[0]  # This returns a tuple (doc_ref, _)
+            new_doc_ref = self.updates_collection.add(update_doc)
             print(f"Created new update: {title} (id: {new_doc_ref.id})")
             
             return new_doc_ref.id
