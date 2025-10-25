@@ -20,6 +20,7 @@ from compact_event_summaries_descriptions import DataUpdater as TimelineCompacto
 from related_figures import RelatedFiguresUpdater
 
 # --- Import the new UpdateTracker ---
+# Updated import to use the fixed version
 from update_tracker import UpdateTracker
 
 
@@ -44,7 +45,7 @@ class MasterUpdater:
         """
         Runs the complete, ordered update and compaction pipeline for a single figure.
         """
-        print(f"\n{'='*25}\nðŸš€ STARTING FULL UPDATE FOR: {figure_id.upper()}\n{'='*25}")
+        print(f"\n{'='*25}\nSTARTING FULL UPDATE FOR: {figure_id.upper()}\n{'='*25}")
 
         # STEP 1: Categorize new article summaries
         print("\n--- STEP 1 of 6: Categorizing new articles ---")
@@ -54,7 +55,7 @@ class MasterUpdater:
         # Track significant article categorizations
         if categorization_result and hasattr(categorization_result, 'new_articles') and categorization_result.new_articles:
             for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
-                await self.update_tracker.add_news_update(
+                self.update_tracker.add_news_update(  # Removed await
                     figure_id=figure_id,
                     headline=article.get('title', 'New Article'),
                     summary=article.get('summary', 'No summary available'),
@@ -70,7 +71,7 @@ class MasterUpdater:
         # Track wiki updates
         if wiki_result and hasattr(wiki_result, 'updated_sections'):
             for section in wiki_result.updated_sections:
-                await self.update_tracker.add_wiki_update(
+                self.update_tracker.add_wiki_update(  # Removed await
                     figure_id=figure_id,
                     section_title=section.get('title', 'Profile Update'),
                     update_summary=section.get('summary', 'Profile information was updated')
@@ -84,7 +85,7 @@ class MasterUpdater:
         # Track timeline updates
         if timeline_result and hasattr(timeline_result, 'new_events'):
             for event in timeline_result.new_events[:5]:  # Limit to 5 most significant
-                await self.update_tracker.add_timeline_update(
+                self.update_tracker.add_timeline_update(  # Removed await
                     figure_id=figure_id,
                     event_title=event.get('title', 'Timeline Update'),
                     event_description=event.get('description', 'New event added to timeline'),
@@ -108,7 +109,7 @@ class MasterUpdater:
         related_result = related_updater.update_for_figure(figure_id)
 
         # Create a general update for the entire process completion
-        await self.update_tracker.add_update(
+        self.update_tracker.add_update(  # Removed await
             figure_id=figure_id,
             update_type='system',
             title='Profile Fully Updated',
@@ -116,7 +117,7 @@ class MasterUpdater:
             additional_data={'update_steps': 6}
         )
 
-        print(f"\n{'='*25}\nâœ… FULL UPDATE COMPLETE FOR: {figure_id.upper()}\n{'='*25}")
+        print(f"\n{'='*25}\nFULL UPDATE COMPLETE FOR: {figure_id.upper()}\n{'='*25}")
 
     async def close_db_manager(self):
         # A helper to close the underlying manager if needed, though each class handles its own.
@@ -200,7 +201,7 @@ async def main():
                 print(f"\n--- Processing Updated Figure {i+1}/{len(figure_ids)} ---")
                 await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
             
-            print("\n\nðŸŽ‰ Complete update process finished! ðŸŽ‰")
+            print("\n\nComplete update process finished!")
         else:
             print("\nIngestion complete. No new figures with articles were found.")
             print("No processing needed.")
@@ -241,7 +242,7 @@ async def main():
             print(f"\n\n--- Processing Figure {i+1}/{len(all_ids)} ---")
             await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
         
-        print("\n\nðŸŽ‰ All figures have been processed! ðŸŽ‰")
+        print("\n\nAll figures have been processed!")
         
     elif args.process_updated:
         print("--- Running in PROCESS-UPDATED mode ---")
@@ -260,7 +261,7 @@ async def main():
                 print(f"\n\n--- Processing Figure {i+1}/{len(ids_to_process)} ---")
                 await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
             
-            print("\n\nðŸŽ‰ All updated figures have been processed! ðŸŽ‰")
+            print("\n\nAll updated figures have been processed!")
 
         except FileNotFoundError:
             print("ERROR: 'figures_to_update.json' not found.")
