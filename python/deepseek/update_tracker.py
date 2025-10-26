@@ -1,11 +1,21 @@
-# update_tracker.py
-# Responsible for tracking and storing updates in a dedicated Firestore collection
+# debug_update_tracker.py
+# Enhanced version with debugging output
 
 import time
 from datetime import datetime
 from typing import Dict, List, Any, Optional
 from firebase_admin import firestore
 import hashlib
+import logging
+import json
+import traceback
+
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger('UpdateTracker')
 
 class UpdateTracker:
     """
@@ -20,18 +30,27 @@ class UpdateTracker:
         Args:
             db: Firestore database instance. If None, will attempt to use the default instance.
         """
-        if db is None:
-            # If no db provided, use the default Firebase app
-            from firebase_admin import firestore
-            self.db = firestore.client()
-        else:
-            self.db = db
-        
-        # Collection reference for updates
-        self.updates_collection = self.db.collection('figure-updates')
-        
-        # Collection reference for figures (to get their data)
-        self.figures_collection = self.db.collection('selected-figures')
+        logger.info("Initializing UpdateTracker")
+        try:
+            if db is None:
+                # If no db provided, use the default Firebase app
+                from firebase_admin import firestore
+                self.db = firestore.client()
+                logger.info("Using default Firestore client")
+            else:
+                self.db = db
+                logger.info("Using provided Firestore client")
+            
+            # Collection reference for updates
+            self.updates_collection = self.db.collection('figure-updates')
+            logger.info(f"Updates collection reference: {self.updates_collection._path}")
+            
+            # Collection reference for figures (to get their data)
+            self.figures_collection = self.db.collection('selected-figures')
+            logger.info(f"Figures collection reference: {self.figures_collection._path}")
+        except Exception as e:
+            logger.error(f"Error initializing UpdateTracker: {e}")
+            traceback.print_exc()
     
     def add_update(
         self,
@@ -60,14 +79,19 @@ class UpdateTracker:
         Returns:
             The ID of the newly created update document
         """
+        logger.info(f"Adding update for figure_id: {figure_id}, type: {update_type}, title: {title}")
+        
         try:
-            # Get figure data for the update - Firestore Python SDK uses synchronous API
+            # Get figure data for the update
+            logger.info(f"Fetching figure data for {figure_id}")
             figure_doc = self.db.collection('selected-figures').document(figure_id).get()
-            figure_data = figure_doc.to_dict()
             
-            if not figure_data:
-                print(f"ERROR: Figure with ID '{figure_id}' not found in database")
+            if not figure_doc.exists:
+                logger.error(f"Figure with ID '{figure_id}' not found in database")
                 return None
+                
+            figure_data = figure_doc.to_dict()
+            logger.info(f"Figure data retrieved: {figure_data.get('name', 'Unknown')}")
             
             # Create update document
             update_doc = {
@@ -85,40 +109,57 @@ class UpdateTracker:
             # Add optional fields if provided
             if source:
                 update_doc['source'] = source
+                logger.info(f"Adding source: {source}")
             if source_url:
                 update_doc['source_url'] = source_url
+                logger.info(f"Adding source_url: {source_url}")
             if related_ids:
                 update_doc['related_ids'] = related_ids
+                logger.info(f"Adding related_ids: {related_ids}")
             if additional_data:
                 update_doc['additional_data'] = additional_data
+                logger.info(f"Adding additional_data: {json.dumps(additional_data, default=str)}")
                 
             # Create content hash to avoid duplicates
             content_to_hash = f"{figure_id}:{title}:{description}"
             hash_id = hashlib.md5(content_to_hash.encode()).hexdigest()
             update_doc['content_hash'] = hash_id
+            logger.info(f"Created content hash: {hash_id}")
             
             # Check for duplicate updates in the last 24 hours
-            yesterday_timestamp = datetime.now().timestamp() - (24 * 60 * 60)
+            logger.info("Checking for duplicate updates")
             query = self.updates_collection.where('content_hash', '==', hash_id)
-            # Note: Firestore timestamp comparison requires a firestore.Timestamp object
-            # This query might need adjustment depending on your timestamp storage method
             
             # Get query results
             existing_docs = query.get()
             
             # If a similar update already exists, don't create a duplicate
             if len(existing_docs) > 0:
-                print(f"Skipping duplicate update: {title} (hash: {hash_id})")
+                logger.info(f"Found duplicate update. Skipping. (hash: {hash_id})")
                 return existing_docs[0].id
-                
-            # Create the new update document
-            new_doc_ref = self.updates_collection.add(update_doc)
-            print(f"Created new update: {title} (id: {new_doc_ref.id})")
             
-            return new_doc_ref.id
+            logger.info("No duplicates found. Creating new update document.")
+            # Create the new update document
+            try:
+                logger.debug(f"Document to add: {json.dumps(update_doc, default=str)}")
+                new_doc_ref = self.updates_collection.add(update_doc)
+                
+                # Check if it's a tuple (old version) or a document reference (fixed version)
+                if isinstance(new_doc_ref, tuple):
+                    logger.info("Add method returned a tuple, extracting document reference")
+                    doc_ref = new_doc_ref[0]
+                else:
+                    logger.info("Add method returned a document reference")
+                    doc_ref = new_doc_ref
+                
+                logger.info(f"Successfully created new update: {title} (id: {doc_ref.id})")
+                return doc_ref.id
+            except Exception as e:
+                logger.error(f"Error adding document to Firestore: {e}")
+                traceback.print_exc()
+                return None
         except Exception as e:
-            print(f"Error adding update: {e}")
-            import traceback
+            logger.error(f"Error in add_update: {e}")
             traceback.print_exc()
             return None
     
@@ -145,6 +186,8 @@ class UpdateTracker:
         Returns:
             The ID of the newly created update document
         """
+        logger.info(f"Adding timeline update for figure_id: {figure_id}, event: {event_title}")
+        
         title = f"Timeline Update: {event_title}"
         description = event_description
         
@@ -152,6 +195,8 @@ class UpdateTracker:
             'event_date': event_date,
             'event_type': 'timeline'
         }
+        
+        logger.info(f"Timeline update data: title='{title}', date='{event_date}'")
         
         return self.add_update(
             figure_id=figure_id,
@@ -182,6 +227,8 @@ class UpdateTracker:
         Returns:
             The ID of the newly created update document
         """
+        logger.info(f"Adding wiki update for figure_id: {figure_id}, section: {section_title}")
+        
         title = f"Profile Updated: {section_title}"
         
         return self.add_update(
@@ -215,6 +262,8 @@ class UpdateTracker:
         Returns:
             The ID of the newly created update document
         """
+        logger.info(f"Adding news update for figure_id: {figure_id}, headline: {headline}")
+        
         return self.add_update(
             figure_id=figure_id,
             update_type='news',
@@ -224,62 +273,3 @@ class UpdateTracker:
             source_url=source_url,
             related_ids=related_ids
         )
-    
-    def get_latest_updates(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get the latest updates across all figures.
-        
-        Args:
-            limit: Maximum number of updates to retrieve
-        
-        Returns:
-            List of update documents
-        """
-        try:
-            query = self.updates_collection.where('visible', '==', True).order_by(
-                'timestamp', direction=firestore.Query.DESCENDING
-            ).limit(limit)
-            
-            # Get query results
-            docs = query.get()
-            
-            updates = []
-            for doc in docs:
-                update_data = doc.to_dict()
-                update_data['id'] = doc.id
-                updates.append(update_data)
-                
-            return updates
-        except Exception as e:
-            print(f"Error getting latest updates: {e}")
-            return []
-    
-    def get_updates_for_figure(self, figure_id: str, limit: int = 10) -> List[Dict[str, Any]]:
-        """
-        Get updates for a specific figure.
-        
-        Args:
-            figure_id: ID of the public figure
-            limit: Maximum number of updates to retrieve
-        
-        Returns:
-            List of update documents
-        """
-        try:
-            query = self.updates_collection.where('figure_id', '==', figure_id).where(
-                'visible', '==', True
-            ).order_by('timestamp', direction=firestore.Query.DESCENDING).limit(limit)
-            
-            # Get query results
-            docs = query.get()
-            
-            updates = []
-            for doc in docs:
-                update_data = doc.to_dict()
-                update_data['id'] = doc.id
-                updates.append(update_data)
-                
-            return updates
-        except Exception as e:
-            print(f"Error getting updates for figure: {e}")
-            return []

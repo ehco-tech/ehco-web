@@ -1,9 +1,17 @@
-# run_full_update.py (Revised with UpdateTracker Integration)
+# Modified version that uses the debug UpdateTracker
 
 import asyncio
 import argparse
 from typing import List
 import json
+import logging
+
+# Set up logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
+)
+logger = logging.getLogger('run_full_update')
 
 # --- Core Dependencies ---
 from setup_firebase_deepseek import NewsManager
@@ -19,24 +27,25 @@ from compact_overview import CompactOverview
 from compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
 from related_figures import RelatedFiguresUpdater
 
-# --- Import the new UpdateTracker ---
-# Updated import to use the fixed version
+# --- Import the debug UpdateTracker ---
 from update_tracker import UpdateTracker
 
 
 # The orchestrator class with UpdateTracker integration
 class MasterUpdater:
     def __init__(self):
+        logger.info("Initializing MasterUpdater")
         self.news_manager = NewsManager()
         self.db = self.news_manager.db
         self.update_tracker = UpdateTracker(db=self.db)
+        logger.info("MasterUpdater initialized successfully")
 
     async def get_all_figure_ids(self) -> List[str]:
         """Fetches all document IDs from the 'selected-figures' collection."""
-        print("Fetching all figure IDs from Firestore...")
+        logger.info("Fetching all figure IDs from Firestore...")
         docs = self.db.collection("selected-figures").stream()
         ids = [doc.id for doc in docs]
-        print(f"Found {len(ids)} figures.")
+        logger.info(f"Found {len(ids)} figures.")
         return ids
 
     async def run_full_update_for_figure(
@@ -45,79 +54,143 @@ class MasterUpdater:
         """
         Runs the complete, ordered update and compaction pipeline for a single figure.
         """
-        print(f"\n{'='*25}\nSTARTING FULL UPDATE FOR: {figure_id.upper()}\n{'='*25}")
+        logger.info(f"STARTING FULL UPDATE FOR: {figure_id.upper()}")
 
         # STEP 1: Categorize new article summaries
-        print("\n--- STEP 1 of 6: Categorizing new articles ---")
+        logger.info("STEP 1 of 6: Categorizing new articles")
         categorizer = ArticleCategorizer()
         categorization_result = await categorizer.process_summaries(figure_id=figure_id)
+        
+        # Debug the categorization result structure
+        logger.debug(f"Categorization result type: {type(categorization_result)}")
+        if categorization_result:
+            if hasattr(categorization_result, 'new_articles'):
+                logger.info(f"Found {len(categorization_result.new_articles)} new articles")
+                for i, article in enumerate(categorization_result.new_articles[:3]):
+                    logger.debug(f"Article {i+1} data: {article}")
+            else:
+                logger.warning("categorization_result has no 'new_articles' attribute")
+        else:
+            logger.warning("categorization_result is None or empty")
         
         # Track significant article categorizations
         if categorization_result and hasattr(categorization_result, 'new_articles') and categorization_result.new_articles:
             for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
-                self.update_tracker.add_news_update(  # Removed await
-                    figure_id=figure_id,
-                    headline=article.get('title', 'New Article'),
-                    summary=article.get('summary', 'No summary available'),
-                    source=article.get('source', 'Unknown source'),
-                    source_url=article.get('url', None)
-                )
+                try:
+                    logger.info(f"Adding news update for article: {article.get('title', 'New Article')}")
+                    update_id = self.update_tracker.add_news_update(
+                        figure_id=figure_id,
+                        headline=article.get('title', 'New Article'),
+                        summary=article.get('summary', 'No summary available'),
+                        source=article.get('source', 'Unknown source'),
+                        source_url=article.get('url', None)
+                    )
+                    logger.info(f"News update added with ID: {update_id}")
+                except Exception as e:
+                    logger.error(f"Error adding news update: {e}")
+                    import traceback
+                    traceback.print_exc()
 
         # STEP 2: Update Wiki Content with new summaries
-        print("\n--- STEP 2 of 6: Updating wiki content ---")
+        logger.info("STEP 2 of 6: Updating wiki content")
         wiki_updater = WikiContentUpdater()
         wiki_result = await wiki_updater.update_all_wiki_content(specific_figure_id=figure_id)
+        
+        # Debug the wiki result structure
+        logger.debug(f"Wiki result type: {type(wiki_result)}")
+        if wiki_result:
+            if hasattr(wiki_result, 'updated_sections'):
+                logger.info(f"Found {len(wiki_result.updated_sections)} updated wiki sections")
+                for i, section in enumerate(wiki_result.updated_sections):
+                    logger.debug(f"Section {i+1} data: {section}")
+            else:
+                logger.warning("wiki_result has no 'updated_sections' attribute")
+        else:
+            logger.warning("wiki_result is None or empty")
         
         # Track wiki updates
         if wiki_result and hasattr(wiki_result, 'updated_sections'):
             for section in wiki_result.updated_sections:
-                self.update_tracker.add_wiki_update(  # Removed await
-                    figure_id=figure_id,
-                    section_title=section.get('title', 'Profile Update'),
-                    update_summary=section.get('summary', 'Profile information was updated')
-                )
+                try:
+                    logger.info(f"Adding wiki update for section: {section.get('title', 'Profile Update')}")
+                    update_id = self.update_tracker.add_wiki_update(
+                        figure_id=figure_id,
+                        section_title=section.get('title', 'Profile Update'),
+                        update_summary=section.get('summary', 'Profile information was updated')
+                    )
+                    logger.info(f"Wiki update added with ID: {update_id}")
+                except Exception as e:
+                    logger.error(f"Error adding wiki update: {e}")
+                    import traceback
+                    traceback.print_exc()
 
         # STEP 3: Update Curated Timeline and mark articles as processed
-        print("\n--- STEP 3 of 6: Updating curated timeline ---")
+        logger.info("STEP 3 of 6: Updating curated timeline")
         curation_engine = CurationEngine(figure_id=figure_id)
         timeline_result = await curation_engine.run_incremental_update()
+        
+        # Debug the timeline result structure
+        logger.debug(f"Timeline result type: {type(timeline_result)}")
+        if timeline_result:
+            if hasattr(timeline_result, 'new_events'):
+                logger.info(f"Found {len(timeline_result.new_events)} new timeline events")
+                for i, event in enumerate(timeline_result.new_events[:5]):
+                    logger.debug(f"Event {i+1} data: {event}")
+            else:
+                logger.warning("timeline_result has no 'new_events' attribute")
+        else:
+            logger.warning("timeline_result is None or empty")
         
         # Track timeline updates
         if timeline_result and hasattr(timeline_result, 'new_events'):
             for event in timeline_result.new_events[:5]:  # Limit to 5 most significant
-                self.update_tracker.add_timeline_update(  # Removed await
-                    figure_id=figure_id,
-                    event_title=event.get('title', 'Timeline Update'),
-                    event_description=event.get('description', 'New event added to timeline'),
-                    event_date=event.get('date', 'Unknown date'),
-                    source=event.get('source', None)
-                )
+                try:
+                    logger.info(f"Adding timeline update for event: {event.get('title', 'Timeline Update')}")
+                    update_id = self.update_tracker.add_timeline_update(
+                        figure_id=figure_id,
+                        event_title=event.get('title', 'Timeline Update'),
+                        event_description=event.get('description', 'New event added to timeline'),
+                        event_date=event.get('date', 'Unknown date'),
+                        source=event.get('source', None)
+                    )
+                    logger.info(f"Timeline update added with ID: {update_id}")
+                except Exception as e:
+                    logger.error(f"Error adding timeline update: {e}")
+                    import traceback
+                    traceback.print_exc()
 
         # STEP 4: Compact Wiki/Overview documents
-        print("\n--- STEP 4 of 6: Compacting wiki overviews ---")
+        logger.info("STEP 4 of 6: Compacting wiki overviews")
         overview_compactor = CompactOverview()
         await overview_compactor.compact_figure_overview(figure_id=figure_id)
 
         # STEP 5: Compact Timeline event summaries and descriptions
-        print("\n--- STEP 5 of 6: Compacting timeline events ---")
+        logger.info("STEP 5 of 6: Compacting timeline events")
         timeline_compactor = TimelineCompactor(figure_id=figure_id)
         await timeline_compactor.run_update()
 
         # STEP 6: Update related figures count
-        print("\n--- STEP 6 of 6: Updating related figures count ---")
+        logger.info("STEP 6 of 6: Updating related figures count")
         # The 'related_updater' was created outside and passed in for efficiency
         related_result = related_updater.update_for_figure(figure_id)
 
         # Create a general update for the entire process completion
-        self.update_tracker.add_update(  # Removed await
-            figure_id=figure_id,
-            update_type='system',
-            title='Profile Fully Updated',
-            description=f'Complete refresh of {figure_id} profile with latest information',
-            additional_data={'update_steps': 6}
-        )
+        try:
+            logger.info("Adding final system update for process completion")
+            update_id = self.update_tracker.add_update(
+                figure_id=figure_id,
+                update_type='system',
+                title='Profile Fully Updated',
+                description=f'Complete refresh of {figure_id} profile with latest information',
+                additional_data={'update_steps': 6}
+            )
+            logger.info(f"System update added with ID: {update_id}")
+        except Exception as e:
+            logger.error(f"Error adding system update: {e}")
+            import traceback
+            traceback.print_exc()
 
-        print(f"\n{'='*25}\nFULL UPDATE COMPLETE FOR: {figure_id.upper()}\n{'='*25}")
+        logger.info(f"FULL UPDATE COMPLETE FOR: {figure_id.upper()}")
 
     async def close_db_manager(self):
         # A helper to close the underlying manager if needed, though each class handles its own.
@@ -180,31 +253,30 @@ async def main():
 
     # DEFAULT BEHAVIOR: Complete update when no arguments provided
     if not any_arg_provided:
-        print("=== RUNNING DEFAULT COMPLETE UPDATE ===")
-        print("(No arguments provided - running ingestion + processing for updated figures)")
+        logger.info("=== RUNNING DEFAULT COMPLETE UPDATE ===")
         
         # STEP 1: Run ingestion to find updated figures
-        print("\n--- PHASE 1: INGESTION ---")
+        logger.info("--- PHASE 1: INGESTION ---")
         extractor = PredefinedPublicFigureExtractor(csv_filepath=args.csv)
         updated_figure_names = await extractor.process_new_articles(limit=args.ingestion_limit)
 
         if updated_figure_names:
-            print(f"\nIngestion found {len(updated_figure_names)} figures with new articles: {', '.join(updated_figure_names)}")
+            logger.info(f"Ingestion found {len(updated_figure_names)} figures with new articles: {', '.join(updated_figure_names)}")
             # Convert names to the document ID format
             figure_ids = [name.lower().replace(" ", "").replace("-", "").replace(".", "") for name in updated_figure_names]
             
             # STEP 2: Immediately process those figures
-            print(f"\n--- PHASE 2: PROCESSING {len(figure_ids)} UPDATED FIGURES ---")
+            logger.info(f"--- PHASE 2: PROCESSING {len(figure_ids)} UPDATED FIGURES ---")
             
             related_figures_updater = RelatedFiguresUpdater()
             for i, figure_id in enumerate(figure_ids):
-                print(f"\n--- Processing Updated Figure {i+1}/{len(figure_ids)} ---")
+                logger.info(f"--- Processing Updated Figure {i+1}/{len(figure_ids)} ---")
                 await master_updater.run_full_update_for_figure(figure_id, related_figures_updater)
             
-            print("\n\nComplete update process finished!")
+            logger.info("Complete update process finished!")
         else:
-            print("\nIngestion complete. No new figures with articles were found.")
-            print("No processing needed.")
+            logger.info("Ingestion complete. No new figures with articles were found.")
+            logger.info("No processing needed.")
         
         return  # Exit here for default behavior
 
