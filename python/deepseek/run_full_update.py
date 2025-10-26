@@ -5,6 +5,7 @@ import argparse
 from typing import List
 import json
 import logging
+import pprint
 
 # Set up logging
 logging.basicConfig(
@@ -61,6 +62,9 @@ class MasterUpdater:
         categorizer = ArticleCategorizer()
         categorization_result = await categorizer.process_summaries(figure_id=figure_id)
         
+        print("Categorization result full data:")
+        pprint.pprint(vars(categorization_result) if hasattr(categorization_result, '__dict__') else categorization_result)
+        
         # Debug the categorization result structure
         logger.debug(f"Categorization result type: {type(categorization_result)}")
         if categorization_result:
@@ -74,27 +78,34 @@ class MasterUpdater:
             logger.warning("categorization_result is None or empty")
         
         # Track significant article categorizations
-        if categorization_result and hasattr(categorization_result, 'new_articles') and categorization_result.new_articles:
-            for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
-                try:
-                    logger.info(f"Adding news update for article: {article.get('title', 'New Article')}")
-                    update_id = self.update_tracker.add_news_update(
-                        figure_id=figure_id,
-                        headline=article.get('title', 'New Article'),
-                        summary=article.get('summary', 'No summary available'),
-                        source=article.get('source', 'Unknown source'),
-                        source_url=article.get('url', None)
-                    )
-                    logger.info(f"News update added with ID: {update_id}")
-                except Exception as e:
-                    logger.error(f"Error adding news update: {e}")
-                    import traceback
-                    traceback.print_exc()
+        if categorization_result:
+            new_articles = getattr(categorization_result, 'new_articles', None)
+            if new_articles is None and isinstance(categorization_result, dict):
+                new_articles = categorization_result.get('new_articles', [])
+            if new_articles:
+                for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
+                    try:
+                        logger.info(f"Adding news update for article: {article.get('title', 'New Article')}")
+                        update_id = self.update_tracker.add_news_update(
+                            figure_id=figure_id,
+                            headline=article.get('title', 'New Article'),
+                            summary=article.get('summary', 'No summary available'),
+                            source=article.get('source', 'Unknown source'),
+                            source_url=article.get('url', None)
+                        )
+                        logger.info(f"News update added with ID: {update_id}")
+                    except Exception as e:
+                        logger.error(f"Error adding news update: {e}")
+                        import traceback
+                        traceback.print_exc()
 
         # STEP 2: Update Wiki Content with new summaries
         logger.info("STEP 2 of 6: Updating wiki content")
         wiki_updater = WikiContentUpdater()
         wiki_result = await wiki_updater.update_all_wiki_content(specific_figure_id=figure_id)
+        
+        print("Wiki result full data:")
+        pprint.pprint(vars(wiki_result) if hasattr(wiki_result, '__dict__') else wiki_result)
         
         # Debug the wiki result structure
         logger.debug(f"Wiki result type: {type(wiki_result)}")
@@ -109,25 +120,32 @@ class MasterUpdater:
             logger.warning("wiki_result is None or empty")
         
         # Track wiki updates
-        if wiki_result and hasattr(wiki_result, 'updated_sections'):
-            for section in wiki_result.updated_sections:
-                try:
-                    logger.info(f"Adding wiki update for section: {section.get('title', 'Profile Update')}")
-                    update_id = self.update_tracker.add_wiki_update(
-                        figure_id=figure_id,
-                        section_title=section.get('title', 'Profile Update'),
-                        update_summary=section.get('summary', 'Profile information was updated')
-                    )
-                    logger.info(f"Wiki update added with ID: {update_id}")
-                except Exception as e:
-                    logger.error(f"Error adding wiki update: {e}")
-                    import traceback
-                    traceback.print_exc()
+        if wiki_result:
+            updated_sections = getattr(wiki_result, 'updated_sections', None)
+            if updated_sections is None and isinstance(wiki_result, dict):
+                updated_sections = wiki_result.get('updated_sections', [])
+            if updated_sections:
+                for section in updated_sections:
+                    try:
+                        logger.info(f"Adding wiki update for section: {section.get('title', 'Profile Update')}")
+                        update_id = self.update_tracker.add_wiki_update(
+                            figure_id=figure_id,
+                            section_title=section.get('title', 'Profile Update'),
+                            update_summary=section.get('summary', 'Profile information was updated')
+                        )
+                        logger.info(f"Wiki update added with ID: {update_id}")
+                    except Exception as e:
+                        logger.error(f"Error adding wiki update: {e}")
+                        import traceback
+                        traceback.print_exc()
 
         # STEP 3: Update Curated Timeline and mark articles as processed
         logger.info("STEP 3 of 6: Updating curated timeline")
         curation_engine = CurationEngine(figure_id=figure_id)
         timeline_result = await curation_engine.run_incremental_update()
+        
+        print("Timeline result full data:")
+        pprint.pprint(vars(timeline_result) if hasattr(timeline_result, '__dict__') else timeline_result)
         
         # Debug the timeline result structure
         logger.debug(f"Timeline result type: {type(timeline_result)}")
@@ -142,22 +160,26 @@ class MasterUpdater:
             logger.warning("timeline_result is None or empty")
         
         # Track timeline updates
-        if timeline_result and hasattr(timeline_result, 'new_events'):
-            for event in timeline_result.new_events[:5]:  # Limit to 5 most significant
-                try:
-                    logger.info(f"Adding timeline update for event: {event.get('title', 'Timeline Update')}")
-                    update_id = self.update_tracker.add_timeline_update(
-                        figure_id=figure_id,
-                        event_title=event.get('title', 'Timeline Update'),
-                        event_description=event.get('description', 'New event added to timeline'),
-                        event_date=event.get('date', 'Unknown date'),
-                        source=event.get('source', None)
-                    )
-                    logger.info(f"Timeline update added with ID: {update_id}")
-                except Exception as e:
-                    logger.error(f"Error adding timeline update: {e}")
-                    import traceback
-                    traceback.print_exc()
+        if timeline_result:
+            new_events = getattr(timeline_result, 'new_events', None)
+            if new_events is None and isinstance(timeline_result, dict):
+                new_events = timeline_result.get('new_events', [])
+            if new_events:
+                for event in new_events[:5]:  # Limit to 5 most significant
+                    try:
+                        logger.info(f"Adding timeline update for event: {event.get('title', 'Timeline Update')}")
+                        update_id = self.update_tracker.add_timeline_update(
+                            figure_id=figure_id,
+                            event_title=event.get('title', 'Timeline Update'),
+                            event_description=event.get('description', 'New event added to timeline'),
+                            event_date=event.get('date', 'Unknown date'),
+                            source=event.get('source', None)
+                        )
+                        logger.info(f"Timeline update added with ID: {update_id}")
+                    except Exception as e:
+                        logger.error(f"Error adding timeline update: {e}")
+                        import traceback
+                        traceback.print_exc()
 
         # STEP 4: Compact Wiki/Overview documents
         logger.info("STEP 4 of 6: Compacting wiki overviews")
