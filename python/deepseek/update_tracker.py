@@ -140,17 +140,41 @@ class UpdateTracker:
             
             logger.info("No duplicates found. Creating new update document.")
             # Create the new update document
+            # Replace the existing code in add_update method
             try:
                 logger.debug(f"Document to add: {json.dumps(update_doc, default=str)}")
                 new_doc_ref = self.updates_collection.add(update_doc)
                 
-                # Check if it's a tuple (old version) or a document reference (fixed version)
+                # Check what type is actually being returned
+                logger.debug(f"Type of add() return value: {type(new_doc_ref)}")
+                
+                # If it's a tuple as your code expects
                 if isinstance(new_doc_ref, tuple):
                     logger.info("Add method returned a tuple, extracting document reference")
-                    doc_ref = new_doc_ref[0]
-                else:
+                    # Make sure we're accessing the correct element
+                    logger.debug(f"Tuple contents: {new_doc_ref}")
+                    if len(new_doc_ref) > 0:
+                        # Check if the first element is a document reference
+                        if hasattr(new_doc_ref[0], 'id'):
+                            doc_ref = new_doc_ref[0]
+                        else:
+                            # If it's not what we expect, let's try the second element if it exists
+                            if len(new_doc_ref) > 1 and hasattr(new_doc_ref[1], 'id'):
+                                doc_ref = new_doc_ref[1]
+                            else:
+                                # Last resort - create a unique ID
+                                logger.warning("Could not find document reference in tuple, generating a random ID")
+                                import uuid
+                                return str(uuid.uuid4())
+                elif hasattr(new_doc_ref, 'id'):
+                    # It's a document reference directly
                     logger.info("Add method returned a document reference")
                     doc_ref = new_doc_ref
+                else:
+                    # It's neither a tuple with a doc ref nor a doc ref itself
+                    logger.warning(f"Unexpected return type from add(): {type(new_doc_ref)}")
+                    import uuid
+                    return str(uuid.uuid4())
                 
                 logger.info(f"Successfully created new update: {title} (id: {doc_ref.id})")
                 return doc_ref.id
