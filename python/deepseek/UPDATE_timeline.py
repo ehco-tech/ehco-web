@@ -161,10 +161,11 @@ class CurationEngine:
         event_data: dict,
         main_category: str,
         subcategory: str,
-        source_id: str
+        source_id: str,
+        action: str  # NEW: 'CREATE_NEW' or 'UPDATE_EXISTING'
     ) -> None:
         """
-        Adds a timeline event to the recent-updates cache collection.
+        Adds or updates a timeline event in the recent-updates cache collection.
         This cache stores the most recent events across all figures for fast querying.
         
         Args:
@@ -172,6 +173,7 @@ class CurationEngine:
             main_category: Main category of the event
             subcategory: Subcategory of the event
             source_id: The most recent source article ID
+            action: Whether this is a new event or update to existing
         """
         try:
             # Get figure data for the cache entry
@@ -201,13 +203,27 @@ class CurationEngine:
             # Use the most recent source ID (last in the list)
             most_recent_source_id = all_source_ids[-1] if all_source_ids else source_id
             
-            # Create cache document
+            event_title = event_data.get('event_title', '')
+            
+            # Check if this event already exists in cache
+            # We identify by: figureId + eventTitle + mainCategory + subcategory
+            cache_ref = self.db.collection('recent-updates')
+            existing_query = cache_ref.where('figureId', '==', self.figure_id) \
+                                       .where('eventTitle', '==', event_title) \
+                                       .where('mainCategory', '==', main_category) \
+                                       .where('subcategory', '==', subcategory) \
+                                       .limit(1) \
+                                       .stream()
+            
+            existing_docs = list(existing_query)
+            
+            # Create cache document structure
             from firebase_admin import firestore
             cache_doc = {
                 'figureId': self.figure_id,
                 'figureName': figure_data.get('name', ''),
                 'figureProfilePic': figure_data.get('profilePic', ''),
-                'eventTitle': event_data.get('event_title', ''),
+                'eventTitle': event_title,
                 'eventSummary': event_data.get('event_summary', ''),
                 'mainCategory': main_category,
                 'subcategory': subcategory,
@@ -215,16 +231,25 @@ class CurationEngine:
                 'timelinePoints': timeline_points,
                 'eventYears': event_data.get('event_years', []),
                 'mostRecentSourceId': most_recent_source_id,
-                'createdAt': firestore.SERVER_TIMESTAMP,
                 'lastUpdated': firestore.SERVER_TIMESTAMP
             }
             
-            # Add to cache collection
-            self.db.collection('recent-updates').add(cache_doc)
-            print(f"    -> ✓ Added to recent-updates cache: {event_data.get('event_title', 'Untitled')}")
+            if existing_docs:
+                # UPDATE existing cache entry
+                existing_doc = existing_docs[0]
+                existing_doc.reference.update(cache_doc)
+                print(f"    -> ✓ Updated recent-updates cache: {event_title}")
+            else:
+                # CREATE new cache entry
+                cache_doc['createdAt'] = firestore.SERVER_TIMESTAMP
+                self.db.collection('recent-updates').add(cache_doc)
+                print(f"    -> ✓ Added to recent-updates cache: {event_title}")
             
-            # Keep cache size manageable
-            self._cleanup_recent_updates_cache()
+            # Keep cache size manageable (only run occasionally to save operations)
+            # Run cleanup every ~10th update
+            import random
+            if random.random() < 0.1:  # 10% chance
+                self._cleanup_recent_updates_cache()
             
         except Exception as e:
             print(f"    -> Error adding to recent-updates cache: {e}")
@@ -401,7 +426,8 @@ class CurationEngine:
                         event_data=event_json,
                         main_category=main_cat,
                         subcategory=sub_cat,
-                        source_id=source_id
+                        source_id=source_id,
+                        action=action  # Pass the AI's decision
                     )
                 except Exception as e:
                     print(f"    -> Warning: Failed to add to cache: {e}")
