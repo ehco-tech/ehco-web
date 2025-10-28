@@ -1,9 +1,14 @@
 import asyncio
 import json
-import argparse # Added
+import argparse
 from collections import defaultdict
 from setup_firebase_deepseek import NewsManager
 from typing import Union, Optional, Dict, Any, List
+
+from notification_service import notify_timeline_update
+
+# Import UpdateTracker singleton
+from update_tracker import UpdateTracker
 
 # --- CONFIGURATION ---
 # TARGET_FIGURE_ID is now handled by the argument parser
@@ -18,6 +23,8 @@ class CurationEngine:
         self.db = self.news_manager.db
         self.ai_client = self.news_manager.client
         self.ai_model = self.news_manager.model
+        # Get singleton instance of UpdateTracker with our db instance
+        self.update_tracker = UpdateTracker.get_instance(db=self.db)
         print(f"✓ CurationEngine initialized for figure: {self.figure_id}")
 
     # =================================================================================
@@ -150,34 +157,38 @@ class CurationEngine:
         event['event_years'] = sorted(list(years), reverse=True)
         return event
 
-    # --- MODIFIED ---
-    def _fetch_unprocessed_articles(self) -> list:
-        """Fetches ALL unprocessed articles, regardless of their content."""
-        print("Fetching ALL unprocessed articles...")
-        from google.cloud.firestore_v1.base_query import FieldFilter
-        
-        articles_ref = self.db.collection('selected-figures').document(self.figure_id).collection('article-summaries')
-        query = articles_ref.where(filter=FieldFilter('is_processed_for_timeline', '!=', True))
-        
-        # We return the full document object now, not a custom dictionary
-        articles = [doc for doc in query.stream()]
-        
-        print(f"Found {len(articles)} unprocessed articles to check.")
-        return articles
-
-    # --- REWRITTEN to align with migration script ---
+    # =================================================================================
+    # MAIN PROCESSING METHODS
+    # =================================================================================
+    
     async def run_incremental_update(self):
-        """Fetches unprocessed articles and intelligently merges their events into the timeline."""
-        print(f"--- Starting Incremental Timeline Update for {self.figure_id} ---")
+        """
+        Processes new articles and update the timeline incrementally.
+        """
+        print("\n--- Starting Incremental Timeline Update ---")
         
-        all_categories = self._get_all_subcategories()
-        # This now gets ALL unprocessed articles
-        articles_to_process = self._fetch_unprocessed_articles()
-
-        if not articles_to_process:
-            print("No new articles to process. Update complete.")
+        # 1. Get unprocessed summaries (where is_processed_for_timeline is FALSE)
+        try:
+            articles_to_process = []
+            article_ref = self.db.collection('selected-figures').document(self.figure_id).collection('article-summaries')
+            articles_to_process = list(article_ref.where('is_processed_for_timeline', '==', False).stream())
+        except Exception as e:
+            print(f"Error fetching unprocessed articles: {e}")
+            await self.news_manager.close()
+            return {}
+            
+        print(f"Found {len(articles_to_process)} unprocessed articles for figure: {self.figure_id}")
+        
+        if len(articles_to_process) == 0:
+            print("No new articles to process. Exiting.")
             await self.news_manager.close() # Close connection if nothing to do
             return
+        
+        # Track new events for UpdateTracker and notifications
+        newly_added_events = []
+
+        # Get the subcategory structure we'll use for classification
+        all_categories = self._get_all_subcategories()
 
         for article_snapshot in articles_to_process:
             source_id = article_snapshot.id
@@ -240,7 +251,36 @@ class CurationEngine:
                 # 5. Apply AI decision
                 action = ai_decision.get("action")
                 event_json = ai_decision.get("event_json")
+                
+                # Store for notifications and UpdateTracker
+                event_for_tracking = {
+                    **event_json,
+                    'main_category': main_cat,
+                    'subcategory': sub_cat,
+                    'event_date': date
+                }
 
+                # Add to our tracking list for notifications
+                newly_added_events.append(event_for_tracking)
+                
+                # Create a timeline update record using UpdateTracker
+                try:
+                    event_title = event_json.get('event_title', 'Timeline Event')
+                    event_summary = event_json.get('event_summary', 'New event added to timeline')
+                    
+                    update_id = self.update_tracker.add_timeline_update(
+                        figure_id=self.figure_id,
+                        event_title=event_title,
+                        event_description=event_summary,
+                        event_date=date,
+                        source=article_data.get('source', None),
+                        source_url=article_data.get('url', None)
+                    )
+                    print(f"    -> Created timeline update record: {update_id}")
+                except Exception as e:
+                    print(f"    -> Error creating timeline update record: {e}")
+
+                # Apply the AI's decision to our collection
                 if action == "CREATE_NEW":
                     curated_events_for_subcategory.append(self._add_event_years(event_json))
                 elif action == "UPDATE_EXISTING":
@@ -264,10 +304,22 @@ class CurationEngine:
             article_ref = self.db.collection('selected-figures').document(self.figure_id).collection('article-summaries').document(source_id)
             article_ref.update({"is_processed_for_timeline": True})
             print(f"  -> Finished processing article {source_id} and marked as processed.")
-        
+            
+        # notifications
+        if newly_added_events:
+            print(f"\n📬 Triggering notifications for {len(newly_added_events)} new events...")
+            try:
+                await notify_timeline_update(self.figure_id, newly_added_events)
+            except Exception as e:
+                print(f"⚠️ Warning: Failed to send notifications: {e}")
+                # Don't fail the entire update if notifications fail
+            
         # Close the connection after the loop finishes
         await self.news_manager.close()
         print("\n--- Incremental Update Complete ---")
+        
+        # Return data about the updated events
+        return {"new_events": newly_added_events}
 
 
 async def main():

@@ -1,4 +1,4 @@
-# Modified version that uses the debug UpdateTracker
+# Modified version that uses the singleton UpdateTracker pattern
 
 import asyncio
 import argparse
@@ -19,6 +19,7 @@ from setup_firebase_deepseek import NewsManager
 from predefined_public_figure_extractor import PredefinedPublicFigureExtractor
 
 # --- Import Updater Classes from Their Respective Files ---
+# Note: These imports should use your actual filenames, which may or may not include "_integrated"
 from UPDATE_article_categorizer import (
     PublicFigureSummaryCategorizer as ArticleCategorizer,
 )
@@ -28,7 +29,7 @@ from compact_overview import CompactOverview
 from compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
 from related_figures import RelatedFiguresUpdater
 
-# --- Import the debug UpdateTracker ---
+# --- Import the singleton UpdateTracker ---
 from update_tracker import UpdateTracker
 
 
@@ -38,7 +39,8 @@ class MasterUpdater:
         logger.info("Initializing MasterUpdater")
         self.news_manager = NewsManager()
         self.db = self.news_manager.db
-        self.update_tracker = UpdateTracker(db=self.db)
+        # Get the singleton instance of UpdateTracker
+        self.update_tracker = UpdateTracker.get_instance(db=self.db)
         logger.info("MasterUpdater initialized successfully")
 
     async def get_all_figure_ids(self) -> List[str]:
@@ -77,27 +79,7 @@ class MasterUpdater:
         else:
             logger.warning("categorization_result is None or empty")
         
-        # Track significant article categorizations
-        if categorization_result:
-            new_articles = getattr(categorization_result, 'new_articles', None)
-            if new_articles is None and isinstance(categorization_result, dict):
-                new_articles = categorization_result.get('new_articles', [])
-            if new_articles:
-                for article in categorization_result.new_articles[:3]:  # Limit to 3 most significant
-                    try:
-                        logger.info(f"Adding news update for article: {article.get('title', 'New Article')}")
-                        update_id = self.update_tracker.add_news_update(
-                            figure_id=figure_id,
-                            headline=article.get('title', 'New Article'),
-                            summary=article.get('summary', 'No summary available'),
-                            source=article.get('source', 'Unknown source'),
-                            source_url=article.get('url', None)
-                        )
-                        logger.info(f"News update added with ID: {update_id}")
-                    except Exception as e:
-                        logger.error(f"Error adding news update: {e}")
-                        import traceback
-                        traceback.print_exc()
+        # Note: Article categorizer now handles its own update tracking
 
         # STEP 2: Update Wiki Content with new summaries
         logger.info("STEP 2 of 6: Updating wiki content")
@@ -119,25 +101,7 @@ class MasterUpdater:
         else:
             logger.warning("wiki_result is None or empty")
         
-        # Track wiki updates
-        if wiki_result:
-            updated_sections = getattr(wiki_result, 'updated_sections', None)
-            if updated_sections is None and isinstance(wiki_result, dict):
-                updated_sections = wiki_result.get('updated_sections', [])
-            if updated_sections:
-                for section in updated_sections:
-                    try:
-                        logger.info(f"Adding wiki update for section: {section.get('title', 'Profile Update')}")
-                        update_id = self.update_tracker.add_wiki_update(
-                            figure_id=figure_id,
-                            section_title=section.get('title', 'Profile Update'),
-                            update_summary=section.get('summary', 'Profile information was updated')
-                        )
-                        logger.info(f"Wiki update added with ID: {update_id}")
-                    except Exception as e:
-                        logger.error(f"Error adding wiki update: {e}")
-                        import traceback
-                        traceback.print_exc()
+        # Note: Wiki updater now handles its own update tracking
 
         # STEP 3: Update Curated Timeline and mark articles as processed
         logger.info("STEP 3 of 6: Updating curated timeline")
@@ -145,49 +109,26 @@ class MasterUpdater:
         timeline_result = await curation_engine.run_incremental_update()
         
         print("Timeline result full data:")
-        pprint.pprint(vars(timeline_result) if hasattr(timeline_result, '__dict__') else timeline_result)
+        pprint.pprint(timeline_result if timeline_result else "None")
         
         # Debug the timeline result structure
         logger.debug(f"Timeline result type: {type(timeline_result)}")
-        if timeline_result:
-            if hasattr(timeline_result, 'new_events'):
-                logger.info(f"Found {len(timeline_result.new_events)} new timeline events")
-                for i, event in enumerate(timeline_result.new_events[:5]):
-                    logger.debug(f"Event {i+1} data: {event}")
-            else:
-                logger.warning("timeline_result has no 'new_events' attribute")
+        if timeline_result and isinstance(timeline_result, dict) and 'new_events' in timeline_result:
+            logger.info(f"Found {len(timeline_result['new_events'])} new timeline events")
+            for i, event in enumerate(timeline_result['new_events'][:5]):
+                logger.debug(f"Event {i+1} data: {event}")
         else:
-            logger.warning("timeline_result is None or empty")
+            logger.warning("timeline_result has no 'new_events' key or is None")
         
-        # Track timeline updates
-        if timeline_result:
-            new_events = getattr(timeline_result, 'new_events', None)
-            if new_events is None and isinstance(timeline_result, dict):
-                new_events = timeline_result.get('new_events', [])
-            if new_events:
-                for event in new_events[:5]:  # Limit to 5 most significant
-                    try:
-                        logger.info(f"Adding timeline update for event: {event.get('title', 'Timeline Update')}")
-                        update_id = self.update_tracker.add_timeline_update(
-                            figure_id=figure_id,
-                            event_title=event.get('title', 'Timeline Update'),
-                            event_description=event.get('description', 'New event added to timeline'),
-                            event_date=event.get('date', 'Unknown date'),
-                            source=event.get('source', None)
-                        )
-                        logger.info(f"Timeline update added with ID: {update_id}")
-                    except Exception as e:
-                        logger.error(f"Error adding timeline update: {e}")
-                        import traceback
-                        traceback.print_exc()
+        # Note: CurationEngine now handles its own update tracking
 
-        # STEP 4: Compact Wiki/Overview documents
-        logger.info("STEP 4 of 6: Compacting wiki overviews")
-        overview_compactor = CompactOverview()
-        await overview_compactor.compact_figure_overview(figure_id=figure_id)
-
-        # STEP 5: Compact Timeline event summaries and descriptions
-        logger.info("STEP 5 of 6: Compacting timeline events")
+        # STEP 4: Run the document compactor (better code/content organization)
+        logger.info("STEP 4 of 6: Running document compactor")
+        compactor = CompactOverview(figure_id=figure_id)
+        compaction_result = await compactor.compact_overview()
+        
+        # STEP 5: Run the timeline compactor
+        logger.info("STEP 5 of 6: Running timeline compactor")
         timeline_compactor = TimelineCompactor(figure_id=figure_id)
         await timeline_compactor.run_update()
 

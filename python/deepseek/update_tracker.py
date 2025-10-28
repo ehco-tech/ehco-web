@@ -1,5 +1,5 @@
-# debug_update_tracker.py
-# Enhanced version with debugging output
+# update_tracker.py
+# Enhanced version with singleton pattern and reliable document creation
 
 import time
 from datetime import datetime
@@ -9,6 +9,7 @@ import hashlib
 import logging
 import json
 import traceback
+import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -22,6 +23,15 @@ class UpdateTracker:
     Tracks and stores updates related to public figures in a dedicated Firestore collection.
     Manages the creation of standardized update documents for display on the frontend.
     """
+    
+    _instance = None
+    
+    @classmethod
+    def get_instance(cls, db=None):
+        """Get or create a singleton instance of UpdateTracker"""
+        if cls._instance is None:
+            cls._instance = cls(db)
+        return cls._instance
     
     def __init__(self, db=None):
         """
@@ -84,7 +94,7 @@ class UpdateTracker:
         try:
             # Get figure data for the update
             logger.info(f"Fetching figure data for {figure_id}")
-            figure_doc = self.db.collection('selected-figures').document(figure_id).get()
+            figure_doc = self.figures_collection.document(figure_id).get()
             
             if not figure_doc.exists:
                 logger.error(f"Figure with ID '{figure_id}' not found in database")
@@ -139,47 +149,19 @@ class UpdateTracker:
                 return existing_docs[0].id
             
             logger.info("No duplicates found. Creating new update document.")
-            # Create the new update document
-            # Replace the existing code in add_update method
+            
+            # IMPROVED METHOD: Use a known document ID for more reliable creation
+            doc_id = f"{update_type}_{figure_id}_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+            
             try:
-                logger.debug(f"Document to add: {json.dumps(update_doc, default=str)}")
-                new_doc_ref = self.updates_collection.add(update_doc)
+                # Create the document with our predefined ID
+                doc_ref = self.updates_collection.document(doc_id)
+                doc_ref.set(update_doc)
                 
-                # Check what type is actually being returned
-                logger.debug(f"Type of add() return value: {type(new_doc_ref)}")
-                
-                # If it's a tuple as your code expects
-                if isinstance(new_doc_ref, tuple):
-                    logger.info("Add method returned a tuple, extracting document reference")
-                    # Make sure we're accessing the correct element
-                    logger.debug(f"Tuple contents: {new_doc_ref}")
-                    if len(new_doc_ref) > 0:
-                        # Check if the first element is a document reference
-                        if hasattr(new_doc_ref[0], 'id'):
-                            doc_ref = new_doc_ref[0]
-                        else:
-                            # If it's not what we expect, let's try the second element if it exists
-                            if len(new_doc_ref) > 1 and hasattr(new_doc_ref[1], 'id'):
-                                doc_ref = new_doc_ref[1]
-                            else:
-                                # Last resort - create a unique ID
-                                logger.warning("Could not find document reference in tuple, generating a random ID")
-                                import uuid
-                                return str(uuid.uuid4())
-                elif hasattr(new_doc_ref, 'id'):
-                    # It's a document reference directly
-                    logger.info("Add method returned a document reference")
-                    doc_ref = new_doc_ref
-                else:
-                    # It's neither a tuple with a doc ref nor a doc ref itself
-                    logger.warning(f"Unexpected return type from add(): {type(new_doc_ref)}")
-                    import uuid
-                    return str(uuid.uuid4())
-                
-                logger.info(f"Successfully created new update: {title} (id: {doc_ref.id})")
-                return doc_ref.id
+                logger.info(f"Successfully created new update: {title} (id: {doc_id})")
+                return doc_id
             except Exception as e:
-                logger.error(f"Error adding document to Firestore: {e}")
+                logger.error(f"Error creating document in Firestore: {e}")
                 traceback.print_exc()
                 return None
         except Exception as e:

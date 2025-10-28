@@ -5,10 +5,14 @@ import re
 import argparse # Import argparse for command-line arguments
 from firebase_admin import firestore
 
+# Import UpdateTracker singleton
+from update_tracker import UpdateTracker
 
 class PublicFigureSummaryCategorizer:
     def __init__(self):
         self.news_manager = NewsManager()
+        # Get singleton instance of UpdateTracker with our db instance
+        self.update_tracker = UpdateTracker.get_instance(db=self.news_manager.db)
         self.categories = {
             "Creative Works": ["Music", "Film & TV", "Publications & Art", "Awards & Honors"],
             "Live & Broadcast": ["Concerts & Tours", "Fan Events", "Broadcast Appearances"],
@@ -51,6 +55,7 @@ class PublicFigureSummaryCategorizer:
                 return
             
             total_summaries_categorized = 0
+            new_articles = []  # Track new articles for returning to caller
             
             for i, public_figure in enumerate(public_figures):
                 public_figure_id = public_figure["id"]
@@ -73,6 +78,7 @@ class PublicFigureSummaryCategorizer:
                     continue
                 
                 print(f"  Found {summary_count} unprocessed summaries for {public_figure_name}.")
+                figure_articles = []  # Track this figure's processed articles
                 
                 for j, summary in enumerate(summaries):
                     summary_id = summary["id"]
@@ -102,10 +108,51 @@ class PublicFigureSummaryCategorizer:
                             # "is_processed_for_timeline": True
                         })
                     
+                    # Add processed article to our tracking lists
+                    article_data = {
+                        "id": summary_id,
+                        "title": summary_data.get("title", "New Article"),
+                        "summary": summary_text,
+                        "source": summary_data.get("source", "Unknown source"),
+                        "url": summary_data.get("url", None),
+                        "mainCategory": categories_result["category"],
+                        "subcategory": categories_result["subcategory"]
+                    }
+                    figure_articles.append(article_data)
+                    
+                    # Create an update record for significant articles
+                    try:
+                        print(f"  Adding news update for article: {article_data['title']}")
+                        update_id = self.update_tracker.add_news_update(
+                            figure_id=public_figure_id,
+                            headline=article_data["title"],
+                            summary=article_data["summary"],
+                            source=article_data["source"],
+                            source_url=article_data["url"]
+                        )
+                        print(f"  News update added with ID: {update_id}")
+                    except Exception as e:
+                        print(f"  Error adding news update: {e}")
+                    
                     print(f"  Successfully updated summary {summary_id} with categories and marked as processed.")
                     total_summaries_categorized += 1
+                
+                # Add this figure's articles to the overall list
+                if figure_articles:
+                    new_articles.append({
+                        "figure_id": public_figure_id,
+                        "figure_name": public_figure_name,
+                        "articles": figure_articles
+                    })
             
             print(f"\nCategorization process completed! Categorized {total_summaries_categorized} new summaries.")
+            
+            # Return a result object with data about what was processed
+            class CategorizationResult:
+                def __init__(self, new_articles):
+                    self.new_articles = new_articles
+            
+            return CategorizationResult(new_articles=new_articles)
         
         except Exception as e:
             print(f"An error occurred during the process: {e}")
@@ -121,7 +168,7 @@ class PublicFigureSummaryCategorizer:
             category_structure = ""
             for category, subcategories in self.categories.items():
                 subcategories_str = " / ".join(subcategories)
-                category_structure += f"**{category}** → {subcategories_str}\n"
+                category_structure += f"**{category}** â†' {subcategories_str}\n"
             
             prompt = f"""
             Based on the following summary about {public_figure_name}, categorize it into exactly ONE main category and ONE corresponding subcategory.

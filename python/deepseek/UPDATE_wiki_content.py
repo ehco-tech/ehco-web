@@ -6,9 +6,14 @@ from firebase_admin import firestore
 import argparse
 import sys
 
+# Import UpdateTracker singleton
+from update_tracker import UpdateTracker
+
 class PublicFigureWikiUpdater:
     def __init__(self):
         self.news_manager = NewsManager()
+        # Get singleton instance of UpdateTracker with our db instance
+        self.update_tracker = UpdateTracker.get_instance(db=self.news_manager.db)
         # The field to check for unprocessed summaries
         self.processing_flag_field = "is_processed_for_timeline"
 
@@ -41,6 +46,8 @@ class PublicFigureWikiUpdater:
             print(f"Found {len(public_figures)} public figure{'s' if len(public_figures) != 1 else ''} to check for updates.")
             
             total_updated_figures = 0
+            updated_sections_all = []  # Track all updated sections for return value
+            
             for i, figure in enumerate(public_figures):
                 figure_id = figure["id"]
                 figure_name = figure["name"].replace("-", " ").title()
@@ -48,13 +55,21 @@ class PublicFigureWikiUpdater:
                 print(f"\n[{i+1}/{len(public_figures)}] Checking '{figure_name}' for new content...")
 
                 # Process updates for this single figure
-                updated = await self.update_wiki_content_for_figure(figure_id, figure_name)
+                updated, updated_sections = await self.update_wiki_content_for_figure(figure_id, figure_name)
                 if updated:
                     total_updated_figures += 1
+                    if updated_sections:
+                        updated_sections_all.extend(updated_sections)
             
             print(f"\nWiki content update process completed!")
             print(f"Successfully updated content for {total_updated_figures}/{len(public_figures)} public figures.")
-            return total_updated_figures > 0
+            
+            # Return a structured result
+            class WikiUpdateResult:
+                def __init__(self, updated_sections):
+                    self.updated_sections = updated_sections
+            
+            return WikiUpdateResult(updated_sections=updated_sections_all)
 
         except Exception as e:
             print(f"An error occurred in update_all_wiki_content: {e}")
@@ -66,6 +81,9 @@ class PublicFigureWikiUpdater:
         """
         Updates wiki content for a single public figure if new summaries are found.
         Creates new wiki documents if they don't exist.
+        
+        Returns:
+            Tuple of (was_updated, list_of_updated_sections)
         """
         try:
             # 1. Find new article summaries that haven't been processed yet
@@ -77,7 +95,7 @@ class PublicFigureWikiUpdater:
 
             if not new_summary_docs:
                 print(f"No new article summaries found for '{figure_name}'. Skipping.")
-                return False
+                return False, []
 
             print(f"Found {len(new_summary_docs)} new summaries for '{figure_name}'. Processing updates...")
 
@@ -113,6 +131,8 @@ class PublicFigureWikiUpdater:
 
             # 3. For each wiki document that has new information, perform the update or creation
             wiki_content_ref = summaries_ref.parent.collection("wiki-content")
+            updated_sections = []  # Track which sections were updated for this figure
+            
             for doc_id, new_summaries in updates_to_process.items():
                 
                 wiki_doc_ref = wiki_content_ref.document(doc_id)
@@ -133,6 +153,22 @@ class PublicFigureWikiUpdater:
                             "is_compacted": False
                         })
                         print(f"  - Updated existing wiki document: '{doc_id}'")
+                        
+                        # Track the updated section
+                        section_info = {
+                            "title": doc_id.replace('-', ' ').title(),
+                            "summary": f"Updated with new information about {figure_name}",
+                            "doc_id": doc_id
+                        }
+                        updated_sections.append(section_info)
+                        
+                        # Create an update in the updates collection
+                        update_id = self.update_tracker.add_wiki_update(
+                            figure_id=figure_id,
+                            section_title=section_info["title"],
+                            update_summary=section_info["summary"]
+                        )
+                        print(f"  - Created wiki update record: {update_id}")
                     else:
                         print(f"  - No significant changes needed for existing wiki document: '{doc_id}'")
                 else:
@@ -151,6 +187,22 @@ class PublicFigureWikiUpdater:
                             "created": firestore.SERVER_TIMESTAMP
                         })
                         print(f"  - Successfully created new wiki document: '{doc_id}'")
+                        
+                        # Track the created section
+                        section_info = {
+                            "title": doc_id.replace('-', ' ').title(),
+                            "summary": f"New section added to {figure_name}'s profile",
+                            "doc_id": doc_id
+                        }
+                        updated_sections.append(section_info)
+                        
+                        # Create an update in the updates collection
+                        update_id = self.update_tracker.add_wiki_update(
+                            figure_id=figure_id,
+                            section_title=section_info["title"],
+                            update_summary=section_info["summary"]
+                        )
+                        print(f"  - Created wiki update record for new section: {update_id}")
                     else:
                         print(f"  - Failed to generate content for new wiki document: '{doc_id}'")
 
@@ -161,11 +213,11 @@ class PublicFigureWikiUpdater:
             # batch.commit()
             print(f"Successfully marked {len(new_summary_docs)} summaries as processed for '{figure_name}'.")
 
-            return True
+            return True, updated_sections
 
         except Exception as e:
             print(f"Error updating content for {figure_name}: {e}")
-            return False
+            return False, []
         
     async def _create_new_content_from_llm(self, figure_name, doc_id, summaries):
         """
@@ -285,10 +337,11 @@ async def main():
         print(f"\n=== Public Figure Wiki Content Updater Starting (All Figures) ===\n")
 
     updater = PublicFigureWikiUpdater()
-    success = await updater.update_all_wiki_content(specific_figure_id=args.figure)
+    result = await updater.update_all_wiki_content(specific_figure_id=args.figure)
 
-    if success:
+    if result and hasattr(result, 'updated_sections') and result.updated_sections:
         print("\n=== Wiki Content Update Process Finished Successfully ===\n")
+        print(f"Updated {len(result.updated_sections)} sections across all figures.")
     else:
         print("\n=== Wiki Content Update Process Finished (No new updates or failed) ===\n")
 
