@@ -153,6 +153,123 @@ class CurationEngine:
         return event
 
     # =================================================================================
+    # RECENT UPDATES CACHE METHODS
+    # =================================================================================
+    
+    def add_to_recent_updates_cache(
+        self,
+        event_data: dict,
+        main_category: str,
+        subcategory: str,
+        source_id: str
+    ) -> None:
+        """
+        Adds a timeline event to the recent-updates cache collection.
+        This cache stores the most recent events across all figures for fast querying.
+        
+        Args:
+            event_data: The complete event JSON object
+            main_category: Main category of the event
+            subcategory: Subcategory of the event
+            source_id: The most recent source article ID
+        """
+        try:
+            # Get figure data for the cache entry
+            figure_doc = self.db.collection('selected-figures').document(self.figure_id).get()
+            if not figure_doc.exists:
+                print(f"    -> Warning: Figure {self.figure_id} not found, skipping cache")
+                return
+            
+            figure_data = figure_doc.to_dict()
+            
+            # Get the most recent date from timeline_points (first point is most recent)
+            timeline_points = event_data.get('timeline_points', [])
+            if not timeline_points or len(timeline_points) == 0:
+                print(f"    -> Warning: No timeline points found for event, skipping cache")
+                return
+            
+            most_recent_date = timeline_points[0].get('date')
+            if not most_recent_date:
+                print(f"    -> Warning: No date found in first timeline point, skipping cache")
+                return
+            
+            # Extract all source IDs from all timeline points
+            all_source_ids = []
+            for point in timeline_points:
+                all_source_ids.extend(point.get('sourceIds', []))
+            
+            # Use the most recent source ID (last in the list)
+            most_recent_source_id = all_source_ids[-1] if all_source_ids else source_id
+            
+            # Create cache document
+            from firebase_admin import firestore
+            cache_doc = {
+                'figureId': self.figure_id,
+                'figureName': figure_data.get('name', ''),
+                'figureProfilePic': figure_data.get('profilePic', ''),
+                'eventTitle': event_data.get('event_title', ''),
+                'eventSummary': event_data.get('event_summary', ''),
+                'mainCategory': main_category,
+                'subcategory': subcategory,
+                'eventDate': most_recent_date,
+                'timelinePoints': timeline_points,
+                'eventYears': event_data.get('event_years', []),
+                'mostRecentSourceId': most_recent_source_id,
+                'createdAt': firestore.SERVER_TIMESTAMP,
+                'lastUpdated': firestore.SERVER_TIMESTAMP
+            }
+            
+            # Add to cache collection
+            self.db.collection('recent-updates').add(cache_doc)
+            print(f"    -> ✓ Added to recent-updates cache: {event_data.get('event_title', 'Untitled')}")
+            
+            # Keep cache size manageable
+            self._cleanup_recent_updates_cache()
+            
+        except Exception as e:
+            print(f"    -> Error adding to recent-updates cache: {e}")
+            # Don't fail the entire update if cache fails
+    
+    def _cleanup_recent_updates_cache(self) -> None:
+        """
+        Keeps the recent-updates cache at a manageable size.
+        Deletes entries beyond the 200 most recent to keep queries fast.
+        """
+        try:
+            # Query all cache documents, sorted by date (newest first)
+            cache_ref = self.db.collection('recent-updates')
+            
+            # Get all documents ordered by date
+            all_docs = list(cache_ref.order_by('eventDate', direction='DESCENDING').stream())
+            
+            # If more than 200, delete the oldest
+            if len(all_docs) > 200:
+                docs_to_delete = all_docs[200:]  # Everything after index 200
+                
+                # Use batch delete for efficiency
+                batch = self.db.batch()
+                delete_count = 0
+                
+                for doc in docs_to_delete:
+                    batch.delete(doc.reference)
+                    delete_count += 1
+                    
+                    # Firestore batch limit is 500 operations
+                    if delete_count % 500 == 0:
+                        batch.commit()
+                        batch = self.db.batch()
+                
+                # Commit any remaining deletes
+                if delete_count % 500 != 0:
+                    batch.commit()
+                    
+                print(f"    -> ✓ Cleaned up {len(docs_to_delete)} old cache entries (keeping latest 200)")
+                
+        except Exception as e:
+            print(f"    -> Error cleaning up cache: {e}")
+            # Don't fail if cleanup fails - it's not critical
+
+    # =================================================================================
     # MAIN PROCESSING METHODS
     # =================================================================================
     
@@ -277,8 +394,20 @@ class CurationEngine:
                 existing_main_category_data[sub_cat] = curated_events_for_subcategory
                 timeline_doc_ref.set(existing_main_category_data)
                 print(f"    -> Successfully updated timeline for [{main_cat}] > [{sub_cat}]")
+                
+                # 7. Add to recent-updates cache for fast querying
+                try:
+                    self.add_to_recent_updates_cache(
+                        event_data=event_json,
+                        main_category=main_cat,
+                        subcategory=sub_cat,
+                        source_id=source_id
+                    )
+                except Exception as e:
+                    print(f"    -> Warning: Failed to add to cache: {e}")
+                    # Don't fail the update if caching fails
 
-            # 7. CRITICAL: Mark the entire article as processed after all its events are handled
+            # 8. CRITICAL: Mark the entire article as processed after all its events are handled
             article_ref = self.db.collection('selected-figures').document(self.figure_id).collection('article-summaries').document(source_id)
             article_ref.update({"is_processed_for_timeline": True})
             print(f"  -> Finished processing article {source_id} and marked as processed.")
