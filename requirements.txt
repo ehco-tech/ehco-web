@@ -1,8 +1,10 @@
 pandas
 typing-extensions
 aiohttp
+sendgrid
 
 # Firebase and Google Cloud
+packaging
 firebase-admin>=6.2.0
 google-cloud-firestore>=2.11.0
 
