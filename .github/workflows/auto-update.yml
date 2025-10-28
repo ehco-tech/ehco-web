@@ -2,7 +2,7 @@ name: Auto update
 
 on:
   schedule:
-    - cron: '31 9 * * 1-5'
+    # - cron: '31 9 * * 1-5'
   workflow_dispatch:  # Allows manual triggers
 
 jobs:
