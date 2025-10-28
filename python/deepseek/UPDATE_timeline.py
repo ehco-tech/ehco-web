@@ -7,9 +7,6 @@ from typing import Union, Optional, Dict, Any, List
 
 from notification_service import notify_timeline_update
 
-# Import UpdateTracker singleton
-from update_tracker import UpdateTracker
-
 # --- CONFIGURATION ---
 # TARGET_FIGURE_ID is now handled by the argument parser
 CURATED_TIMELINE_COLLECTION = "curated-timeline"
@@ -23,8 +20,6 @@ class CurationEngine:
         self.db = self.news_manager.db
         self.ai_client = self.news_manager.client
         self.ai_model = self.news_manager.model
-        # Get singleton instance of UpdateTracker with our db instance
-        self.update_tracker = UpdateTracker.get_instance(db=self.db)
         print(f"✓ CurationEngine initialized for figure: {self.figure_id}")
 
     # =================================================================================
@@ -262,23 +257,6 @@ class CurationEngine:
 
                 # Add to our tracking list for notifications
                 newly_added_events.append(event_for_tracking)
-                
-                # Create a timeline update record using UpdateTracker
-                try:
-                    event_title = event_json.get('event_title', 'Timeline Event')
-                    event_summary = event_json.get('event_summary', 'New event added to timeline')
-                    
-                    update_id = self.update_tracker.add_timeline_update(
-                        figure_id=self.figure_id,
-                        event_title=event_title,
-                        event_description=event_summary,
-                        event_date=date,
-                        source=article_data.get('source', None),
-                        source_url=article_data.get('url', None)
-                    )
-                    print(f"    -> Created timeline update record: {update_id}")
-                except Exception as e:
-                    print(f"    -> Error creating timeline update record: {e}")
 
                 # Apply the AI's decision to our collection
                 if action == "CREATE_NEW":

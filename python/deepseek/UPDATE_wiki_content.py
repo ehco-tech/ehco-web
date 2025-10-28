@@ -6,14 +6,9 @@ from firebase_admin import firestore
 import argparse
 import sys
 
-# Import UpdateTracker singleton
-from update_tracker import UpdateTracker
-
 class PublicFigureWikiUpdater:
     def __init__(self):
         self.news_manager = NewsManager()
-        # Get singleton instance of UpdateTracker with our db instance
-        self.update_tracker = UpdateTracker.get_instance(db=self.news_manager.db)
         # The field to check for unprocessed summaries
         self.processing_flag_field = "is_processed_for_timeline"
 
@@ -161,14 +156,6 @@ class PublicFigureWikiUpdater:
                             "doc_id": doc_id
                         }
                         updated_sections.append(section_info)
-                        
-                        # Create an update in the updates collection
-                        update_id = self.update_tracker.add_wiki_update(
-                            figure_id=figure_id,
-                            section_title=section_info["title"],
-                            update_summary=section_info["summary"]
-                        )
-                        print(f"  - Created wiki update record: {update_id}")
                     else:
                         print(f"  - No significant changes needed for existing wiki document: '{doc_id}'")
                 else:
@@ -195,14 +182,6 @@ class PublicFigureWikiUpdater:
                             "doc_id": doc_id
                         }
                         updated_sections.append(section_info)
-                        
-                        # Create an update in the updates collection
-                        update_id = self.update_tracker.add_wiki_update(
-                            figure_id=figure_id,
-                            section_title=section_info["title"],
-                            update_summary=section_info["summary"]
-                        )
-                        print(f"  - Created wiki update record for new section: {update_id}")
                     else:
                         print(f"  - Failed to generate content for new wiki document: '{doc_id}'")
 

@@ -5,14 +5,9 @@ import re
 import argparse # Import argparse for command-line arguments
 from firebase_admin import firestore
 
-# Import UpdateTracker singleton
-from update_tracker import UpdateTracker
-
 class PublicFigureSummaryCategorizer:
     def __init__(self):
         self.news_manager = NewsManager()
-        # Get singleton instance of UpdateTracker with our db instance
-        self.update_tracker = UpdateTracker.get_instance(db=self.news_manager.db)
         self.categories = {
             "Creative Works": ["Music", "Film & TV", "Publications & Art", "Awards & Honors"],
             "Live & Broadcast": ["Concerts & Tours", "Fan Events", "Broadcast Appearances"],
@@ -119,20 +114,6 @@ class PublicFigureSummaryCategorizer:
                         "subcategory": categories_result["subcategory"]
                     }
                     figure_articles.append(article_data)
-                    
-                    # Create an update record for significant articles
-                    try:
-                        print(f"  Adding news update for article: {article_data['title']}")
-                        update_id = self.update_tracker.add_news_update(
-                            figure_id=public_figure_id,
-                            headline=article_data["title"],
-                            summary=article_data["summary"],
-                            source=article_data["source"],
-                            source_url=article_data["url"]
-                        )
-                        print(f"  News update added with ID: {update_id}")
-                    except Exception as e:
-                        print(f"  Error adding news update: {e}")
                     
                     print(f"  Successfully updated summary {summary_id} with categories and marked as processed.")
                     total_summaries_categorized += 1

@@ -29,18 +29,12 @@ from compact_overview import CompactOverview
 from compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
 from related_figures import RelatedFiguresUpdater
 
-# --- Import the singleton UpdateTracker ---
-from update_tracker import UpdateTracker
-
-
-# The orchestrator class with UpdateTracker integration
+# The orchestrator class
 class MasterUpdater:
     def __init__(self):
         logger.info("Initializing MasterUpdater")
         self.news_manager = NewsManager()
         self.db = self.news_manager.db
-        # Get the singleton instance of UpdateTracker
-        self.update_tracker = UpdateTracker.get_instance(db=self.db)
         logger.info("MasterUpdater initialized successfully")
 
     async def get_all_figure_ids(self) -> List[str]:
@@ -136,22 +130,6 @@ class MasterUpdater:
         logger.info("STEP 6 of 6: Updating related figures count")
         # The 'related_updater' was created outside and passed in for efficiency
         related_result = related_updater.update_for_figure(figure_id)
-
-        # Create a general update for the entire process completion
-        try:
-            logger.info("Adding final system update for process completion")
-            update_id = self.update_tracker.add_update(
-                figure_id=figure_id,
-                update_type='system',
-                title='Profile Fully Updated',
-                description=f'Complete refresh of {figure_id} profile with latest information',
-                additional_data={'update_steps': 6}
-            )
-            logger.info(f"System update added with ID: {update_id}")
-        except Exception as e:
-            logger.error(f"Error adding system update: {e}")
-            import traceback
-            traceback.print_exc()
 
         logger.info(f"FULL UPDATE COMPLETE FOR: {figure_id.upper()}")
 
