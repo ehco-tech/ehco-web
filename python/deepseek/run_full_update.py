@@ -118,8 +118,8 @@ class MasterUpdater:
 
         # STEP 4: Run the document compactor (better code/content organization)
         logger.info("STEP 4 of 6: Running document compactor")
-        compactor = CompactOverview(figure_id=figure_id)
-        compaction_result = await compactor.compact_overview()
+        compactor = CompactOverview()
+        compaction_result = await compactor.compact_figure_overview(figure_id=figure_id)
         
         # STEP 5: Run the timeline compactor
         logger.info("STEP 5 of 6: Running timeline compactor")
