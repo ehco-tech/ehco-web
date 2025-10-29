@@ -45,6 +45,10 @@ jobs:
     - name: Run master updater script
       run: python python/deepseek/run_full_update.py
 
+    - name: Update article counter
+      run: python python/deepseek/UPDATE_article_counter.py
+      continue-on-error: true
+
     - name: Compact recent update descriptions
       run: python python/deepseek/compact_recent_updates.py --recent 100
       continue-on-error: true
