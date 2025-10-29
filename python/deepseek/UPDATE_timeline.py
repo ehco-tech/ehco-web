@@ -162,11 +162,12 @@ class CurationEngine:
         main_category: str,
         subcategory: str,
         source_id: str,
-        action: str  # NEW: 'CREATE_NEW' or 'UPDATE_EXISTING'
+        action: str  # 'CREATE_NEW' or 'UPDATE_EXISTING'
     ) -> None:
         """
-        Adds or updates a timeline event in the recent-updates cache collection.
-        This cache stores the most recent events across all figures for fast querying.
+        Adds timeline points to the recent-updates cache collection.
+        Creates ONE cache entry PER timeline point (not per event group).
+        Each entry shows the specific update but includes event group info for navigation.
         
         Args:
             event_data: The complete event JSON object
@@ -184,69 +185,110 @@ class CurationEngine:
             
             figure_data = figure_doc.to_dict()
             
-            # Get the most recent date from timeline_points (first point is most recent)
+            # Get timeline points
             timeline_points = event_data.get('timeline_points', [])
             if not timeline_points or len(timeline_points) == 0:
                 print(f"    -> Warning: No timeline points found for event, skipping cache")
                 return
             
-            most_recent_date = timeline_points[0].get('date')
-            if not most_recent_date:
-                print(f"    -> Warning: No date found in first timeline point, skipping cache")
-                return
-            
-            # Extract all source IDs from all timeline points
-            all_source_ids = []
-            for point in timeline_points:
-                all_source_ids.extend(point.get('sourceIds', []))
-            
-            # Use the most recent source ID (last in the list)
-            most_recent_source_id = all_source_ids[-1] if all_source_ids else source_id
-            
             event_title = event_data.get('event_title', '')
+            event_summary = event_data.get('event_summary', '')
             
-            # Check if this event already exists in cache
-            # We identify by: figureId + eventTitle + mainCategory + subcategory
+            from firebase_admin import firestore
             cache_ref = self.db.collection('recent-updates')
-            existing_query = cache_ref.where('figureId', '==', self.figure_id) \
+            
+            # Helper function to extract publish date from sourceId
+            def extract_publish_date(source_id: str) -> str:
+                """
+                Extracts publish date from sourceId format like 'AEN20250418...'
+                Returns YYYY-MM-DD format for easy sorting and display.
+                """
+                try:
+                    # Find the date pattern YYYYMMDD (8 digits after initial letters)
+                    import re
+                    match = re.search(r'(\d{8})', source_id)
+                    if match:
+                        date_str = match.group(1)
+                        # Convert YYYYMMDD to YYYY-MM-DD
+                        year = date_str[0:4]
+                        month = date_str[4:6]
+                        day = date_str[6:8]
+                        return f"{year}-{month}-{day}"
+                except Exception as e:
+                    print(f"    -> Warning: Could not extract date from sourceId {source_id}: {e}")
+                
+                # Fallback to current date if extraction fails
+                from datetime import datetime
+                return datetime.now().strftime('%Y-%m-%d')
+            
+            # Create ONE cache entry for EACH timeline point
+            for point in timeline_points:
+                point_date = point.get('date')
+                point_description = point.get('description', '')
+                point_source_ids = point.get('sourceIds', [])
+                
+                if not point_date or not point_description:
+                    continue
+                
+                # Get the most recent source ID for this point
+                most_recent_source_id = point_source_ids[-1] if point_source_ids else source_id
+                
+                # Extract publish date from sourceId for sorting
+                publish_date = extract_publish_date(most_recent_source_id)
+                
+                # Check if THIS SPECIFIC POINT already exists in cache
+                # Identity: figureId + eventTitle + pointDate + pointDescription
+                existing_query = cache_ref.where('figureId', '==', self.figure_id) \
                                        .where('eventTitle', '==', event_title) \
-                                       .where('mainCategory', '==', main_category) \
-                                       .where('subcategory', '==', subcategory) \
+                                       .where('eventPointDate', '==', point_date) \
+                                       .where('eventPointDescription', '==', point_description) \
                                        .limit(1) \
                                        .stream()
+                
+                existing_docs = list(existing_query)
+                
+                # Create cache document for THIS specific timeline point
+                cache_doc = {
+                    # === FIGURE INFO (for display) ===
+                    'figureId': self.figure_id,
+                    'figureName': figure_data.get('name', ''),
+                    'figureProfilePic': figure_data.get('profilePic', ''),
+                    
+                    # === EVENT GROUP INFO (for navigation) ===
+                    'eventTitle': event_title,
+                    'eventSummary': event_summary,
+                    'mainCategory': main_category,
+                    'subcategory': subcategory,
+                    'eventYears': event_data.get('event_years', []),
+                    
+                    # === SPECIFIC TIMELINE POINT (the actual update - PRIMARY FOCUS) ===
+                    'eventPointDate': point_date,
+                    'eventPointDescription': point_description,
+                    'eventPointSourceIds': point_source_ids,
+                    
+                    # === PUBLISH DATE (for sorting by recency) ===
+                    'publishDate': publish_date,  # YYYY-MM-DD format from sourceId
+                    'mostRecentSourceId': most_recent_source_id,
+                    
+                    # === ALL TIMELINE POINTS (for navigation to full event) ===
+                    'allTimelinePoints': timeline_points,
+                    
+                    # === METADATA ===
+                    'lastUpdated': firestore.SERVER_TIMESTAMP
+                }
+                
+                if existing_docs:
+                    # UPDATE existing point entry
+                    existing_doc = existing_docs[0]
+                    existing_doc.reference.update(cache_doc)
+                    print(f"    -> ✓ Updated cache point ({publish_date}): {point_description[:50]}...")
+                else:
+                    # CREATE new point entry
+                    cache_doc['createdAt'] = firestore.SERVER_TIMESTAMP
+                    cache_ref.add(cache_doc)
+                    print(f"    -> ✓ Added cache point ({publish_date}): {point_description[:50]}...")
             
-            existing_docs = list(existing_query)
-            
-            # Create cache document structure
-            from firebase_admin import firestore
-            cache_doc = {
-                'figureId': self.figure_id,
-                'figureName': figure_data.get('name', ''),
-                'figureProfilePic': figure_data.get('profilePic', ''),
-                'eventTitle': event_title,
-                'eventSummary': event_data.get('event_summary', ''),
-                'mainCategory': main_category,
-                'subcategory': subcategory,
-                'eventDate': most_recent_date,
-                'timelinePoints': timeline_points,
-                'eventYears': event_data.get('event_years', []),
-                'mostRecentSourceId': most_recent_source_id,
-                'lastUpdated': firestore.SERVER_TIMESTAMP
-            }
-            
-            if existing_docs:
-                # UPDATE existing cache entry
-                existing_doc = existing_docs[0]
-                existing_doc.reference.update(cache_doc)
-                print(f"    -> ✓ Updated recent-updates cache: {event_title}")
-            else:
-                # CREATE new cache entry
-                cache_doc['createdAt'] = firestore.SERVER_TIMESTAMP
-                self.db.collection('recent-updates').add(cache_doc)
-                print(f"    -> ✓ Added to recent-updates cache: {event_title}")
-            
-            # Keep cache size manageable (only run occasionally to save operations)
-            # Run cleanup every ~10th update
+            # Keep cache size manageable (only run occasionally)
             import random
             if random.random() < 0.1:  # 10% chance
                 self._cleanup_recent_updates_cache()
@@ -261,11 +303,11 @@ class CurationEngine:
         Deletes entries beyond the 200 most recent to keep queries fast.
         """
         try:
-            # Query all cache documents, sorted by date (newest first)
+            # Query all cache documents, sorted by publishDate (newest first)
             cache_ref = self.db.collection('recent-updates')
             
-            # Get all documents ordered by date
-            all_docs = list(cache_ref.order_by('eventDate', direction='DESCENDING').stream())
+            # Get all documents ordered by publishDate
+            all_docs = list(cache_ref.order_by('publishDate', direction='DESCENDING').stream())
             
             # If more than 200, delete the oldest
             if len(all_docs) > 200:
