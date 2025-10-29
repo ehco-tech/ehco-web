@@ -1,8 +1,8 @@
 name: Auto update
 
 on:
-  # schedule:
-  #   - cron: '31 9 * * 1-5'
+  schedule:
+    - cron: '31 9 * * 1-5'
   workflow_dispatch:  # Allows manual triggers
 
 jobs:
@@ -44,6 +44,10 @@ jobs:
         
     - name: Run master updater script
       run: python python/deepseek/run_full_update.py
+
+    - name: Compact recent update descriptions
+      run: python python/deepseek/compact_recent_updates.py --recent 100
+      continue-on-error: true
 
     - name: Process newsletter queue
       run: python python/deepseek/newsletter_service.py --action process
