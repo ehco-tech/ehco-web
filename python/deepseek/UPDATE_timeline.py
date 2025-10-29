@@ -151,6 +151,30 @@ class CurationEngine:
                 except (ValueError, IndexError): pass
         event['event_years'] = sorted(list(years), reverse=True)
         return event
+    
+    # =================================================================================
+    # STATS COUNTER METHODS
+    # =================================================================================
+    
+    def increment_facts_counter(self, count: int = 1) -> None:
+        """
+        Increments the totalFacts counter in the stats/counters document.
+        
+        Args:
+            count: Number to increment by (default: 1)
+        """
+        try:
+            from firebase_admin import firestore
+            
+            stats_ref = self.db.collection('stats').document('counters')
+            stats_ref.update({
+                'totalFacts': firestore.Increment(count),
+                'lastUpdated': firestore.SERVER_TIMESTAMP
+            })
+            print(f"    -> ✓ Incremented totalFacts counter by {count}")
+        except Exception as e:
+            print(f"    -> Warning: Failed to increment stats counter: {e}")
+            # Don't fail the entire update if counter increment fails
 
     # =================================================================================
     # RECENT UPDATES CACHE METHODS
@@ -461,6 +485,12 @@ class CurationEngine:
                 existing_main_category_data[sub_cat] = curated_events_for_subcategory
                 timeline_doc_ref.set(existing_main_category_data)
                 print(f"    -> Successfully updated timeline for [{main_cat}] > [{sub_cat}]")
+                
+                # 6.5. Increment the totalFacts counter (only for CREATE_NEW)
+                try:
+                    self.increment_facts_counter(1)
+                except Exception as e:
+                    print(f"    -> Warning: Failed to increment counter: {e}")
                 
                 # 7. Add to recent-updates cache for fast querying
                 try:
