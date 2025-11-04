@@ -1,7 +1,7 @@
 # python/deepseek/newsletter_service.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
 from setup_firebase_deepseek import NewsManager
 import os
@@ -50,8 +50,8 @@ class NewsletterService:
                     batch_data = batch_doc.to_dict()
                     scheduled_time = batch_data.get('scheduledFor')
                     
-                    # Check if it's time to send
-                    if scheduled_time and datetime.now() >= scheduled_time:
+                    # Check if it's time to send - use UTC timezone-aware datetime
+                    if scheduled_time and datetime.now(timezone.utc) >= scheduled_time:
                         await self._process_single_batch(batch_doc.id, batch_data)
         
         except Exception as e:
@@ -92,7 +92,7 @@ class NewsletterService:
             # Update batch status
             await asyncio.to_thread(batch_ref.update, {
                 'status': 'sent' if failed_sends == 0 else 'partial',
-                'processedAt': datetime.now(),
+                'processedAt': datetime.now(timezone.utc),
                 'stats': {
                     'successful_sends': successful_sends,
                     'failed_sends': failed_sends
@@ -468,10 +468,10 @@ class NewsletterService:
             
             # Create batch document
             batch_data = {
-                'scheduledFor': datetime.now(),  # Send immediately
+                'scheduledFor': datetime.now(timezone.utc),  # Send immediately
                 'status': 'pending',
                 'userUpdates': {},
-                'createdAt': datetime.now(),
+                'createdAt': datetime.now(timezone.utc),
                 'type': 'daily'
             }
             
