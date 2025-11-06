@@ -5,17 +5,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'http',
-        hostname: '*.yna.co.kr',
+        hostname: '**.yna.co.kr',
       },
       // Consolidated with wildcard
       {
         protocol: 'https',
-        hostname: '*.yna.co.kr',
+        hostname: '**.yna.co.kr',
       },
       // Consolidated with wildcard
       {
         protocol: 'https',
-        hostname: '*.redd.it',
+        hostname: '**.redd.it',
       },
       // Unique hostnames
       {
