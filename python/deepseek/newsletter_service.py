@@ -212,6 +212,14 @@ class NewsletterService:
                         padding: 30px;
                         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
                     }}
+                    .logo {{
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }}
+                    .logo img {{
+                        height: 40px;
+                        width: auto;
+                    }}
                     .header {{
                         text-align: center;
                         border-bottom: 2px solid #f0f0f0;
@@ -225,7 +233,7 @@ class NewsletterService:
                     }}
                     .summary {{
                         background: #e8f4fd;
-                        padding: 15px;
+                        padding: 20px;
                         border-radius: 8px;
                         margin-bottom: 30px;
                         text-align: center;
@@ -238,22 +246,29 @@ class NewsletterService:
                     }}
                     .figure-header {{
                         background: #f8f9fa;
-                        padding: 15px;
+                        padding: 20px;
                         border-bottom: 1px solid #e1e8ed;
                         display: flex;
                         align-items: center;
-                        gap: 12px;
+                        gap: 15px;
                     }}
                     .figure-avatar {{
-                        width: 40px;
-                        height: 40px;
+                        width: 60px;
+                        height: 60px;
                         border-radius: 50%;
                         background: #ddd;
+                        object-fit: cover;
+                        flex-shrink: 0;
+                    }}
+                    .figure-info {{
+                        flex: 1;
+                        min-width: 0;
                     }}
                     .figure-name {{
                         font-weight: 600;
                         color: #1a1a1a;
                         font-size: 18px;
+                        margin-bottom: 4px;
                     }}
                     .event-count {{
                         color: #657786;
@@ -312,13 +327,16 @@ class NewsletterService:
             </head>
             <body>
                 <div class="container">
+                    <div class="logo">
+                        <img src="{self.base_url}/ehco_logo-02.png" alt="EHCO Logo" />
+                    </div>
                     <div class="header">
                         <h1>🌟 Your Favorites Update</h1>
                     </div>
                     
                     <div class="summary">
-                        <p><strong>Hi {user_prefs['name']}!</strong></p>
-                        <p>You have <strong>{total_events} new updates</strong> from <strong>{figure_count} of your favorite figures</strong>.</p>
+                        <p><strong>Hi there!</strong></p>
+                        <p>You have <strong>{total_events} new update{'s' if total_events != 1 else ''}</strong> from <strong>{figure_count} of your favorite figure{'s' if figure_count != 1 else ''}</strong>.</p>
                     </div>
             """
             
@@ -328,15 +346,24 @@ class NewsletterService:
                 events = update['events']
                 figure_id = update['figureId']
                 
+                # Get figure image URL (you may need to adjust this based on how you store profile pics)
+                figure_image_url = update.get('figureImageUrl', '')
+                
                 # Limit to top 3 events for email brevity
                 display_events = events[:3]
                 remaining_count = len(events) - len(display_events)
                 
+                # Build avatar HTML - use image if available, otherwise fallback to colored circle
+                if figure_image_url:
+                    avatar_html = f'<img src="{figure_image_url}" class="figure-avatar" alt="{figure_name}" />'
+                else:
+                    avatar_html = '<div class="figure-avatar"></div>'
+                
                 html_content += f"""
                     <div class="figure-update">
                         <div class="figure-header">
-                            <div class="figure-avatar"></div>
-                            <div>
+                            {avatar_html}
+                            <div class="figure-info">
                                 <div class="figure-name">{figure_name}</div>
                                 <div class="event-count">{len(events)} new event{'s' if len(events) != 1 else ''}</div>
                             </div>
@@ -381,15 +408,17 @@ class NewsletterService:
             # Add footer
             unsubscribe_url = f"{self.base_url}/profile/notifications"
             preferences_url = f"{self.base_url}/profile/notifications"
+            home_url = self.base_url
             
             html_content += f"""
                     <div class="footer">
-                        <p>Stay updated with your favorite public figures!</p>
+                        <p>Stay updated with your favorite public figures on EHCO!</p>
                         <p>
+                            <a href="{home_url}" class="unsubscribe">Visit EHCO</a> | 
                             <a href="{preferences_url}" class="unsubscribe">Manage Preferences</a> | 
                             <a href="{unsubscribe_url}" class="unsubscribe">Unsubscribe</a>
                         </p>
-                        <p style="margin-top: 20px; font-size: 12px;">
+                        <p style="margin-top: 20px; font-size: 12px; color: #9ca3af;">
                             This email was sent because you have these figures in your favorites list.
                         </p>
                     </div>
@@ -513,13 +542,20 @@ class NewsletterService:
             for figure_id in favorite_figures:
                 figure_updates = await self._get_figure_updates_for_date(figure_id, target_date)
                 if figure_updates:
-                    # Get figure name
+                    # Get figure name and image
                     figure_doc = self.db.collection('selected-figures').document(figure_id).get()
-                    figure_name = figure_doc.to_dict().get('name', figure_id) if figure_doc.exists else figure_id
+                    if figure_doc.exists:
+                        figure_data = figure_doc.to_dict()
+                        figure_name = figure_data.get('name', figure_id)
+                        figure_image_url = figure_data.get('profilePictureUrl', '')
+                    else:
+                        figure_name = figure_id
+                        figure_image_url = ''
                     
                     user_updates.append({
                         'figureId': figure_id,
                         'figureName': figure_name,
+                        'figureImageUrl': figure_image_url,
                         'events': figure_updates
                     })
             
