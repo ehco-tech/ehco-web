@@ -588,6 +588,8 @@ class CurationEngine:
                     if action == "CREATE_NEW":
                         curated_events_for_subcategory.append(self._add_event_years(event_json))
                         print(f"    Action: CREATE_NEW ✓")
+                        # For new events, save the entire event to recent updates
+                        event_for_recent_updates = event_json
                     elif action == "UPDATE_EXISTING":
                         target_title = ai_decision.get("target_event_title")
                         found_and_updated = False
@@ -600,6 +602,13 @@ class CurationEngine:
                         if not found_and_updated:
                             curated_events_for_subcategory.append(self._add_event_years(event_json))
                         print(f"    Action: UPDATE_EXISTING ✓")
+                        # For updated events, only save the new timeline point to recent updates
+                        # Find the new point (it should be from new_event_point which has 1 timeline point)
+                        event_for_recent_updates = {
+                            'event_title': event_json['event_title'],
+                            'event_summary': event_json['event_summary'],
+                            'timeline_points': [new_event_point['timeline_points'][0]]  # Only the new point
+                        }
                     
                     # Save to Firestore
                     existing_main_category_data[sub_cat] = curated_events_for_subcategory
@@ -610,7 +619,7 @@ class CurationEngine:
                     
                     # Add to cache
                     self.add_to_recent_updates_cache(
-                        event_data=event_json,
+                        event_data=event_for_recent_updates,
                         main_category=main_cat,
                         subcategory=sub_cat,
                         source_id=source_ids[0] if source_ids else '',
