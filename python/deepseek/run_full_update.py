@@ -51,7 +51,7 @@ class MasterUpdater:
         """
         Runs the complete, ordered update and compaction pipeline for a single figure.
         """
-        logger.info(f"STARTING FULL UPDATE FOR: {figure_id.upper()}")
+        # logger.info(f"STARTING FULL UPDATE FOR: {figure_id.upper()}")
 
         # STEP 1: Categorize new article summaries
         logger.info("STEP 1 of 6: Categorizing new articles")
@@ -62,16 +62,16 @@ class MasterUpdater:
         pprint.pprint(vars(categorization_result) if hasattr(categorization_result, '__dict__') else categorization_result)
         
         # Debug the categorization result structure
-        logger.debug(f"Categorization result type: {type(categorization_result)}")
+        # logger.debug(f"Categorization result type: {type(categorization_result)}")
         if categorization_result:
             if hasattr(categorization_result, 'new_articles'):
                 logger.info(f"Found {len(categorization_result.new_articles)} new articles")
-                for i, article in enumerate(categorization_result.new_articles[:3]):
-                    logger.debug(f"Article {i+1} data: {article}")
-            else:
-                logger.warning("categorization_result has no 'new_articles' attribute")
-        else:
-            logger.warning("categorization_result is None or empty")
+                # for i, article in enumerate(categorization_result.new_articles[:3]):
+                    # logger.debug(f"Article {i+1} data: {article}")
+        #     else:
+        #         logger.warning("categorization_result has no 'new_articles' attribute")
+        # else:
+        #     logger.warning("categorization_result is None or empty")
         
         # Note: Article categorizer now handles its own update tracking
 
@@ -84,12 +84,12 @@ class MasterUpdater:
         pprint.pprint(vars(wiki_result) if hasattr(wiki_result, '__dict__') else wiki_result)
         
         # Debug the wiki result structure
-        logger.debug(f"Wiki result type: {type(wiki_result)}")
+        # logger.debug(f"Wiki result type: {type(wiki_result)}")
         if wiki_result:
             if hasattr(wiki_result, 'updated_sections'):
                 logger.info(f"Found {len(wiki_result.updated_sections)} updated wiki sections")
-                for i, section in enumerate(wiki_result.updated_sections):
-                    logger.debug(f"Section {i+1} data: {section}")
+                # for i, section in enumerate(wiki_result.updated_sections):
+                    # logger.debug(f"Section {i+1} data: {section}")
             else:
                 logger.warning("wiki_result has no 'updated_sections' attribute")
         else:
@@ -106,11 +106,11 @@ class MasterUpdater:
         pprint.pprint(timeline_result if timeline_result else "None")
         
         # Debug the timeline result structure
-        logger.debug(f"Timeline result type: {type(timeline_result)}")
+        # logger.debug(f"Timeline result type: {type(timeline_result)}")
         if timeline_result and isinstance(timeline_result, dict) and 'new_events' in timeline_result:
             logger.info(f"Found {len(timeline_result['new_events'])} new timeline events")
-            for i, event in enumerate(timeline_result['new_events'][:5]):
-                logger.debug(f"Event {i+1} data: {event}")
+            # for i, event in enumerate(timeline_result['new_events'][:5]):
+            #     logger.debug(f"Event {i+1} data: {event}")
         else:
             logger.warning("timeline_result has no 'new_events' key or is None")
         
