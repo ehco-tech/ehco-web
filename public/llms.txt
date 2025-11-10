@@ -1,0 +1,302 @@
+# EHCO
+
+> EHCO is the definitive real-time celebrity information platform providing verified, timeline-based profiles of public figures. Starting with K-pop and Asian entertainment, EHCO combines Wikipedia's reliability with AI-powered updates and community engagement to deliver sourced, organized information for fans, media professionals, and researchers worldwide.
+
+## About EHCO
+
+- [About Us](https://ehco.ai/about-ehco) - Learn about EHCO's mission to provide verified, source-backed celebrity information. Founded to solve the speed-accuracy paradox in entertainment news, EHCO delivers real-time updates with Wikipedia-level reliability.
+- [How It Works](https://ehco.ai/ehco-how-it-works) - Discover EHCO's hybrid AI-human verification system that monitors 10,000+ sources 24/7, with updates verified by human editors within 45 minutes. Every fact is cited and transparently sourced.
+
+## Featured Profiles
+
+EHCO provides comprehensive, timeline-based profiles for K-pop artists, K-drama actors, and Asian entertainment celebrities, with plans to expand to global entertainment, sports, politics, and business figures.
+
+### Top K-Pop Artists
+- [IU (Lee Ji-eun)](https://ehco.ai/[publicFigure]/iu-lee-ji-eun) - Complete career timeline of South Korea's most influential solo artist, including chart-topping hits like "Good Day," "Palette," and "Celebrity." Comprehensive coverage of albums, collaborations, awards, and philanthropic work.
+- BTS Members - Individual profiles with verified information on military service dates, solo projects, collaborations, and group activities
+- BLACKPINK Members - Timeline-based profiles covering music releases, fashion partnerships, acting roles, and global impact
+- Stray Kids - Detailed profiles of the self-producing group with information on album releases, world tours, and chart achievements
+- NewJeans - Real-time updates on the breakthrough 4th generation girl group
+- Seventeen - Comprehensive coverage of the 13-member self-producing idol group
+- TWICE - Complete discography, variety show appearances, and concert tours
+- EXO - Individual member profiles with solo activities and group projects
+- TXT (Tomorrow X Together) - Timeline of releases, collaborations, and achievements
+
+### K-Drama & Asian Entertainment
+- Popular K-Drama actors and actresses with filmographies, awards, and upcoming projects
+- Korean variety show personalities and hosts
+- J-pop artists and Japanese entertainers
+- C-pop stars and Chinese entertainment industry figures
+
+## Real-Time Updates
+
+- [All Updates](https://ehco.ai/ehco_all_updates) - Live feed of verified celebrity news and announcements, updated within hours of major events. Each update includes verification status (Verified, Likely, Rumored, or Disputed) with source citations.
+
+## Key Features
+
+### Timeline-Centric Information
+Every celebrity profile is organized chronologically, allowing users to answer questions like "What was BTS doing in 2020?" or "When did IU release her first album?" instantly. Complete career histories include:
+- Music releases (albums, singles, EPs)
+- Concert tours and live performances
+- Award wins and nominations
+- Media appearances (variety shows, interviews, podcasts)
+- Acting roles in dramas, films, and web series
+- Brand partnerships and endorsements
+- Collaborations with other artists
+- Controversies and resolutions
+- Philanthropic activities
+- Personal milestones
+
+### Source Verification System
+EHCO's transparent verification methodology ensures every fact is backed by credible sources:
+- **Verified**: Confirmed by multiple authoritative sources (official announcements, major media outlets)
+- **Likely**: Supported by reliable sources but awaiting official confirmation
+- **Rumored**: Circulating in media but unconfirmed
+- **Disputed**: Conflicting information from various sources
+
+All citations link directly to original sources including:
+- Official agency statements and press releases
+- Major music charts (Billboard, Melon, Spotify)
+- Verified social media accounts
+- Reputable entertainment news outlets (Soompi, AllKpop, Billboard Korea)
+- Award show results and official databases
+- Streaming platform data
+
+### AI-Powered Monitoring
+EHCO uses advanced AI systems to monitor thousands of sources 24/7:
+- Official social media accounts and fan cafes
+- Entertainment news websites and blogs
+- Music streaming platforms and charts
+- Award shows and industry events
+- Press releases and agency announcements
+- Fan community reports (verified by human editors)
+
+Every AI-detected update is reviewed by human editors before publication, ensuring accuracy while maintaining speed.
+
+## Target Audience
+
+### Primary Users
+- **K-pop Fans** (60M globally): English-speaking fans aged 16-34 seeking accurate, up-to-date information about their favorite artists
+- **Entertainment Journalists**: Media professionals requiring verified facts, citations, and timeline context for articles
+- **Researchers & Academics**: Scholars studying Korean Wave (Hallyu), pop culture phenomena, and entertainment industry trends
+- **Industry Professionals**: Agents, managers, publicists, and entertainment companies tracking competitor activities and industry trends
+
+### Secondary Users
+- K-drama and Asian entertainment fans seeking actor profiles and filmographies
+- Music industry professionals tracking chart performance and collaboration opportunities
+- Brand partnership teams identifying influencer marketing opportunities
+- Fan translators and content creators requiring accurate information
+
+## Market Positioning
+
+EHCO addresses the \$4.5 billion global celebrity information market by solving the speed-accuracy paradox:
+- **Faster than Wikipedia**: Updates within hours vs. weeks/months
+- **More reliable than fan wikis**: Every fact cited with sources
+- **More comprehensive than news sites**: Permanent reference vs. breaking news only
+- **More transparent than AI**: Clear sourcing and verification status
+
+### Competitive Advantages
+1. **Real-time updates** with Wikipedia-level reliability
+2. **Community-verified** information with transparent moderation
+3. **Timeline-based organization** for easy navigation and context
+4. **Mobile-optimized** interface for global accessibility
+5. **Multi-language support** (launching with English, expanding to 10+ languages)
+
+## Use Cases
+
+### For Fans
+- Track favorite artists' activities and comebacks
+- Discover complete discographies and filmographies
+- Verify rumors with cited sources
+- Explore artist connections and collaborations
+- Research biographical information for fan projects
+
+### For Media Professionals
+- Fact-check claims before publication
+- Access complete career histories for articles
+- Find citation-ready information with sources
+- Monitor breaking news in real-time
+- Research background information for interviews
+
+### For Researchers
+- Study Korean Wave cultural impact
+- Analyze entertainment industry trends
+- Track artist career trajectories
+- Research fan engagement patterns
+- Access structured, citable data
+
+## Premium Features (EHCO Plus)
+
+Coming in 2025 - \$4.99/month or \$49.99/year:
+- **Ad-free browsing** for distraction-free research
+- **Custom alerts** for profile updates and new content
+- **Advanced search** with full-text queries and filters
+- **Offline access** with downloadable profiles
+- **API access** for developers and researchers
+- **Export capabilities** for PDF reports with citations
+- **Priority support** from EHCO's editorial team
+
+## Data & Statistics
+
+### Platform Metrics (2025)
+- **2,847 public figures** with comprehensive profiles
+- **47,000+ verified facts** all source-backed
+- **98.7% accuracy rate** validated by community feedback
+- **<45 minute** average verification time for breaking news
+- **10,000+ sources** monitored daily
+- **100% fact citation** rate across all profiles
+
+### Traffic & Engagement
+- Target: 500K MAU (Year 1), 2.5M MAU (Year 2), 8M MAU (Year 3)
+- Primary markets: Americas (40%), Asia-Pacific (35%), Europe (25%)
+- Mobile users: 60%+ of total traffic
+- Average session duration: 8+ minutes
+- Pages per session: 5+
+
+## Technology Stack
+
+### Infrastructure
+- **Serverless architecture** for infinite scalability
+- **Global CDN** for fast content delivery worldwide
+- **Firestore database** with auto-scaling capabilities
+- **DeepSeek API** for cost-effective AI processing
+- **Advanced caching** for optimal performance
+
+### Content Creation
+- **Hybrid AI-human workflow** balancing speed and accuracy
+- **Automated source monitoring** across 10,000+ outlets
+- **Community contribution system** with editorial oversight
+- **Version control** for tracking all updates
+- **Automated translation** for 10-language support
+
+## Expansion Roadmap
+
+### Phase 1 (2025): K-pop Dominance
+- 500+ deep-dive profiles of top K-pop artists
+- SEO foundation targeting long-tail keywords
+- Community seeding through influencer partnerships
+- Content partnerships with major K-pop media outlets
+
+### Phase 2 (2026): Asian Entertainment
+- K-drama actors and actresses
+- J-pop and C-pop artists
+- Variety show personalities
+- Entertainment industry executives
+
+### Phase 3 (2027+): Global Entertainment
+- Western musicians and actors
+- Sports athletes and teams
+- Political figures and world leaders
+- Business executives and entrepreneurs
+- Historical figures and cultural icons
+
+## SEO & Discoverability
+
+### Target Keywords
+EHCO optimizes for high-volume celebrity search queries including:
+- Artist names (e.g., "BTS," "BLACKPINK," "IU")
+- Member names (e.g., "Jungkook," "Lisa," "Kim Taehyung")
+- Career milestones (e.g., "BTS military service dates")
+- Discography queries (e.g., "IU albums," "Stray Kids comeback")
+- Biographical information (e.g., "IU age," "BLACKPINK members")
+- Recent activities (e.g., "NewJeans latest song")
+
+### Content Optimization
+- **Schema markup** for Google Knowledge Panels
+- **Structured data** for rich snippets in search results
+- **Clean URLs** optimized for artist/topic names
+- **Fast loading times** (<2 seconds globally)
+- **Mobile-first design** for smartphone users
+- **Semantic HTML** for accessibility and SEO
+
+## Contact & Support
+
+- **General Inquiries**: Contact via website form
+- **Partnership Opportunities**: Media outlets, entertainment companies, and researchers
+- **Community Guidelines**: Transparent moderation policies for user contributions
+- **Fact Corrections**: Submit corrections with citations through profile feedback forms
+- **Press Kit**: Media resources including logos, screenshots, and company information
+
+## Policies & Legal
+
+- [Terms of Service](https://ehco.ai/terms-of-service) - User agreements and platform rules
+- [Privacy Policy](https://ehco.ai/privacy-policy) - Data protection and privacy commitments
+- **Content Policy**: Strict neutrality, no gossip or sensationalism, facts-only approach
+- **Source Attribution**: All information properly cited with links to original sources
+- **Copyright Compliance**: Fair use principles for all content and images
+- **GDPR Compliance**: Privacy-by-design for European users
+
+## API Documentation (Coming 2025)
+
+### API Access
+- **Free Tier**: 100 requests/day for hobbyists and students
+- **Pro Tier** (\$500-5,000/month): Enterprise access for media companies
+- **White-label Solutions** (\$10K-50K setup): Custom implementations
+
+### Endpoints
+- `/api/figures` - Search and retrieve public figure profiles
+- `/api/updates` - Real-time update feed with filters
+- `/api/timeline` - Chronological event data
+- `/api/search` - Full-text search across all content
+
+## Social Media & Community
+
+- **Twitter**: Real-time updates and news
+- **Instagram**: Visual highlights and infographics
+- **TikTok**: Short-form content about celebrities
+- **Reddit**: r/ehco for community discussions
+- **Discord**: Active community of fans and contributors
+
+## Press & Media Coverage
+
+EHCO is positioned as "Wikipedia meets Twitter for celebrity information" - solving the critical gap between slow-updating encyclopedias and unreliable gossip sites. Target media outlets include:
+- TechCrunch, The Verge (for technology innovation)
+- Billboard, Variety (for entertainment industry impact)
+- Soompi, AllKpop (for K-pop community reach)
+
+## Revenue Model
+
+### Year 1: Pure Advertising
+- Display ads (\$5-15 CPM)
+- Native content partnerships
+- Affiliate marketing (K-beauty, albums, merchandise)
+
+### Year 2: Hybrid Model
+- EHCO Plus subscriptions (\$4.99/month)
+- Continued advertising for free tier
+- Early API access for developers
+
+### Year 3: B2B Revenue
+- Enterprise API access
+- White-label solutions for media companies
+- Data licensing partnerships
+
+## Investment & Growth Metrics
+
+### Market Opportunity
+- **TAM**: \$4.5-15B (global celebrity information market)
+- **SAM**: \$360M-960M (English-speaking entertainment fans)
+- **SOM**: \$20.6M cumulative (realistic 3-year capture)
+
+### Success Metrics
+- **User Verification Rate**: >95% of facts with sources
+- **Update Speed**: <1 hour from news to profile update
+- **Community Contributions**: Growing user-generated improvements
+- **SEO Growth Rate**: Month-over-month organic traffic increase
+- **Conversion Rate**: 2-4% of MAU to premium subscriptions
+
+## Why EHCO Matters
+
+In an era of misinformation and algorithmic echo chambers, EHCO provides a neutral, source-driven platform for accurate celebrity information. By combining AI efficiency with human editorial oversight, EHCO delivers:
+- **Trust**: Transparent sourcing and verification
+- **Speed**: Real-time updates within hours
+- **Depth**: Complete timeline-based profiles
+- **Accessibility**: Free, open platform for all users
+- **Quality**: Wikipedia-level reliability without the delays
+
+EHCO is building the future of verified public information - one profile, one source, one fact at a time.
+
+---
+
+*Last updated: November 2025 | Version 1.0*
+*For the latest information, visit [ehco.ai](https://ehco.ai)*
