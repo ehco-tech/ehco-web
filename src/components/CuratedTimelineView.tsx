@@ -1,17 +1,16 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { CheckSquare, ChevronDown, ChevronUp, Square } from 'lucide-react';
+import React, { useMemo, useState, useRef, useEffect } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import {
     Article,
     CuratedEvent,
     CuratedTimelineData,
     TimelinePoint
 } from '@/types/definitions';
-import MainCategorySummary from './MainCategorySummary';
 import ScrapButton from './ScrapButton';
 import ReportButton from './ReportButton';
+import HighlightedText from './HighlightedText';
 
 // --- TYPE DEFINITIONS ---
 interface EventSourcesProps {
@@ -23,6 +22,7 @@ interface TimelinePointWithSourcesProps {
     point: TimelinePoint;
     isLast: boolean;
     articlesMap: Map<string, Article>;
+    searchQuery: string;
 }
 
 interface CuratedTimelineViewProps {
@@ -31,17 +31,13 @@ interface CuratedTimelineViewProps {
     figureId: string;
     figureName: string;
     figureNameKr: string;
+    activeMainCategory: string;
+    activeSubCategory: string;
+    activeYear: string | null;
+    searchQuery?: string; // NEW: Search query for better empty states
 }
 
 // --- CONSTANTS ---
-const ORDERED_MAIN_CATEGORIES = [
-    'Creative Works',
-    'Live & Broadcast',
-    'Public Relations',
-    'Personal Milestones',
-    'Incidents & Controversies'
-];
-
 const ORDERED_SUB_CATEGORIES: { [key: string]: string[] } = {
     "Creative Works": ["Music", "Film & TV", "Publications & Art", "Awards & Honors"],
     "Live & Broadcast": ["Concerts & Tours", "Fan Events", "Broadcast Appearances"],
@@ -49,7 +45,6 @@ const ORDERED_SUB_CATEGORIES: { [key: string]: string[] } = {
     "Personal Milestones": ["Relationships & Family", "Health & Service", "Education & Growth"],
     "Incidents & Controversies": ["Legal & Scandal", "Accidents & Emergencies", "Public Backlash"]
 };
-
 
 // --- HELPER FUNCTIONS ---
 const formatTimelineDate = (dateStr: string): string => {
@@ -76,9 +71,9 @@ const sortTimelinePoints = (points: TimelinePoint[]): TimelinePoint[] => {
         const aDateIsValid = a.date && typeof a.date === 'string';
         const bDateIsValid = b.date && typeof b.date === 'string';
 
-        if (!aDateIsValid && !bDateIsValid) return 0; // Both are invalid, treat as equal
-        if (!aDateIsValid) return 1;  // 'a' is invalid, so it goes last
-        if (!bDateIsValid) return -1; // 'b' is invalid, so it goes last
+        if (!aDateIsValid && !bDateIsValid) return 0;
+        if (!aDateIsValid) return 1;
+        if (!bDateIsValid) return -1;
 
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
@@ -93,134 +88,49 @@ const sortTimelinePoints = (points: TimelinePoint[]): TimelinePoint[] => {
 
 const formatCategoryForURL = (name: string) => name.toLowerCase().replace(/ & /g, '-and-').replace(/[ &]/g, '-');
 
-const getCategoryFromSlug = (slug: string | null): string => {
-    if (!slug) return '';
-    return ORDERED_MAIN_CATEGORIES.find(cat => formatCategoryForURL(cat) === slug) || '';
-};
-
-const getSubCategoryFromSlug = (slug: string | null, mainCategory: string): string => {
-    if (!slug || !mainCategory || !ORDERED_SUB_CATEGORIES[mainCategory]) return '';
-    const subCategories = ORDERED_SUB_CATEGORIES[mainCategory];
-    return subCategories.find(subCat => formatCategoryForURL(subCat) === slug) || '';
-};
-
-// Helper to create URL-safe IDs from titles
 const slugify = (text: string) =>
     text
         .toLowerCase()
-        .replace(/\s+/g, '-') // Replace spaces with -
-        .replace(/[^\w-]+/g, ''); // Remove all non-word chars
+        .replace(/\s+/g, '-')
+        .replace(/[^\w-]+/g, '');
+
+// Sort events by their most recent timeline point date (most recent first)
+const sortEventsByMostRecentDate = (events: CuratedEvent[]): CuratedEvent[] => {
+    return [...events].sort((a, b) => {
+        // Get the most recent date from each event's timeline points
+        const getLatestDate = (event: CuratedEvent): Date => {
+            const validDates = event.timeline_points
+                .filter(point => point.date)
+                .map(point => {
+                    const parts = point.date.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parts.length > 1 ? parseInt(parts[1]) - 1 : 0;
+                    const day = parts.length > 2 ? parseInt(parts[2]) : 1;
+                    return new Date(year, month, day);
+                });
+            
+            // If no valid dates, return a very old date (so it goes to the end)
+            if (validDates.length === 0) return new Date(0);
+            
+            // Return the most recent date
+            return new Date(Math.max(...validDates.map(d => d.getTime())));
+        };
+
+        const dateA = getLatestDate(a);
+        const dateB = getLatestDate(b);
+
+        // Sort descending (most recent first)
+        return dateB.getTime() - dateA.getTime();
+    });
+};
 
 // --- CHILD COMPONENTS ---
-
-// Year filter
-const YearFilter: React.FC<{
-    years: number[];
-    selectedYears: number[];
-    onToggleYear: (year: number) => void;
-    onSelectAll: () => void;
-}> = ({ years, selectedYears, onToggleYear, onSelectAll }) => {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
-
-    // Handle click outside to close the dropdown
-    useEffect(() => {
-        function handleClickOutside(event: MouseEvent) {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        }
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, [dropdownRef]);
-
-    const buttonText = selectedYears.length === 0
-        ? 'All Years'
-        : `${selectedYears.length} year${selectedYears.length > 1 ? 's' : ''} selected`;
-
-    return (
-        <div className='relative p-4 border-b border-gray-200' ref={dropdownRef}>
-            <label className="font-semibold text-sm mb-2 block text-gray-800">Filter by Year</label>
-            <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="w-full p-2 text-black border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-key-color focus:border-key-color transition-colors flex justify-between items-center"
-            >
-                <span>{buttonText}</span>
-                <ChevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {isOpen && (
-                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                    <ul className="py-1">
-                        <li
-                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                            onClick={onSelectAll}
-                        >
-                            {selectedYears.length === 0 ? (
-                                <CheckSquare className="mr-2 h-5 w-5 text-key-color" />
-                            ) : (
-                                <Square className="mr-2 h-5 w-5 text-gray-400" />
-                            )}
-                            <span className="text-gray-800">All Years</span>
-                        </li>
-                        {years.map(year => (
-                            <li
-                                key={year}
-                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
-                                onClick={() => onToggleYear(year)}
-                            >
-                                {selectedYears.includes(year) ? (
-                                    <CheckSquare className="mr-2 h-5 w-5 text-key-color" />
-                                ) : (
-                                    <Square className="mr-2 h-5 w-5 text-gray-400" />
-                                )}
-                                <span className="text-gray-800">{year}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </div>
-    );
-};
-
-// Navigation component for events in the current view
-const EventNavigator: React.FC<{ eventList: CuratedEvent[], onNavigate: (id: string) => void }> = ({ eventList, onNavigate }) => {
-    if (!eventList || eventList.length === 0) {
-        return <div className="p-3 text-center text-xs text-gray-500">No events in this section.</div>;
-    }
-
-    return (
-        <div className="w-full">
-            <h3 className="font-semibold text-sm p-3 text-gray-800 border-b border-gray-200">On This Page</h3>
-            <nav>
-                <ul className="py-2 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
-                    {eventList.map((event, index) => (
-                        <li key={`nav-${index}-${event.event_title}`}>
-                            <button
-                                onClick={() => onNavigate(slugify(event.event_title))}
-                                className="w-full text-left text-sm px-3 py-2.5 text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors duration-200 rounded-md"
-                            >
-                                {event.event_title}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </nav>
-        </div>
-    );
-};
-
-
 const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) => {
-    // --- ADD THESE CONSOLE.LOGS ---
-    console.log('--- Debugging EventSources Component ---');
-    console.log('Received articleIds:', articleIds);
-    
     const mappedArticles = articleIds.map(id => articlesMap.get(id));
-    console.log('Result after mapping IDs to articlesMap:', mappedArticles);
-    
+    // console.log('Result after mapping IDs to articlesMap:', mappedArticles);
+
     const relevantArticles = mappedArticles.filter(Boolean) as Article[];
-    console.log('Final relevantArticles after filtering out undefined:', relevantArticles);
+    // console.log('Final relevantArticles after filtering out undefined:', relevantArticles);
     // --- END OF LOGS ---
     // const relevantArticles = articleIds
     //     .map(id => articlesMap.get(id))
@@ -230,6 +140,7 @@ const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) 
         if (!b.sendDate) return -1;
         return b.sendDate.localeCompare(a.sendDate);
     });
+
     const formatArticleDate = (dateString: string | undefined): string => {
         if (!dateString || dateString.length !== 8) return dateString || '';
         try {
@@ -239,20 +150,22 @@ const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) 
             return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
         } catch (error) { console.error("Could not parse date:", dateString, error); return dateString; }
     };
+
     if (relevantArticles.length === 0) return null;
+
     return (
-        <div className="mt-3 pt-3 border-t border-gray-200/80 "><div className="grid grid-cols-1 gap-4">
+        <div className="mt-3 pt-3 border-t border-gray-200/80 dark:border-gray-700/80"><div className="grid grid-cols-1 gap-4">
             {relevantArticles.map(article => (
-                <a key={article.id} href={article.link} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 border rounded-lg hover:bg-gray-50/80 transition-all duration-200 shadow-sm">
-                    {article.imageUrls?.[0] && (<img src={article.imageUrls[0]} alt={article.subTitle || 'Source image'} className="w-full h-32 sm:w-20 sm:h-20 object-cover rounded-md flex-shrink-0 bg-gray-100" />)}
+                <a key={article.id} href={article.link} target="_blank" rel="noopener noreferrer" className="flex flex-col sm:flex-row sm:items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50/80 dark:hover:bg-gray-700/80 transition-all duration-200 shadow-sm">
+                    {article.imageUrls?.[0] && (<img src={article.imageUrls[0]} alt={article.subTitle || 'Source image'} className="w-full h-32 sm:w-20 sm:h-20 object-cover rounded-md flex-shrink-0 bg-gray-100 dark:bg-gray-700" />)}
                     <div className="flex flex-col">
-                        <h6 className="font-semibold text-sm text-blue-700 hover:underline leading-tight">{article.subTitle || article.title || 'Source Article'}</h6>
-                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500">
+                        <h6 className="font-semibold text-sm text-blue-700 dark:text-blue-400 hover:underline leading-tight">{article.subTitle || article.title || 'Source Article'}</h6>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-500 dark:text-gray-400">
                             {article.source && <span>{article.source}</span>}
                             {article.source && article.sendDate && <span>&middot;</span>}
                             {article.sendDate && <time dateTime={article.sendDate}>{formatArticleDate(article.sendDate)}</time>}
                         </div>
-                        {article.body && (() => { const parts = article.body.split(' -- '), mainContent = (parts.length > 1 ? parts[1] : parts[0]).trim(); return <p className="text-xs text-gray-600 mt-2 leading-relaxed">{mainContent.substring(0, 120)}...</p>; })()}
+                        {article.body && (() => { const parts = article.body.split(' -- '), mainContent = (parts.length > 1 ? parts[1] : parts[0]).trim(); return <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 leading-relaxed">{mainContent.substring(0, 120)}...</p>; })()}
                     </div>
                 </a>
             ))}
@@ -260,380 +173,166 @@ const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) 
     );
 };
 
-// NEW CODE
-const TimelinePointWithSources: React.FC<TimelinePointWithSourcesProps> = ({ point, isLast, articlesMap }) => {
-    const [isSourcesVisible, setIsSourcesVisible] = useState(false);
+const TimelinePointWithSources: React.FC<TimelinePointWithSourcesProps> = ({ point, articlesMap, isLast, searchQuery }) => {
+    const [showSources, setShowSources] = useState(false);
+    const sortedPoints = sortTimelinePoints([point]);
+    const sortedPoint = sortedPoints[0];
 
-    // Fix: Check for both sourceIds and sources array
-    const sourceIds = point.sourceIds || (point.sources?.map((source: { id?: string }) => source.id).filter((id): id is string => Boolean(id))) || [];
-    const hasSources = sourceIds.length > 0;
-    const toggleSources = () => {
-        // --- ADD THIS CONSOLE.LOG ---
-        // console.log('--- Debugging Timeline Point ---');
-        // console.log('Raw timeline point:', point);
-        // console.log('Extracted sourceIds:', sourceIds);
-        // console.log('Does articlesMap have these IDs?');
-        // sourceIds.forEach(id => {
-        //     console.log(`  - ID: ${id}, Exists in map:`, articlesMap.has(id));
-        // });
-        // --- END OF LOG ---
-        setIsSourcesVisible(prev => !prev)
-    };
+    // Check if there are any sources to show
+    const hasSourcesCount = (sortedPoint.sourceIds || [])
+        .filter(id => articlesMap.get(id))
+        .length;
+
     return (
-        <div className="relative pb-4">
-            <div className="absolute w-3 h-3 bg-red-500 rounded-full left-[-20px] top-1 border-2 border-white"></div>
-            {!isLast && <div className="absolute w-px h-full bg-gray-200 left-[-14px] top-4"></div>}
-            <p className="text-sm font-medium text-gray-500">{formatTimelineDate(point.date)}</p>
-            <div className="flex justify-between items-start gap-4">
-                <p className="text-base text-gray-700">{point.description.replaceAll("*", "'")}</p>
-                {hasSources && (<button onClick={toggleSources} className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors flex-shrink-0" aria-label="Toggle sources">{isSourcesVisible ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</button>)}
+        <div className={`relative ${!isLast ? 'pb-6' : ''}`}>
+            {!isLast && <div className="absolute left-1 top-3 h-full w-0.5 bg-gray-200 dark:bg-[#1d1d1f]"></div>}
+            <div className="flex items-start gap-3">
+                <div className="relative z-10 mt-1">
+                    <div className="w-2 h-2 bg-key-color dark:bg-key-color-dark rounded-full"></div>
+                </div>
+                <div className="flex-1">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white mb-1">
+                        {formatTimelineDate(sortedPoint.date)}
+                    </div>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                        <HighlightedText
+                            text={sortedPoint.description.replaceAll("*", "'")}
+                            searchQuery={searchQuery || ''}
+                        />
+                    </p>
+
+                    {/* Toggle button for sources */}
+                    {hasSourcesCount > 0 && (
+                        <button
+                            onClick={() => setShowSources(!showSources)}
+                            className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium mb-2 transition-colors"
+                        >
+                            {showSources ? (
+                                <>
+                                    <ChevronUp size={14} />
+                                    Hide sources ({hasSourcesCount})
+                                </>
+                            ) : (
+                                <>
+                                    <ChevronDown size={14} />
+                                    View sources ({hasSourcesCount})
+                                </>
+                            )}
+                        </button>
+                    )}
+
+
+                    {/* Conditionally render EventSources */}
+                    {showSources && <EventSources articleIds={sortedPoint.sourceIds || []} articlesMap={articlesMap} />}
+                </div>
             </div>
-            {isSourcesVisible && hasSources && (
-                <EventSources articlesMap={articlesMap} articleIds={sourceIds} />
-            )}
         </div>
     );
 };
 
-
 // --- MAIN COMPONENT ---
-const CuratedTimelineView: React.FC<CuratedTimelineViewProps> = ({ data, articles, figureId, figureName, figureNameKr }) => {
-    // console.log("Data received by CuratedTimelineView:", data);
-
-    const router = useRouter();
-    const pathname = usePathname();
-    const searchParams = useSearchParams();
-
-    const processedData: CuratedTimelineData = useMemo(() => {
-        const dataCopy: CuratedTimelineData = JSON.parse(JSON.stringify(data));
-        // CHANGED: Logic now iterates through the new structure
-        for (const mainCategory in dataCopy) {
-            // Now we look inside the subCategories property
-            for (const subCategory in dataCopy[mainCategory].subCategories) {
-                const eventList = dataCopy[mainCategory].subCategories[subCategory];
-                eventList.forEach((event) => {
-                    event.timeline_points = sortTimelinePoints(event.timeline_points);
-                });
-            }
-        }
-        return dataCopy;
-    }, [data]);
-
+const CuratedTimelineView: React.FC<CuratedTimelineViewProps> = ({
+    data,
+    articles,
+    figureId,
+    figureName,
+    figureNameKr,
+    activeMainCategory,
+    activeSubCategory,
+    searchQuery = '' // NEW: From parent
+}) => {
+    // Articles map for quick lookup
     const articlesMap = useMemo(() => {
-        return new Map<string, Article>(articles.map(article => [article.id, article]));
+        const map = new Map<string, Article>();
+        articles.forEach((article) => map.set(article.id, article));
+        return map;
     }, [articles]);
 
-    const mainCategories = useMemo(() => {
-        const availableCategories = Object.keys(data);
-        return ORDERED_MAIN_CATEGORIES.filter(c => availableCategories.includes(c));
-    }, [data]);
-
-    const urlActiveCategory = useMemo(() => {
-        const catFromUrl = getCategoryFromSlug(searchParams.get('category'));
-        return mainCategories.includes(catFromUrl) ? catFromUrl : mainCategories[0] || '';
-    }, [searchParams, mainCategories]);
-
-    const urlActiveSubCategory = useMemo(() => {
-        return getSubCategoryFromSlug(searchParams.get('subCategory'), urlActiveCategory);
-    }, [searchParams, urlActiveCategory]);
-
-    const [localActiveCategory, setLocalActiveCategory] = useState(urlActiveCategory);
-    const [localActiveSubCategory, setLocalActiveSubCategory] = useState(urlActiveSubCategory);
-
-    const [selectedYears, setSelectedYears] = useState<number[]>([]);
-
+    // State for mobile accordion
     const [openEvents, setOpenEvents] = useState<string[]>([]);
 
+    // Track previous main category to detect changes (for mobile state cleanup if needed)
+    const prevMainCategoryRef = useRef<string>(activeMainCategory);
+
+    // Reset mobile accordion when main category changes significantly
     useEffect(() => {
-        setLocalActiveCategory(urlActiveCategory);
-        setLocalActiveSubCategory(urlActiveSubCategory);
-    }, [urlActiveCategory, urlActiveSubCategory]);
-
-    // Handle URL hash navigation and highlighting
-    useEffect(() => {
-        const hash = window.location.hash.slice(1); // Remove the # symbol
-        if (!hash) return;
-
-        // Find which category and subcategory contains the event with this hash
-        let foundCategory = '';
-        let foundSubCategory = '';
-        let targetEventTitle = '';
-
-        // Search through all data to find the event
-        for (const [mainCat, mainCatData] of Object.entries(processedData)) {
-            if (mainCatData?.subCategories) {
-                for (const [subCat, events] of Object.entries(mainCatData.subCategories)) {
-                    const foundEvent = events.find(event => slugify(event.event_title) === hash);
-                    if (foundEvent) {
-                        foundCategory = mainCat;
-                        foundSubCategory = subCat;
-                        targetEventTitle = foundEvent.event_title;
-                        break;
-                    }
-                }
-            }
-            if (foundCategory) break;
+        if (prevMainCategoryRef.current !== activeMainCategory) {
+            setOpenEvents([]);
+            prevMainCategoryRef.current = activeMainCategory;
         }
+    }, [activeMainCategory]);
 
-        if (foundCategory && foundSubCategory) {
-            // Set the category and subcategory to make the event visible
-            setLocalActiveCategory(foundCategory);
-            setLocalActiveSubCategory(foundSubCategory);
-            setOpenCategories([foundCategory]); // For mobile view
-
-            // Open the specific event in mobile view
-            setOpenEvents(prev => [...prev, hash]);
-
-            // Scroll to the element after a short delay to ensure it's rendered
-            setTimeout(() => {
-                const element = document.getElementById(hash);
-                const header = document.getElementById('timeline-sticky-header');
-
-                if (element) {
-                    // Default scroll for mobile where the header isn't sticky
-                    if (!header || getComputedStyle(header).display === 'none') {
-                        element.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center',
-                        });
-                    } else {
-                        // Custom scroll for desktop to account for the sticky header
-                        const MAIN_HEADER_HEIGHT = 64; // Height from Header.tsx (h-16 class)
-                        const PADDING_TOP = 24; // Your adjustable vertical offset/padding (in pixels)
-
-                        const timelineHeaderHeight = header.offsetHeight;
-                        const elementPosition = element.getBoundingClientRect().top;
-
-                        const offsetPosition = elementPosition + window.pageYOffset - MAIN_HEADER_HEIGHT - timelineHeaderHeight - PADDING_TOP;
-
-                        window.scrollTo({
-                            top: offsetPosition,
-                            behavior: 'smooth'
-                        });
-                    }
-
-                    // Highlight effect remains the same
-                    element.classList.add('ring-2', 'ring-blue-500', 'ring-opacity-50', 'transition-shadow', 'duration-300');
-                    setTimeout(() => {
-                        element.classList.remove('ring-2', 'ring-blue-500', 'ring-opacity-50');
-                    }, 3000);
-                }
-            }, 300); // 300ms delay allows the UI to update
-        }
-    }, [processedData]); // Run when processedData is available
-
-    const [openCategories, setOpenCategories] = useState<string[]>([localActiveCategory]);
-
-    const getAvailableSubCategories = useCallback((category: string) => {
-        // CHANGED: Now looks inside the .subCategories object
-        if (!category || !processedData[category] || !processedData[category].subCategories) return [];
-        const subCategoryKeys = Object.keys(processedData[category].subCategories);
-        const ordered = ORDERED_SUB_CATEGORIES[category] || [];
-        return ordered.filter(sc => subCategoryKeys.includes(sc));
-    }, [processedData]);
-
-    const availableYears = useMemo(() => {
-        const yearSet = new Set<number>();
-        // CHANGED: Iterates one level deeper to get to events
-        Object.values(processedData).forEach(mainCatData => {
-            if (mainCatData && mainCatData.subCategories) {
-                Object.values(mainCatData.subCategories).forEach(events => {
-                    events.forEach(event => {
-                        event.event_years?.forEach(year => yearSet.add(year));
-                    });
-                });
-            }
-        });
-        return Array.from(yearSet).sort((a, b) => b - a);
-    }, [processedData]);
-
-    const handleSelectCategory = useCallback((category: string, subCategory?: string) => {
-        setLocalActiveCategory(category);
-        if (subCategory) {
-            setLocalActiveSubCategory(subCategory);
-        } else {
-            const availableSubCats = getAvailableSubCategories(category);
-            setLocalActiveSubCategory(availableSubCats[0] || '');
-        }
-
-        const params = new URLSearchParams(searchParams.toString());
-        params.set('category', formatCategoryForURL(category));
-        if (subCategory) {
-            params.set('subCategory', formatCategoryForURL(subCategory));
-        } else {
-            const availableSubCats = getAvailableSubCategories(category);
-            if (availableSubCats.length > 0) {
-                params.set('subCategory', formatCategoryForURL(availableSubCats[0]));
-            } else {
-                params.delete('subCategory');
-            }
-        }
-        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-
-    }, [pathname, router, searchParams, getAvailableSubCategories]);
-
-    const handleToggleYear = (year: number) => {
-        setSelectedYears(prev =>
-            prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+    // Handle mobile event toggle
+    const handleToggleEvent = (eventTitle: string) => {
+        const eventId = slugify(eventTitle);
+        setOpenEvents(prev =>
+            prev.includes(eventId)
+                ? prev.filter(id => id !== eventId)
+                : [...prev, eventId]
         );
     };
 
-    const handleSelectAllYears = () => {
-        setSelectedYears([]);
-    };
-
-    useEffect(() => {
-        const availableSubCategories = getAvailableSubCategories(localActiveCategory);
-        const currentSubCategoryIsValid = availableSubCategories.includes(localActiveSubCategory);
-        if (localActiveCategory && !currentSubCategoryIsValid && availableSubCategories.length > 0) {
-            handleSelectCategory(localActiveCategory, availableSubCategories[0]);
-        }
-    }, [localActiveCategory, localActiveSubCategory, getAvailableSubCategories, handleSelectCategory]);
-
-
-    // const handleToggleCategory = (category: string) => {
-    //     if (!openCategories.includes(category)) {
-    //         handleSelectCategory(category);
-    //     }
-    //     setOpenCategories(prevOpen => {
-    //         const isOpen = prevOpen.includes(category);
-    //         return isOpen ? prevOpen.filter(c => c !== category) : [...prevOpen, category];
-    //     });
-    // };
-
-    const handleToggleCategory = (category: string) => {
-        const isCurrentlyOpen = openCategories.includes(category);
-
-        if (isCurrentlyOpen) {
-            // Close this category
-            setOpenCategories([]);
-            setLocalActiveCategory('');
-            setLocalActiveSubCategory('');
-        } else {
-            // Open this category and close all others
-            setOpenCategories([category]);
-            handleSelectCategory(category);
-        }
-    };
-
-    const handleToggleEvent = useCallback((eventTitle: string) => {
-        const eventId = slugify(eventTitle); // Use the same slugify helper
-        setOpenEvents(prevOpen => {
-            const isOpen = prevOpen.includes(eventId);
-            return isOpen ? prevOpen.filter(id => id !== eventId) : [...prevOpen, eventId];
-        });
-    }, []);
-
+    // Get content to display based on active category and subcategory
     const displayedContent = useMemo(() => {
-        // CHANGED: Accesses data through the new .subCategories path
-        if (!localActiveCategory || !localActiveSubCategory || !processedData[localActiveCategory]?.subCategories?.[localActiveSubCategory]) {
-            return null;
+        if (!data || !data[activeMainCategory]) return null;
+
+        const categoryData = data[activeMainCategory];
+
+        // If "All Events" is selected, show all subcategories within this main category
+        if (activeSubCategory === 'All Events') {
+            return categoryData.subCategories;
         }
 
-        let events = processedData[localActiveCategory].subCategories[localActiveSubCategory];
-
-        if (selectedYears.length > 0) {
-            events = events.filter(event =>
-                event.event_years?.some(year => selectedYears.includes(year))
-            );
+        // Otherwise, show the specific subcategory
+        if (activeSubCategory && categoryData.subCategories[activeSubCategory]) {
+            return {
+                [activeSubCategory]: categoryData.subCategories[activeSubCategory]
+            };
         }
 
-        return { [localActiveSubCategory]: events };
-    }, [localActiveCategory, localActiveSubCategory, processedData, selectedYears]);
+        return null;
+    }, [data, activeMainCategory, activeSubCategory]);
 
-    // Memoize the list of events for the navigator
-    const eventListForNavigator = useMemo(() => {
-        if (!localActiveCategory || !localActiveSubCategory || !processedData[localActiveCategory]?.subCategories?.[localActiveSubCategory]) {
-            return [];
-        }
+    const hasContent = displayedContent && Object.keys(displayedContent).length > 0;
 
-        let events = processedData[localActiveCategory].subCategories[localActiveSubCategory];
-
-        if (selectedYears.length > 0) {
-            events = events.filter(event =>
-                event.event_years?.some(year => selectedYears.includes(year))
-            );
-        }
-
-        return events;
-    }, [localActiveCategory, localActiveSubCategory, processedData, selectedYears]);
-
-    // Handler for smooth scrolling
-    const handleEventNavigation = (id: string) => {
-        // Update URL hash without triggering a page reload
-        history.replaceState(null, '', `#${id}`);
-
-        const element = document.getElementById(id);
-        element?.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start',
-        });
-    };
+    // Get available subcategories for current main category (for internal logic if needed)
+    const availableSubCategories = useMemo(() => {
+        if (!data[activeMainCategory]) return ['All Events'];
+        const categoryData = data[activeMainCategory];
+        const orderedSubs = ORDERED_SUB_CATEGORIES[activeMainCategory] || [];
+        return ['All Events', ...orderedSubs.filter(subCat =>
+            categoryData.subCategories[subCat] &&
+            categoryData.subCategories[subCat].length > 0
+        )];
+    }, [data, activeMainCategory]);
 
     return (
-        <div className="w-full max-w-[100vw] flex flex-row justify-start">
-            {/* ================================================================== */}
-            {/* --- Sticky Left Navigation ---                                     */}
-            {/* ================================================================== */}
-            <div className='hidden sm:flex w-[25%] max-w-xs flex-col'>
-                <div className="sticky top-16 self-start w-full h-screen overflow-y-auto border-r border-gray-200 bg-white">
-                    <YearFilter
-                        years={availableYears}
-                        selectedYears={selectedYears}
-                        onToggleYear={handleToggleYear}
-                        onSelectAll={handleSelectAllYears}
-                    />
-                    <div className='p-2'>
-                        <EventNavigator eventList={eventListForNavigator} onNavigate={handleEventNavigation} />
-                    </div>
-                </div>
-            </div>
+        <div className="w-full">
+            {/* Timeline Events */}
+            {displayedContent && Object.keys(displayedContent).length > 0 ? (
+                <div className="space-y-8">
+                    {Object.entries(displayedContent).map(([subCategoryKey, events]) => (
+                        <div key={subCategoryKey}>
+                            {/* Show subcategory header when "All Events" is selected */}
+                            {activeSubCategory === 'All Events' && (
+                                <h3 className="text-lg font-bold text-gray-800 dark:text-gray-200 mb-4">{subCategoryKey}</h3>
+                            )}
 
-            <div className='w-full sm:w-[75%] px-2 sm:px-8'>
-
-                {/* ================================================================== */}
-                {/* --- DESKTOP VIEW (sm screens and up) ---                           */}
-                {/* ================================================================== */}
-                <div className="hidden sm:block">
-                    <div id="timeline-sticky-header" className="w-full mt-3 mb-6 sticky top-16 z-10 bg-white/80 backdrop-blur-sm">
-                        <div className="flex flex-row flex-wrap gap-x-2 gap-y-1 pb-2 border-b border-gray-200">
-                            {mainCategories.map(category => (
-                                <button key={category} onClick={() => handleSelectCategory(category)} className={`px-4 py-2 whitespace-nowrap font-medium text-sm transition-colors ${localActiveCategory === category ? 'text-red-500 border-b-2 border-red-500' : 'text-gray-500 hover:text-gray-800'}`}>
-                                    {category}
-                                </button>
-                            ))}
-                        </div>
-
-                        {/* ========================================================= */}
-                        {/* ADDED: Main Category Description is placed here           */}
-                        {/* ========================================================= */}
-                        {localActiveCategory && processedData[localActiveCategory] && (
-                            <MainCategorySummary content={processedData[localActiveCategory].description} />
-                        )}
-
-                        {getAvailableSubCategories(localActiveCategory).length > 0 && (
-                            <div className="flex flex-row overflow-x-auto space-x-2 py-2 hide-scrollbar border-b border-gray-200">
-                                {getAvailableSubCategories(localActiveCategory).map(subCategory => (
-                                    <button key={subCategory} onClick={() => handleSelectCategory(localActiveCategory, subCategory)} className={`px-3 py-1.5 whitespace-nowrap text-xs font-medium rounded-full transition-colors ${localActiveSubCategory === subCategory ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                                        {subCategory}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-                    <div className="pb-12">
-                        {displayedContent && Object.entries(displayedContent).map(([subCategory, eventList]) => (
-                            <div key={subCategory} className="space-y-8">
-                                {eventList.map((event, eventIndex) => (
-                                    <div id={slugify(event.event_title)} key={`${localActiveCategory}-${localActiveSubCategory}-${eventIndex}`} className="p-4 border rounded-lg shadow-sm bg-white relative">
-                                        {/* Action buttons positioned at top-right */}
+                            {/* Desktop View */}
+                            <div className="hidden sm:block space-y-6">
+                                {sortEventsByMostRecentDate(events).map((event, eventIndex) => (
+                                    <div
+                                        key={`${subCategoryKey}-${eventIndex}`}
+                                        className="bg-white dark:bg-[#1d1d1f] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
+                                    >
+                                        {/* Action Buttons */}
                                         <div className="absolute top-4 right-4 flex gap-1">
                                             <ReportButton
                                                 figureId={figureId}
                                                 figureName={figureName}
                                                 figureNameKr={figureNameKr}
-                                                mainCategory={localActiveCategory}
-                                                subcategory={localActiveSubCategory}
+                                                mainCategory={activeMainCategory}
+                                                subcategory={subCategoryKey}
                                                 eventGroupIndex={eventIndex}
                                                 eventGroup={event}
                                                 size="sm"
@@ -642,122 +341,123 @@ const CuratedTimelineView: React.FC<CuratedTimelineViewProps> = ({ data, article
                                                 figureId={figureId}
                                                 figureName={figureName}
                                                 figureNameKr={figureNameKr}
-                                                mainCategory={localActiveCategory}
-                                                subcategory={localActiveSubCategory}
+                                                mainCategory={activeMainCategory}
+                                                subcategory={subCategoryKey}
                                                 eventGroupIndex={eventIndex}
                                                 eventGroup={event}
                                                 size="sm"
                                             />
                                         </div>
-                                        <h4 className="font-semibold text-lg text-gray-900 pr-16">{event.event_title}</h4>
-                                        <p className="text-sm text-gray-600 italic mt-1 mb-3">{event.event_summary.replaceAll("*", "'")}</p>
+
+                                        <h4 className="font-semibold text-lg text-gray-900 dark:text-white pr-16 mb-2">
+                                            <HighlightedText text={event.event_title} searchQuery={searchQuery || ''} />
+                                        </h4>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-4">
+                                            <HighlightedText
+                                                text={event.event_summary.replaceAll("*", "'")}
+                                                searchQuery={searchQuery || ''}
+                                            />
+                                        </p>
+
                                         <div className="relative pl-5">
-                                            {event.timeline_points.map((point, index) => (<TimelinePointWithSources key={index} point={point} articlesMap={articlesMap} isLast={index === event.timeline_points.length - 1} />))}
+                                            {event.timeline_points.map((point, index) => (
+                                                <TimelinePointWithSources
+                                                    key={index}
+                                                    point={point}
+                                                    articlesMap={articlesMap}
+                                                    isLast={index === event.timeline_points.length - 1}
+                                                    searchQuery={searchQuery}
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        ))}
-                        {!displayedContent && localActiveCategory && (
-                            <div className="text-center py-12 text-gray-500"><p>Select a subcategory to view events.</p></div>
-                        )}
-                    </div>
-                </div>
 
-                {/* ================================================================== */}
-                {/* --- MOBILE VIEW (screens smaller than sm) ---                      */}
-                {/* ================================================================== */}
-                <div className="sm:hidden">
-                    <div className="w-full mt-3 mb-12 space-y-4">
-                        {mainCategories.map(category => {
-                            const isOpen = openCategories.includes(category);
-                            const availableSubCats = getAvailableSubCategories(category);
-
-                            return (
-                                <div key={category} className="border border-gray-200/80 rounded-lg shadow-sm overflow-hidden transition-all duration-300">
-                                    <button onClick={() => handleToggleCategory(category)} className="w-full flex justify-between items-center px-4 py-3 text-left font-semibold text-gray-800 bg-gray-50/80 hover:bg-gray-100">
-                                        <span className='text-lg'>{category}</span>
-                                        {isOpen ? <ChevronUp size={22} /> : <ChevronDown size={22} />}
-                                    </button>
-                                    {isOpen && (
-                                        <div className="px-4 pt-4 pb-2 bg-white border-t border-gray-200/80">
-                                            <div className="flex flex-wrap gap-2 mb-4">
-                                                {availableSubCats.map(subCat => (
-                                                    <button
-                                                        key={subCat}
-                                                        onClick={(e) => { e.stopPropagation(); handleSelectCategory(category, subCat); }}
-                                                        className={`px-3 py-1.5 whitespace-nowrap text-xs font-medium rounded-full transition-colors ${localActiveCategory === category && localActiveSubCategory === subCat
-                                                            ? 'bg-key-color text-white'
-                                                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                                                            }`}
-                                                    >
-                                                        {subCat}
-                                                    </button>
-                                                ))}
+                            {/* Mobile View */}
+                            <div className="sm:hidden space-y-4">
+                                {sortEventsByMostRecentDate(events).map((event, eventIndex) => {
+                                    const isEventOpen = openEvents.includes(slugify(event.event_title));
+                                    return (
+                                        <div
+                                            key={`mobile-${subCategoryKey}-${eventIndex}`}
+                                            className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#1d1d1f] relative"
+                                        >
+                                            {/* Action Buttons */}
+                                            <div className="absolute top-4 right-4 z-10 flex gap-1">
+                                                <ReportButton
+                                                    figureId={figureId}
+                                                    figureName={figureName}
+                                                    figureNameKr={figureNameKr}
+                                                    mainCategory={activeMainCategory}
+                                                    subcategory={subCategoryKey}
+                                                    eventGroupIndex={eventIndex}
+                                                    eventGroup={event}
+                                                    size="sm"
+                                                />
+                                                <ScrapButton
+                                                    figureId={figureId}
+                                                    figureName={figureName}
+                                                    figureNameKr={figureNameKr}
+                                                    mainCategory={activeMainCategory}
+                                                    subcategory={subCategoryKey}
+                                                    eventGroupIndex={eventIndex}
+                                                    eventGroup={event}
+                                                    size="sm"
+                                                />
                                             </div>
 
-                                            {localActiveCategory === category && displayedContent && (
-                                                <div className="space-y-6 pt-4 border-t border-gray-200/80">
-                                                    {Object.values(displayedContent)[0].map((event, eventIndex) => {
-                                                        const isEventOpen = openEvents.includes(slugify(event.event_title));
-                                                        return (
-                                                            <div key={`${localActiveCategory}-${localActiveSubCategory}-${eventIndex}`} className="border rounded-lg overflow-hidden bg-white relative">
-                                                                {/* Action buttons positioned at top-right */}
-                                                                <div className="absolute top-4 right-4 z-10 flex gap-1">
-                                                                    <ReportButton
-                                                                        figureId={figureId}
-                                                                        figureName={figureName}
-                                                                        figureNameKr={figureNameKr}
-                                                                        mainCategory={localActiveCategory}
-                                                                        subcategory={localActiveSubCategory}
-                                                                        eventGroupIndex={eventIndex}
-                                                                        eventGroup={event}
-                                                                        size="sm"
-                                                                    />
-                                                                    <ScrapButton
-                                                                        figureId={figureId}
-                                                                        figureName={figureName}
-                                                                        figureNameKr={figureNameKr}
-                                                                        mainCategory={localActiveCategory}
-                                                                        subcategory={localActiveSubCategory}
-                                                                        eventGroupIndex={eventIndex}
-                                                                        eventGroup={event}
-                                                                        size="sm"
-                                                                    />
-                                                                </div>
-                                                                <button
-                                                                    onClick={() => handleToggleEvent(event.event_title)}
-                                                                    className="w-full flex justify-between items-center p-4 text-left pr-20"
-                                                                >
-                                                                    <h4 className="font-semibold text-base text-gray-800">{event.event_title}</h4>
-                                                                    {isEventOpen ? <ChevronUp size={20} className="text-gray-500" /> : <ChevronDown size={20} className="text-gray-500" />}
-                                                                </button>
+                                            <button
+                                                onClick={() => handleToggleEvent(event.event_title)}
+                                                className="w-full flex justify-between items-center p-4 text-left pr-20"
+                                            >
+                                                <h4 className="font-semibold text-base text-gray-800 dark:text-white">
+                                                    {event.event_title}
+                                                </h4>
+                                                {isEventOpen ? (
+                                                    <ChevronUp size={20} className="text-gray-500 dark:text-gray-400" />
+                                                ) : (
+                                                    <ChevronDown size={20} className="text-gray-500 dark:text-gray-400" />
+                                                )}
+                                            </button>
 
-                                                                {/* MODIFIED: Conditionally render event details */}
-                                                                {isEventOpen && (
-                                                                    <div className="px-4 pb-4">
-                                                                        <p className="text-sm text-gray-600 italic mt-1 mb-3">{event.event_summary.replaceAll("*", "'")}</p>
-                                                                        <div className="relative pl-5 border-t pt-4">
-                                                                            {event.timeline_points.map((point, index) => (
-                                                                                <TimelinePointWithSources key={index} point={point} articlesMap={articlesMap} isLast={index === event.timeline_points.length - 1} />
-                                                                            ))}
-                                                                        </div>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        );
-                                                    })}
+                                            {isEventOpen && (
+                                                <div className="px-4 pb-4">
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-3">
+                                                        {event.event_summary.replaceAll("*", "'")}
+                                                    </p>
+                                                    <div className="relative pl-5 border-t border-gray-200 dark:border-gray-700 pt-4">
+                                                        {event.timeline_points.map((point, index) => (
+                                                            <TimelinePointWithSources
+                                                                key={index}
+                                                                point={point}
+                                                                articlesMap={articlesMap}
+                                                                isLast={index === event.timeline_points.length - 1}
+                                                                searchQuery={searchQuery}
+                                                            />
+                                                        ))}
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
                 </div>
-
-            </div>
+            ) : (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                    {searchQuery ? (
+                        <div>
+                            <p className="text-lg font-medium mb-2">No results found for &quot;{searchQuery}&quot;</p>
+                            <p className="text-sm">Try adjusting your search terms or filters</p>
+                        </div>
+                    ) : (
+                        <p>No events found for this category.</p>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

@@ -1,28 +1,22 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Search, X, Loader2 } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Search, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import algoliasearch from 'algoliasearch';
-import { useFigures } from '@/context/FiguresContext';
 import Image from 'next/image';
-import WelcomeBanner from '@/components/WelcomeBanner';
 import { createUrlSlug } from '@/lib/slugify';
+import algoliasearch from 'algoliasearch';
+import { Timestamp } from 'firebase/firestore';
+import WelcomeBanner from '@/components/WelcomeBanner';
 
-// Setup Algolia client - same as in Header.tsx
+// Setup Algolia client
 const searchClient = algoliasearch(
   "B1QF6MLIU5",
   "ef0535bdd12e549ffa7c9541395432a1"
 );
 
-interface PublicFigure {
-  id: string;
-  name: string;
-  profilePic?: string;
-}
-
-// Add the Algolia search result type
+// Types
 type AlgoliaPublicFigure = {
   objectID: string;
   name?: string;
@@ -42,41 +36,251 @@ type AlgoliaPublicFigure = {
   };
 }
 
+interface PublicFigure {
+  id: string;
+  name: string;
+  name_kr?: string;
+  profilePic?: string;
+  occupation?: string[];
+  nationality?: string;
+  gender?: string;
+  company?: string;
+  stats?: {
+    totalFacts: number;
+    totalSources: number;
+  };
+  featuredUpdate?: {
+    eventTitle: string;
+    eventSummary: string;
+    eventPointDescription: string;
+    eventPointDate: string;
+    mainCategory: string;
+    subcategory: string;
+    lastUpdated?: number;
+  };
+}
+
+type FeaturedFigure = PublicFigure;
+
+type TrendingUpdate = {
+  id: string;
+  title: string;
+  user: {
+    initials: string;
+    profilePic?: string;
+    name?: string;
+  };
+  description: string;
+  timeAgo: string;
+  source?: string;
+  verified: boolean;
+};
+
+// Interface matching the API response from /api/updates
+interface UpdateDocument {
+  id: string;
+  figureId: string;
+  figureName: string;
+  figureProfilePic?: string;
+  eventTitle: string;
+  eventSummary: string;
+  mainCategory: string;
+  subcategory: string;
+  eventYears: number[];
+  eventPointDate: string;
+  eventPointDescription: string;
+  eventPointSourceIds: string[];
+  publishDate: string;
+  mostRecentSourceId: string;
+  allTimelinePoints: {
+    date: string;
+    description: string;
+    sourceIds: string[];
+  }[];
+  createdAt: number; // Milliseconds from API
+  lastUpdated: number; // Milliseconds from API
+}
+
 const LoadingOverlay = () => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg flex items-center space-x-3">
-      <Loader2 className="animate-spin text-slate-600" size={24} />
-      <span className="text-slate-600 font-medium">Loading...</span>
+  <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-[60] flex items-center justify-center">
+    <div className="bg-white dark:bg-[#1d1d1f] p-6 rounded-lg flex items-center space-x-3">
+      <Loader2 className="animate-spin text-slate-600 dark:text-white" size={24} />
+      <span className="text-slate-600 dark:text-white font-medium">Loading...</span>
     </div>
   </div>
 );
 
-// Helper function to preload an image
-const preloadImage = (src: string): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const img = new window.Image();
-    img.onload = () => resolve(src);
-    img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
-    img.src = src;
-  });
+// Generate initials from a name
+const getInitials = (name: string): string => {
+  return name
+    .split(' ')
+    .map(word => word[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 };
 
-// Email validation function
-const isValidEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+// Format event date based on available precision
+const formatEventDate = (dateStr: string): string => {
+  if (!dateStr) return 'No date available';
+
+  // Year only: "2030"
+  if (dateStr.length === 4) {
+    return dateStr;
+  }
+  // Year-Month: "2026-01"
+  else if (dateStr.length === 7) {
+    const [year, month] = dateStr.split('-');
+    const date = new Date(parseInt(year), parseInt(month) - 1);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short'
+    });
+  }
+  // Full date: "2025-10-30"
+  else {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
 };
 
-// The Homepage component without the header
+// Format time elapsed with detailed granularity
+const formatTimeAgo = (timestamp: Timestamp | Date | string | number): string => {
+  let date: Date;
+
+  // Handle Firestore Timestamp object
+  if (timestamp && typeof timestamp === 'object' && 'toMillis' in timestamp) {
+    date = new Date(timestamp.toMillis());
+  }
+  // Handle ISO string
+  else if (typeof timestamp === 'string') {
+    date = new Date(timestamp);
+  }
+  // Handle regular Date object
+  else if (timestamp instanceof Date) {
+    date = timestamp;
+  }
+  // Handle timestamp in milliseconds
+  else if (typeof timestamp === 'number') {
+    date = new Date(timestamp);
+  }
+  else {
+    return 'recently';
+  }
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSecs = Math.floor(diffMs / 1000);
+  const diffMins = Math.floor(diffSecs / 60);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  const diffWeeks = Math.floor(diffDays / 7);
+  const diffMonths = Math.floor(diffDays / 30);
+  const diffYears = Math.floor(diffDays / 365);
+
+  // Less than 10 seconds
+  if (diffSecs < 10) {
+    return 'a few moments ago';
+  }
+  // Less than 1 minute
+  if (diffSecs < 60) {
+    return `${diffSecs} second${diffSecs !== 1 ? 's' : ''} ago`;
+  }
+  // Less than 1 hour
+  if (diffMins < 60) {
+    return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+  }
+  // Less than 24 hours
+  if (diffHours < 24) {
+    return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  }
+  // Less than 7 days
+  if (diffDays < 7) {
+    return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+  }
+  // Less than 4 weeks
+  if (diffWeeks < 4) {
+    return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+  }
+  // Less than 12 months
+  if (diffMonths < 12) {
+    return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+  }
+  // Years
+  return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+};
+
+// Mock data for trending updates until you implement the API
+const mockTrendingUpdates: TrendingUpdate[] = [
+  {
+    id: '1',
+    title: 'Queen of Tears Success',
+    user: {
+      initials: 'QT',
+    },
+    description: 'Netflix confirms "Queen of Tears" reached #1 on global non-English TV chart with 19.5M viewing hours, marking Kim Soo-Hyun\'s biggest international success.',
+    timeAgo: '2 hours ago',
+    source: 'Netflix Press Release',
+    verified: true
+  },
+  {
+    id: '2',
+    title: 'New Jennie',
+    user: {
+      initials: 'NJ',
+    },
+    description: 'Celebrity sightings discussion: Awaiting official statement.',
+    timeAgo: '4 hours ago',
+    verified: true
+  },
+  {
+    id: '3',
+    title: 'BABYMONSTER',
+    user: {
+      initials: 'BM',
+    },
+    description: '1st comeback February 2025 confirmed with full lineup.',
+    timeAgo: '1 day ago',
+    verified: true
+  },
+  {
+    id: '4',
+    title: 'SEVENTEEN',
+    user: {
+      initials: 'SV',
+    },
+    description: 'Asia tour finale next tour dates announced.',
+    timeAgo: '2 days ago',
+    verified: true
+  }
+];
+
+// Main Page Component
 export default function Home() {
-  const { figures, isLoading, error } = useFigures();
+  // State for welcome banner
+  const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
 
-  // Updated state to handle the new data structure
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAutoSliding, setIsAutoSliding] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
+  // State for featured figures
+  const [featuredFigures, setFeaturedFigures] = useState<FeaturedFigure[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState<boolean>(true);
+  const [featuredError, setFeaturedError] = useState<string | null>(null);
 
-  // States for search functionality
+  // State for trending updates
+  const [trendingUpdates, setTrendingUpdates] = useState<TrendingUpdate[]>(mockTrendingUpdates);
+  const [updatesLoading, setUpdatesLoading] = useState<boolean>(false);
+
+  // State for stats counters
+  const [statsData, setStatsData] = useState<{ totalFigures: number; totalFacts: number }>({
+    totalFigures: 0,
+    totalFacts: 0
+  });
+  const [statsLoading, setStatsLoading] = useState<boolean>(true);
+
+
+  // Search functionality
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<AlgoliaPublicFigure[]>([]);
@@ -85,75 +289,180 @@ export default function Home() {
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // State to track which images have been successfully preloaded
-  const [preloadedImages, setPreloadedImages] = useState<Set<string>>(new Set());
-  const [imagesLoading, setImagesLoading] = useState(true);
+  // Refs for animation
+  const searchSectionRef = useRef<HTMLElement>(null);
+  const whatsSectionRef = useRef<HTMLElement>(null);
+  const featuredSectionRef = useRef<HTMLElement>(null);
+  const ctaSectionRef = useRef<HTMLElement>(null);
 
-  // Newsletter subscription states
-  const [email, setEmail] = useState('');
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [subscriptionError, setSubscriptionError] = useState('');
-  const [isSubscribing, setIsSubscribing] = useState(false);
-
-  // Welcome Banner
-  const [showBanner, setShowBanner] = useState(false);
-
-  // Check if device is mobile
+  // Check if user has visited before (for welcome banner)
   useEffect(() => {
-    const checkIfMobile = () => {
-      setIsMobile(window.innerWidth < 640);
-    };
-
-    checkIfMobile();
-    window.addEventListener('resize', checkIfMobile);
-    return () => window.removeEventListener('resize', checkIfMobile);
+    const hasVisited = localStorage.getItem('hasVisitedEhco');
+    if (!hasVisited) {
+      setShowWelcomeBanner(true);
+    }
   }, []);
 
-  // Preload images after figures are loaded
+  // Handle closing the welcome banner
+  const handleCloseWelcomeBanner = () => {
+    setShowWelcomeBanner(false);
+    localStorage.setItem('hasVisitedEhco', 'true');
+  };
+
+  // Fetch featured figures (IU, BLACKPINK, BTS)
   useEffect(() => {
-    if (figures.length === 0) {
-      setImagesLoading(false);
-      return;
-    }
-
-    const preloadAllImages = async () => {
-      setImagesLoading(true);
-      const preloadPromises: Promise<string>[] = [];
-      const imagesToPreload: string[] = [];
-
-      figures.forEach(figure => {
-        if (figure.profilePic &&
-          figure.profilePic !== '/images/default-profile.png' &&
-          !figure.profilePic.includes('default-profile')) {
-          imagesToPreload.push(figure.profilePic);
-          preloadPromises.push(preloadImage(figure.profilePic));
-        }
-      });
-
+    const fetchFeaturedFigures = async () => {
       try {
-        const results = await Promise.allSettled(preloadPromises);
-        const successfullyLoaded = new Set<string>();
+        setFeaturedLoading(true);
 
-        results.forEach((result, index) => {
-          if (result.status === 'fulfilled') {
-            successfullyLoaded.add(imagesToPreload[index]);
-          } else {
-            console.warn(`Failed to preload image: ${imagesToPreload[index]}`);
-          }
+        // Using the /api/figures endpoint to fetch specific figures
+        const response = await fetch('/api/figures', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            figureIds: ['iu(leejieun)', 'blackpink', 'bts']
+          }),
         });
 
-        setPreloadedImages(successfullyLoaded);
+        if (!response.ok) {
+          throw new Error('Failed to fetch featured figures');
+        }
+
+        const data: PublicFigure[] = await response.json();
+
+        // Data now includes stats and featuredUpdate from API
+        setFeaturedFigures(data);
       } catch (error) {
-        console.error('Error during image preloading:', error);
+        console.error('Error fetching featured figures:', error);
+        setFeaturedError('Failed to load featured figures');
       } finally {
-        setImagesLoading(false);
+        setFeaturedLoading(false);
       }
     };
 
-    preloadAllImages();
-  }, [figures]);
+    fetchFeaturedFigures();
+  }, []);
 
-  // Handle clicks outside of search results
+  // Fetch updates
+  useEffect(() => {
+    const fetchUpdates = async () => {
+      try {
+        setUpdatesLoading(true);
+        const response = await fetch('/api/updates?limit=4');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch updates');
+        }
+
+        const data = await response.json();
+
+        // Transform the API response to match your UI format
+        const formattedUpdates = data.updates.map((update: UpdateDocument) => {
+          // Safe function to get initials
+          const getInitials = (name: string | undefined): string => {
+            if (!name) return '??';
+            return name.split(' ')
+              .map((n: string) => n[0])
+              .join('')
+              .toUpperCase()
+              .slice(0, 2);
+          };
+
+          return {
+            id: update.id,
+            title: update.eventTitle || 'Update',
+            user: {
+              initials: getInitials(update.figureName),
+              profilePic: update.figureProfilePic,
+              name: update.figureName
+            },
+            description: update.eventPointDescription || 'No description available',
+            timeAgo: formatTimeAgo(update.lastUpdated), // Use the updated formatTimeAgo with lastUpdated timestamp
+            source: update.subcategory || update.mainCategory,
+            verified: true
+          };
+        });
+        console.log(formattedUpdates);
+        setTrendingUpdates(formattedUpdates);
+      } catch (error) {
+        console.error('Error fetching trending updates:', error);
+        // Fallback to mock data if needed
+        setTrendingUpdates(mockTrendingUpdates);
+      } finally {
+        setUpdatesLoading(false);
+      }
+    };
+    fetchUpdates();
+  }, []);
+
+  // Fetch stats counters
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        const response = await fetch('/api/stats');
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+
+        const data = await response.json();
+        setStatsData({
+          totalFigures: data.totalFigures || 0,
+          totalFacts: data.totalFacts || 0
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Keep default values (0) on error
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  // Intersection Observer for scroll animations
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('animate-fade-in');
+        }
+      });
+    }, observerOptions);
+
+    // Observe all section refs
+    const sections = [
+      searchSectionRef.current,
+      whatsSectionRef.current,
+      featuredSectionRef.current,
+      ctaSectionRef.current
+    ];
+
+    sections.forEach(section => {
+      if (section) {
+        observer.observe(section);
+      }
+    });
+
+    return () => {
+      sections.forEach(section => {
+        if (section) {
+          observer.unobserve(section);
+        }
+      });
+    };
+  }, []);
+
+  // Handle clicks outside search
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -163,28 +472,6 @@ export default function Home() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Auto-swipe effect - only start after images are loaded
-  useEffect(() => {
-    if (!isAutoSliding || figures.length === 0 || imagesLoading) return;
-
-    const autoSlideInterval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + (isMobile ? 3 : 6)) % figures.length);
-    }, 5000); // Slide every 3 seconds
-
-    return () => clearInterval(autoSlideInterval);
-  }, [isAutoSliding, figures.length, isMobile, imagesLoading]);
-
-  // Banner effect
-  useEffect(() => {
-    const hasVisited = localStorage.getItem('hasVisitedECHO');
-    if (!hasVisited) {
-      const timer = setTimeout(() => {
-        setShowBanner(true);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
   }, []);
 
   // Search functionality
@@ -223,218 +510,143 @@ export default function Home() {
     performSearch(query);
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    // Prevent the browser's default behavior of reloading the page
-    e.preventDefault();
+  const handleResultClick = (figureId: string, name: string) => {
+    setIsPageLoading(true);
+    const slug = createUrlSlug(name);
+    router.push(`/${slug}`);
+  };
 
+  const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      setShowResults(false);
+      setIsPageLoading(true);
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
-  const renderHighlightedText = (text: string) => {
-    return <span dangerouslySetInnerHTML={{ __html: text }} />;
-  };
-
-  const handlePrevious = () => {
-    setIsAutoSliding(false);
-    setCurrentIndex((prev) => {
-      const step = isMobile ? 3 : 6;
-      if (prev === 0) {
-        return figures.length - step >= 0 ? figures.length - step : 0;
-      }
-      return Math.max(0, prev - step);
-    });
-    setTimeout(() => setIsAutoSliding(true), 5000);
-  };
-
-  const handleNext = () => {
-    setIsAutoSliding(false);
-    const step = isMobile ? 3 : 6;
-    setCurrentIndex((prev) => (prev + step) % figures.length);
-    setTimeout(() => setIsAutoSliding(true), 5000);
-  };
-
-  // Handle infinite loop by creating a circular array
-  const getCircularSlice = (start: number, length: number): PublicFigure[] => {
-    const displayCount = isMobile ? 3 : 6;
-    const result = [];
-    for (let i = 0; i < displayCount; i++) {
-      const index = (start + i) % figures.length;
-      result.push(figures[index]);
-    }
-    return result;
-  };
-
-  const displayedFigures = figures.length > 0 ? getCircularSlice(currentIndex, isMobile ? 3 : 6) : [];
-
-  // Function to get the appropriate image source
-  const getImageSrc = (figure: PublicFigure): string => {
-    if (!figure.profilePic) return '/images/default-profile.png';
-
-    // If the image was successfully preloaded, use it; otherwise use default
-    if (preloadedImages.has(figure.profilePic)) {
-      return figure.profilePic;
-    }
-
-    return '/images/default-profile.png';
-  };
-
-  // Newsletter subscription handler
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Clear previous errors
-    setSubscriptionError('');
-
-    // Validate email format
-    if (!isValidEmail(email)) {
-      setSubscriptionError('Please enter a valid email address.');
-      return;
-    }
-
-    setIsSubscribing(true);
-
-    try {
-      // Replace this with your actual API endpoint
-      const response = await fetch('/api/newsletter/subscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // Success
-        setIsSubscribed(true);
-        setEmail('');
-      } else if (response.status === 409) {
-        // Email already exists
-        setSubscriptionError('This email is already subscribed to our newsletter.');
-      } else {
-        // Other error
-        setSubscriptionError(data.message || 'Something went wrong. Please try again.');
-      }
-    } catch (error) {
-      console.error('Subscription error:', error);
-      setSubscriptionError('Network error. Please try again.');
-    } finally {
-      setIsSubscribing(false);
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim()) {
+      e.preventDefault();
+      handleSearchSubmit();
     }
   };
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(e.target.value);
-    // Clear error when user starts typing
-    if (subscriptionError) {
-      setSubscriptionError('');
-    }
-  };
-
-  // handle banner action
-  const handleCloseBanner = () => {
-    setShowBanner(false);
-    localStorage.setItem('hasVisitedECHO', 'true');
+  const renderHighlightedText = (highlightedValue: string) => {
+    return <span dangerouslySetInnerHTML={{ __html: highlightedValue }} />;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {showBanner && <WelcomeBanner onClose={handleCloseBanner} />}
-      <div className={showBanner ? 'blur-sm' : ''}>
-        {/* Main content */}
-        <main className="w-[92%] sm:w-[90%] md:w-[80%] mx-auto px-2 sm:px-4 py-12 sm:py-16">
-          {/* Title section */}
-          <section className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4 text-black">
-              Understand Their <span className="text-key-color">Story</span>
-            </h2>
-            <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8">
-              Structured information from trusted sources.
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
+      <style jsx global>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .section-animate {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+
+        .animate-fade-in {
+          animation: fadeInUp 0.6s ease forwards;
+        }
+      `}</style>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Hero Section with Search - Full Height */}
+        <section ref={searchSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+              Understanding <span className="text-key-color">Their Story</span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-400">
+              Get accurate, fact-checked information about your favorite celebrities
             </p>
+          </div>
 
-            {/* Search bar - shown only on homepage */}
-            <div className="w-full max-w-xl mx-auto mb-6 relative" ref={searchRef}>
-              <form onSubmit={handleSearchSubmit}>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={handleInputChange}
-                    // You no longer need onKeyDown for submission
-                    // onKeyDown={handleKeyDown} 
-                    placeholder="Search for a public figure..."
-                    className="w-full px-4 md:px-6 py-2.5 md:py-3 text-black text-base md:text-lg border-2 border-key-color rounded-full focus:outline-none focus:border-key-color pl-12"
-                  />
-                  {searchQuery ? (
-                    <X
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
-                      size={20}
-                      onClick={() => {
-                        setSearchQuery('');
-                        setSearchResults([]);
-                        setShowResults(false);
-                      }}
-                    />
-                  ) : (
-                    // It's good practice to make the search icon a submit button for accessibility
-                    <button type="submit" aria-label="Search" className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                      <Search className="w-5 h-5 md:w-6 md:h-6 text-key-color" />
-                    </button>
-                  )}
-                </div>
-              </form>
+          {/* Search Bar */}
+          <div ref={searchRef} className="relative max-w-2xl mx-auto w-full mb-8">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={() => searchQuery && setShowResults(true)}
+                placeholder="Search for a public figure..."
+                className="w-full px-6 py-4 pr-12 text-lg border-2 border-gray-200 dark:border-gray-700 rounded-full focus:outline-none focus:border-key-color transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+              />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                {isSearching ? (
+                  <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+                ) : searchQuery ? (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSearchResults([]);
+                      setShowResults(false);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                ) : (
+                  <Search className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+            </div>
 
-              {/* Search Results Dropdown */}
-              {isSearching ? (
-                <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0">
-                  <div className="px-3 py-3 text-sm text-gray-500 text-center">
-                    Loading...
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {showResults && searchResults.length > 0 && (
-                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0 max-h-96 overflow-y-auto">
-                      <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* Search Results Dropdown */}
+            {showResults && (
+              <>
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1d1d1f] rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-20 overflow-hidden">
+                  <div className="max-h-96 overflow-y-auto">
+                    {isSearching ? (
+                      <div className="py-8 text-center">
+                        <Loader2 className="animate-spin w-6 h-6 mx-auto mb-2 text-key-color" />
+                        <p className="text-gray-500 dark:text-gray-400">Searching...</p>
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p className="text-gray-500 dark:text-gray-400">No results found for &quot;{searchQuery}&quot;</p>
+                      </div>
+                    ) : (
+                      <>
                         {searchResults.map((result) => (
                           <Link
                             key={result.objectID}
-                            href={`/${createUrlSlug(result.objectID)}`}
-                            className="flex flex-row items-center px-4 py-3 hover:bg-gray-100"
+                            href={`/${createUrlSlug(result.name || '')}`}
                             onClick={(e) => {
                               e.preventDefault();
-                              setShowResults(false);
-                              setSearchQuery('');
-                              setIsPageLoading(true);
-                              router.push(`/${createUrlSlug(result.objectID)}`);
-
-                              setTimeout(() => {
-                                setIsPageLoading(false);
-                              }, 500);
+                              handleResultClick(result.objectID, result.name || '');
                             }}
+                            className="flex items-center gap-3 px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border-b border-gray-100 dark:border-gray-800"
                           >
-                            <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden flex-shrink-0">
-                              <Image
-                                src={result.profilePic || '/images/default-profile.png'}
-                                alt={result.name || 'Profile'}
-                                fill
-                                sizes="(max-width: 768px) 48px, 64px"
-                                className="object-cover"
-                              />
+                            <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                              {result.profilePic && (
+                                <Image
+                                  src={result.profilePic}
+                                  alt={result.name || ''}
+                                  width={48}
+                                  height={48}
+                                  className="object-cover w-full h-full"
+                                />
+                              )}
                             </div>
-
-                            <div className="flex-1 pl-4">
-                              <div className="font-medium text-sm md:text-md text-black truncate">
+                            <div className="flex-1">
+                              <div className="font-medium text-gray-900 dark:text-white">
                                 {result._highlightResult?.name ?
                                   renderHighlightedText(result._highlightResult.name.value) :
                                   result.name}
                               </div>
                               {result.name_kr && (
-                                <div className="text-xs md:text-sm text-gray-500 truncate">
+                                <div className="text-sm text-gray-500 dark:text-gray-400">
                                   {result._highlightResult?.name_kr ?
                                     renderHighlightedText(result._highlightResult.name_kr.value) :
                                     result.name_kr}
@@ -443,204 +655,246 @@ export default function Home() {
                             </div>
                           </Link>
                         ))}
-                      </div>
-                    </div>
-                  )}
+                        {/* See all results button */}
+                        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-[#1d1d1f]">
+                          <button
+                            onClick={handleSearchSubmit}
+                            className="w-full text-center py-3 px-4 bg-key-color hover:bg-red-700 text-white rounded-full font-medium transition-colors duration-150 flex items-center justify-center gap-2"
+                          >
+                            <Search className="w-4 h-4" />
+                            See all results for &quot;{searchQuery}&quot;
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
 
-                  {showResults && searchQuery && searchResults.length === 0 && (
-                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0">
-                      <div className="px-3 py-3 text-sm text-gray-500 text-center">
-                        No results found
-                      </div>
-                    </div>
+          {/* Stats Section */}
+          <section className="mb-12">
+            <div className="flex flex-wrap justify-center gap-8 mb-6">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-key-color">
+                  {statsLoading ? (
+                    <Loader2 className="animate-spin inline-block" size={24} />
+                  ) : (
+                    `${statsData.totalFacts.toLocaleString()}`
                   )}
-                </>
-              )}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Facts</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-key-color">
+                  {statsLoading ? (
+                    <Loader2 className="animate-spin inline-block" size={24} />
+                  ) : (
+                    statsData.totalFigures.toLocaleString()
+                  )}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Figures</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-key-color">96%</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Accuracy</div>
+              </div>
             </div>
           </section>
+        </section>
 
-          {/* Explore Figures section */}
-          <section className="mt-16 sm:mt-24">
-            <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-8 sm:mb-12 text-black">
-              Explore Figures
-            </h3>
+        {/* What's Happening Section - Full Height */}
+        <section ref={whatsSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">What&apos;s Happening</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Live updates on trending stories</p>
 
-            {isLoading || (figures.length > 0 && imagesLoading) ? (
-              <div className="flex justify-center items-center gap-2 sm:gap-4 md:gap-8 px-4 md:px-16">
-                {[...Array(isMobile ? 3 : 6)].map((_, index) => (
-                  <div key={index} className="text-center">
-                    <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full bg-gray-200 animate-pulse mb-2 md:mb-3 mx-auto" />
-                    <div className="h-4 w-16 sm:w-20 md:w-24 bg-gray-200 animate-pulse rounded mx-auto" />
-                  </div>
-                ))}
-              </div>
-            ) : error ? (
-              <div className="text-center text-red-500 py-8">
-                <p className="mb-4">{error}</p>
-                <button
-                  onClick={() => window.location.reload()}
-                  className="px-4 py-2 bg-key-color text-white rounded-lg hover:opacity-80 transition-opacity"
-                >
-                  Retry
-                </button>
-              </div>
-            ) : figures.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <p>No figures available at the moment.</p>
-              </div>
-            ) : (
-              <div
-                className="relative"
-                onMouseEnter={() => setIsAutoSliding(false)}
-                onMouseLeave={() => setIsAutoSliding(true)}
-              >
-                {/* Visible carousel items */}
-                <div className="flex justify-center items-center gap-2 sm:gap-4 md:gap-8 px-1 sm:px-4 md:px-8">
-                  {displayedFigures.map((figure, index) => (
-                    <Link
-                      href={`/${createUrlSlug(figure.id)}`}
-                      key={`${figure.id}-${index}`}
-                      className="text-center group"
-                    >
-                      <div className="relative w-20 h-20 sm:w-24 sm:h-24 md:w-32 md:h-32 rounded-full overflow-hidden mb-1 md:mb-3 mx-auto border-2 border-gray-200 group-hover:border-key-color transition-colors">
-                        <Image
-                          src={getImageSrc(figure)}
-                          alt={figure.name}
-                          fill
-                          sizes="(max-width: 640px) 6rem, (max-width: 768px) 8rem, 10rem"
-                          className="object-cover"
-                        />
+          <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
+            <div className="px-4">
+              {updatesLoading ? (
+                <div className="py-8 text-center">
+                  <Loader2 className="animate-spin w-6 h-6 mx-auto mb-2 text-key-color" />
+                  <p className="text-gray-500 dark:text-gray-400">Loading updates...</p>
+                </div>
+              ) : (
+                <div>
+                  {trendingUpdates.map((update) => (
+                    <div key={update.id} className="flex gap-3 py-3 border-t border-gray-100 dark:border-gray-800">
+                      <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                        {update.user.profilePic ? (
+                          <Link href={`/${createUrlSlug(update.user.name!)}`}>
+                            <div className="w-14 h-14 rounded-full overflow-hidden">
+                              <Image
+                                src={update.user.profilePic}
+                                alt={update.user.initials}
+                                width={56}
+                                height={56}
+                                className="object-cover w-full h-full"
+                              />
+                            </div>
+                            <div className="text-xs text-gray-900 dark:text-white font-medium text-center max-w-[70px] truncate">
+                              {update.user.name}
+                            </div>
+                          </Link>
+
+                        ) : (
+                          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
+                            {update.user.initials}
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs md:text-sm font-medium text-black truncate max-w-[80px] sm:max-w-[100px] md:max-w-full mx-auto">
-                        {figure.name}
-                      </p>
-                    </Link>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{update.title}</p>
+                        <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{update.description}</h3>
+                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                          <span>{update.timeAgo}</span>
+                          {update.source && (
+                            <>
+                              <span className="mx-1">•</span>
+                              <span>{update.source}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 self-start">
+                        {update.verified && (
+                          <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs">Verified</span>
+                        )}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {/* Navigation controls at the bottom */}
-            {figures.length > 0 && (
-              <div className="flex justify-center items-center space-x-4 sm:space-x-6 mt-6">
-                <button
-                  onClick={handlePrevious}
-                  className="bg-white rounded-full p-2 sm:p-2.5 shadow-md hover:shadow-lg transition-shadow focus:outline-none"
-                  disabled={isLoading || imagesLoading}
-                >
-                  <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                </button>
-                <button
-                  onClick={handleNext}
-                  className="bg-white rounded-full p-2 sm:p-2.5 shadow-md hover:shadow-lg transition-shadow focus:outline-none"
-                  disabled={isLoading || imagesLoading}
-                >
-                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                </button>
-              </div>
-            )}
-
-            {/* Explore All link */}
-            {figures.length > 0 && (
-              <div className="text-center mt-6 sm:mt-8">
-                <Link href='/all-figures' className='text-sm md:text-base text-key-color font-medium underline hover:opacity-80 transition-colors'>
-                  Explore All
-                </Link>
-              </div>
-            )}
-          </section>
-        </main>
-
-        {/* Newsletter subscription section - separate from footer */}
-        <section className="mt-16 sm:mt-24 bg-key-color text-white py-8 sm:py-10 md:py-12">
-          <div className="w-[92%] sm:w-[90%] md:w-[80%] mx-auto px-4 text-center">
-            <p className="text-xs sm:text-sm md:text-lg mb-6 sm:mb-8 max-w-3xl mx-auto">
-              EHCO delivers clearly sourced, organized timelines for fans, media, and industry professionals seeking accurate context.
-            </p>
-
-            {/* Newsletter signup */}
-            <div className="flex justify-center">
-              <div className="relative max-w-2xl w-full">
-                {isSubscribed ? (
-                  // Success message
-                  <div className="text-center py-4">
-                    <p className="text-sm md:text-base font-medium">
-                      You are all set! Thank you for subscribing.
-                    </p>
-                  </div>
-                ) : (
-                  // Subscription form
-                  <form onSubmit={handleSubscribe}>
-                    {/* Desktop layout */}
-                    <div className="hidden sm:block">
-                      <div className="relative flex rounded-full border-2 border-white overflow-hidden">
-                        <input
-                          type="email"
-                          value={email}
-                          onChange={handleEmailChange}
-                          placeholder="Enter Email Address"
-                          className="flex-1 px-6 py-3 bg-transparent text-white placeholder-white placeholder-opacity-80 focus:outline-none text-sm md:text-base"
-                          disabled={isSubscribing}
-                        />
-                        <button
-                          type="submit"
-                          disabled={isSubscribing || !email.trim()}
-                          className="px-6 md:px-8 py-3 bg-white text-key-color font-medium hover:bg-gray-100 transition-colors text-sm md:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                        >
-                          {isSubscribing ? (
-                            <>
-                              <Loader2 className="animate-spin mr-2" size={16} />
-                              Subscribing...
-                            </>
-                          ) : (
-                            'Subscribe for Updates'
-                          )}
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Mobile layout */}
-                    <div className="block sm:hidden space-y-3">
-                      <input
-                        type="email"
-                        value={email}
-                        onChange={handleEmailChange}
-                        placeholder="Enter Email Address"
-                        className="w-full px-4 py-3 bg-transparent text-white placeholder-white placeholder-opacity-80 focus:outline-none text-sm border-2 border-white rounded-full"
-                        disabled={isSubscribing}
-                      />
-                      <button
-                        type="submit"
-                        disabled={isSubscribing || !email.trim()}
-                        className="w-full px-4 py-3 bg-white text-key-color font-medium hover:bg-gray-100 transition-colors text-sm rounded-full disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                      >
-                        {isSubscribing ? (
-                          <>
-                            <Loader2 className="animate-spin mr-2" size={16} />
-                            Subscribing...
-                          </>
-                        ) : (
-                          'Subscribe for Updates'
-                        )}
-                      </button>
-                    </div>
-
-                    {/* Error message */}
-                    {subscriptionError && (
-                      <div className="mt-3 text-center">
-                        <p className="text-sm text-red-200 bg-red-500 bg-opacity-20 px-4 py-2 rounded-lg">
-                          {subscriptionError}
-                        </p>
-                      </div>
-                    )}
-                  </form>
-                )}
-              </div>
+              )}
             </div>
+
+          </div>
+          <div className="text-center mt-6">
+            <Link href="/updates" className="text-key-color text-sm font-medium">
+              See All Updates →
+            </Link>
           </div>
         </section>
-      </div>
+
+        {/* Featured Figures Section - Full Height */}
+        <section ref={featuredSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Featured Figures</h2>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Complete profiles with full verification</p>
+
+          {featuredLoading ? (
+            <div className="py-12 text-center">
+              <Loader2 className="animate-spin w-8 h-8 mx-auto mb-4 text-key-color" />
+              <p className="text-gray-500 dark:text-gray-400">Loading featured profiles...</p>
+            </div>
+          ) : featuredError ? (
+            <div className="py-12 text-center">
+              <p className="text-red-500 dark:text-red-400 mb-2">{featuredError}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-key-color text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Retry
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {featuredFigures.map((figure) => (
+                <div key={figure.id} className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
+                  <div className="p-4">
+                    <div className="flex items-center mb-4">
+                      <div className="flex-shrink-0">
+                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-key-color">
+                          <Link href={`/${createUrlSlug(figure.name)}`}>
+                            <Image
+                              src={figure.profilePic || '/images/default-profile.png'}
+                              alt={figure.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </Link>
+                        </div>
+                      </div>
+                      <div className="ml-3">
+                        <Link href={`/${createUrlSlug(figure.name)}`}>
+                          <h3 className="font-bold text-lg text-gray-900 dark:text-white">{figure.name}</h3>
+                        </Link>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {figure.occupation ? figure.occupation.join(', ') : 'Artist'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between text-center mb-4">
+                      <div>
+                        <div className="font-bold text-key-color">{figure.stats?.totalSources || 85}</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Sources</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 dark:text-white">{figure.stats?.totalFacts.toLocaleString() || '3,500+'}</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Facts</div>
+                      </div>
+                      <div>
+                        <div className="font-bold text-green-600 dark:text-green-400">
+                          {figure.stats?.totalSources && figure.stats?.totalFacts
+                            ? `${Math.min(99, Math.round((figure.stats.totalSources / Math.max(figure.stats.totalFacts, 1)) * 100))}%`
+                            : 'N/A'}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400">Verified</div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
+                      <div className="flex justify-between items-start mb-1">
+                        <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                          {figure.featuredUpdate?.eventTitle || `Latest: ${figure.name} update`}
+                        </h4>
+                        <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs flex-shrink-0 ml-2">Verified</span>
+                      </div>
+                      <div className="min-h-[60px]"> {/* Fixed height container for description */}
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                          {figure.featuredUpdate?.eventPointDescription || 'Recent professional activities and public appearances.'}
+                        </p>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {figure.featuredUpdate?.eventPointDate
+                            ? formatEventDate(figure.featuredUpdate.eventPointDate)
+                            : 'No recent updates'
+                          }
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* <div className="bg-gray-50 px-3 py-2"> */}
+                  {/* Empty footer for consistent height */}
+                  {/* </div> */}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-6">
+            <Link href="/all-figures" className="text-key-color text-sm font-medium">
+              Browse All Figures →
+            </Link>
+          </div>
+        </section>
+
+        {/* Call to Action Section */}
+        <section ref={ctaSectionRef} className="section-animate bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md p-8 text-center mb-12">
+          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Ready to explore?</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Start discovering verified information about your favorite public figures.
+          </p>
+          <Link
+            href="/search"
+            className="inline-flex items-center bg-key-color hover:bg-red-700 text-white font-medium py-2 px-6 rounded-full transition-colors"
+          >
+            Start Searching
+            <Search className="ml-2 w-4 h-4" />
+          </Link>
+        </section>
+      </main>
       {isPageLoading && <LoadingOverlay />}
+      {showWelcomeBanner && <WelcomeBanner onClose={handleCloseWelcomeBanner} />}
     </div>
   );
 }

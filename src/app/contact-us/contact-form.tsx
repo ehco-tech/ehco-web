@@ -19,24 +19,24 @@ function SuccessModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => voi
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleOverlayClick}>
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative animate-in fade-in zoom-in duration-200">
+            <div className="bg-white dark:bg-[#1d1d1f] rounded-2xl p-8 max-w-md w-full mx-4 relative animate-in fade-in zoom-in duration-200">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                     <X size={24} />
                 </button>
 
                 <div className="text-center">
-                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                        <CheckCircle className="w-8 h-8 text-green-600" />
+                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full mb-4">
+                        <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
                     </div>
 
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                         Thank You!
                     </h3>
 
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
                         Your feedback has been sent successfully! You should receive a confirmation email shortly.
                     </p>
 
@@ -73,24 +73,24 @@ function ErrorModal({
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={handleOverlayClick}>
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative animate-in fade-in zoom-in duration-200">
+            <div className="bg-white dark:bg-[#1d1d1f] rounded-2xl p-8 max-w-md w-full mx-4 relative animate-in fade-in zoom-in duration-200">
                 <button
                     onClick={onClose}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
                 >
                     <X size={24} />
                 </button>
 
                 <div className="text-center">
-                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
-                        <X className="w-8 h-8 text-red-600" />
+                    <div className="mx-auto flex items-center justify-center w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full mb-4">
+                        <X className="w-8 h-8 text-red-600 dark:text-red-400" />
                     </div>
 
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                         Oops!
                     </h3>
 
-                    <p className="text-gray-600 mb-6">
+                    <p className="text-gray-600 dark:text-gray-400 mb-6">
                         {errorMessage}
                     </p>
 
@@ -158,7 +158,7 @@ export default function ContactForm() {
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white dark:bg-black">
             <main className="max-w-3xl mx-auto px-4 py-16">
                 <h1 className="text-4xl font-bold text-center text-key-color mb-8">Contact Us</h1>
 
@@ -170,7 +170,7 @@ export default function ContactForm() {
                 <form onSubmit={handleSubmit} className="space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div>
-                            <label htmlFor="name" className="block text-gray-900 font-medium mb-2">Name (Optional)</label>
+                            <label htmlFor="name" className="block text-gray-900 dark:text-white font-medium mb-2">Name (Optional)</label>
                             <input
                                 type="text"
                                 id="name"
@@ -178,11 +178,11 @@ export default function ContactForm() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Your Name"
-                                className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700"
+                                className="w-full px-4 py-3 border-2 border-key-color dark:border-pink-700 rounded-full focus:outline-none focus:border-pink-700 bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                             />
                         </div>
                         <div>
-                            <label htmlFor="email" className="block text-gray-900 font-medium mb-2">Email</label>
+                            <label htmlFor="email" className="block text-gray-900 dark:text-white font-medium mb-2">Email</label>
                             <input
                                 type="email"
                                 id="email"
@@ -191,19 +191,19 @@ export default function ContactForm() {
                                 onChange={handleChange}
                                 placeholder="email@example.com"
                                 required
-                                className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700"
+                                className="w-full px-4 py-3 border-2 border-key-color dark:border-pink-700 rounded-full focus:outline-none focus:border-pink-700 bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                             />
                         </div>
                     </div>
                     <div>
-                        <label htmlFor="subject" className="block text-gray-900 font-medium mb-2">Subject</label>
+                        <label htmlFor="subject" className="block text-gray-900 dark:text-white font-medium mb-2">Subject</label>
                         <select
                             id="subject"
                             name="subject"
                             value={formData.subject}
                             onChange={handleChange}
                             required
-                            className="w-full px-4 py-3 border-2 border-key-color rounded-full appearance-none focus:outline-none focus:border-pink-700 cursor-pointer select-arrow-light text-gray-900"
+                            className="w-full px-4 py-3 border-2 border-key-color dark:border-pink-700 rounded-full appearance-none focus:outline-none focus:border-pink-700 cursor-pointer select-arrow-light dark:select-arrow-dark text-gray-900 dark:text-white bg-white dark:bg-[#1d1d1f]"
                         >
                             <option value="">Select a topic</option>
                             <option value="General Feedback">General Feedback</option>
@@ -214,7 +214,7 @@ export default function ContactForm() {
                         </select>
                     </div>
                     <div>
-                        <label htmlFor="message" className="block text-gray-900 font-medium mb-2">Message</label>
+                        <label htmlFor="message" className="block text-gray-900 dark:text-white font-medium mb-2">Message</label>
                         <textarea
                             id="message"
                             name="message"
@@ -223,7 +223,7 @@ export default function ContactForm() {
                             placeholder="Tell us more..."
                             required
                             rows={6}
-                            className="w-full px-4 py-3 border-2 border-key-color rounded-3xl focus:outline-none focus:border-pink-700 resize-none"
+                            className="w-full px-4 py-3 border-2 border-key-color dark:border-pink-700 rounded-3xl focus:outline-none focus:border-pink-700 resize-none bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         />
                     </div>
                     <div className="text-center">

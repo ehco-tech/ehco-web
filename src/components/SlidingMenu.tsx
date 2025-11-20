@@ -55,7 +55,7 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
 
             {/* Sliding Menu */}
             <div
-                className={`fixed top-0 left-0 h-full w-80 bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                className={`fixed top-0 left-0 h-full w-80 bg-white dark:bg-[#1d1d1f] shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}
             >
                 {/* Header with close button */}
@@ -65,7 +65,7 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
                         className="text-gray-600 hover:text-gray-800 transition-colors"
                         aria-label="Close menu"
                     >
-                        <X size={24} />
+                        <X size={24} className='dark:text-white' />
                     </button>
                 </div>
 
@@ -76,7 +76,7 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
                         <li>
                             <button
                                 onClick={() => handleNavigation('/', 'Loading home...')}
-                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                             >
                                 Home
                             </button>
@@ -84,27 +84,27 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
                         <li>
                             <button
                                 onClick={() => handleNavigation('/all-figures', 'Loading all figures...')}
-                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                             >
-                                Explore All
+                                All Figures
                             </button>
                         </li>
                         <li>
                             <button
-                                onClick={() => handleNavigation('/about-ehco', 'Loading about us...')}
-                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                onClick={() => handleNavigation('/updates', 'Loading updates...')}
+                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                             >
-                                About Us
+                                All Updates
                             </button>
                         </li>
-                        <li>
+                        {/* <li>
                             <button
                                 onClick={() => handleNavigation('/contact-us', 'Loading contact page...')}
-                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                             >
                                 Contact Us
                             </button>
-                        </li>
+                        </li> */}
 
                         {/* --- MODIFIED: Links for logged-in users only --- */}
                         {user && (
@@ -113,7 +113,7 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
                                 <li>
                                     <button
                                         onClick={() => handleNavigation('/profile/favorites', 'Loading your favorites...')}
-                                        className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                        className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                                     >
                                         My Favorites
                                     </button>
@@ -121,7 +121,7 @@ export default function SlidingMenu({ isOpen, onClose }: SlidingMenuProps) {
                                 <li>
                                     <button
                                         onClick={() => handleNavigation('/profile/scrapped', 'Loading scrapped events...')}
-                                        className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:rounded-full transition-colors"
+                                        className="block w-full text-left text-2xl px-4 font-normal text-key-color hover:bg-slate-100 hover:dark:bg-gray-600 rounded-full transition-colors"
                                     >
                                         Scrapped Events
                                     </button>

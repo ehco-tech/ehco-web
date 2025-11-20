@@ -4,9 +4,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLoading } from '@/context/LoadingContext'; // 1. Import useLoading
+import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({
@@ -19,6 +21,8 @@ export default function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showResendVerification, setShowResendVerification] = useState(false);
+  const [resendingEmail, setResendingEmail] = useState(false);
 
   const { signIn, signInWithGoogle } = useAuth();
   const { showLoading } = useLoading(); // 2. Get the showLoading function from the context
@@ -45,6 +49,7 @@ export default function LoginForm() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setShowResendVerification(false);
 
     try {
       await signIn(formData.email, formData.password);
@@ -67,12 +72,41 @@ export default function LoginForm() {
       router.push(redirectPath || '/'); // Redirect to saved path or homepage
     } catch (err) { // 1. Corrected 'error: any'
       if (err instanceof Error) {
-        setError(err.message || 'Failed to sign in');
+        const errorMessage = err.message || 'Failed to sign in';
+        setError(errorMessage);
+
+        // Show resend verification option if error is about email verification
+        if (errorMessage.includes('verify your email')) {
+          setShowResendVerification(true);
+        }
       } else {
         setError('An unexpected error occurred.');
       }
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendingEmail(true);
+    setError('');
+    setSuccessMessage('');
+
+    try {
+      // Sign in temporarily to get the user object (won't actually log them in due to verification check)
+      const userCredential = await signInWithEmailAndPassword(auth, formData.email, formData.password);
+
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
+
+      setSuccessMessage('Verification email sent! Please check your inbox.');
+      setShowResendVerification(false);
+    } catch (err) {
+      if (err instanceof Error) {
+        setError('Failed to resend verification email. Please try again.');
+      }
+    } finally {
+      setResendingEmail(false);
     }
   };
 
@@ -113,28 +147,47 @@ export default function LoginForm() {
 
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-black">
       <main className="max-w-md mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-key-color mb-4">Welcome</h1>
-          <p className="text-gray-600">Sign in to your EHCO account</p>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to your EHCO account</p>
         </div>
 
         {successMessage && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <p className="text-green-600 text-sm">{successMessage}</p>
+          <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-green-600 dark:text-green-400 text-sm">{successMessage}</p>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
+            {showResendVerification && (
+              <button
+                onClick={handleResendVerification}
+                disabled={resendingEmail}
+                className="mt-3 flex items-center gap-2 text-sm text-key-color dark:text-key-color-dark hover:underline disabled:opacity-50"
+              >
+                {resendingEmail ? (
+                  <>
+                    <Loader2 className="animate-spin" size={16} />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail size={16} />
+                    Resend verification email
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="email" className="block text-gray-900 dark:text-white font-medium mb-2">
               Email Address
             </label>
             <input
@@ -145,12 +198,12 @@ export default function LoginForm() {
               onChange={handleChange}
               placeholder="your@email.com"
               required
-              className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+              className="w-full px-4 py-3 border-2 border-key-color dark:border-key-color-dark rounded-full focus:outline-none focus:border-key-color transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="password" className="block text-gray-900 dark:text-white font-medium mb-2">
               Password
             </label>
             <div className="relative">
@@ -162,12 +215,12 @@ export default function LoginForm() {
                 onChange={handleChange}
                 placeholder="Enter your password"
                 required
-                className="w-full px-4 py-3 pr-12 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+                className="w-full px-4 py-3 pr-12 border-2 border-key-color dark:border-key-color-dark rounded-full focus:outline-none focus:border-key-color transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
@@ -181,9 +234,9 @@ export default function LoginForm() {
                 id="rememberMe"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 text-key-color border-2 border-gray-300 rounded focus:ring-key-color"
+                className="w-4 h-4 text-key-color border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-key-color bg-white dark:bg-[#1d1d1f]"
               />
-              <label htmlFor="rememberMe" className="text-sm text-gray-700">
+              <label htmlFor="rememberMe" className="text-sm text-gray-700 dark:text-gray-300">
                 Remember my email address
               </label>
             </div>
@@ -194,9 +247,9 @@ export default function LoginForm() {
                 id="stayLoggedIn"
                 checked={stayLoggedIn}
                 onChange={(e) => setStayLoggedIn(e.target.checked)}
-                className="w-4 h-4 text-key-color border-2 border-gray-300 rounded focus:ring-key-color"
+                className="w-4 h-4 text-key-color border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-key-color bg-white dark:bg-[#1d1d1f]"
               />
-              <label htmlFor="stayLoggedIn" className="text-sm text-gray-700">
+              <label htmlFor="stayLoggedIn" className="text-sm text-gray-700 dark:text-gray-300">
                 Keep me signed in for 30 days
               </label>
             </div>
@@ -205,7 +258,7 @@ export default function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-pink-700 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-key-color-dark transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="animate-spin" size={20} />}
             {isLoading ? 'Signing In...' : 'Sign In'}
@@ -215,10 +268,10 @@ export default function LoginForm() {
         <div className="my-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-300 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or</span>
+              <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">Or</span>
             </div>
           </div>
         </div>
@@ -226,7 +279,7 @@ export default function LoginForm() {
         <button
           onClick={handleGoogleSignIn}
           disabled={isLoading}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          className="w-full bg-white dark:bg-[#1d1d1f] border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium py-3 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -237,7 +290,7 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
-        <div className="mt-8 text-center text-sm text-gray-600">
+        <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
           {/* 3. Corrected unescaped entity */}
           Don&apos;t have an account?{' '}
           {/* 4. Update the Sign Up link */}
@@ -250,7 +303,7 @@ export default function LoginForm() {
           </Link>
         </div>
 
-        <div className="mt-4 text-center text-sm text-gray-600">
+        <div className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
           {/* 4. Update the Forgot Password link */}
           <Link
             href="/forgot-password"

@@ -70,7 +70,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 md:p-8 text-center relative animate-fade-in-up">
+            <div className="bg-white dark:bg-[#1d1d1f] rounded-xl shadow-2xl w-full max-w-md p-6 md:p-8 text-center relative animate-fade-in-up">
                 <button onClick={onClose} className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -79,8 +79,8 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onClose }) => {
                     <span className="text-2xl text-[#D10041]">👋</span>
                 </div>
 
-                <h2 className="text-2xl font-bold text-gray-800">Welcome, friend!</h2>
-                <p className="mt-2 text-gray-600">
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Welcome, friend!</h2>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
                     We&apos;re a small team trying to build something valuable. Thank you for checking us out!
                 </p>
                 <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 text-sm rounded-lg">
@@ -104,7 +104,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onClose }) => {
                                 onChange={handleEmailChange}
                                 placeholder="your.email@example.com"
                                 required
-                                className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-300"
+                                className="flex-grow px-4 py-2 dark:bg-[#1d1d1f] border border-gray-300 dark:border-gray-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-key-color"
                                 disabled={isSubscribing}
                             />
                             <button
@@ -138,7 +138,7 @@ const WelcomeBanner: React.FC<WelcomeBannerProps> = ({ onClose }) => {
                     Give Feedback on Google Forms
                 </a>
 
-                <button onClick={onClose} className="mt-3 text-sm text-gray-500 hover:underline">Continue to site</button>
+                <button onClick={onClose} className="mt-3 text-sm text-gray-500 dark:text-gray-400 hover:underline">Continue to site</button>
             </div>
             <style>{`
                 @keyframes fade-in-up {

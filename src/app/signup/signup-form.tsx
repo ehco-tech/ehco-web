@@ -195,14 +195,12 @@ export default function EnhancedSignupForm() {
         const imageRef = ref(storage, `profile-pictures/${createdUser.uid}/${profileImage.name}`);
         const snapshot = await uploadBytes(imageRef, profileImage);
         profilePictureUrl = await getDownloadURL(snapshot.ref);
+        console.log('✅ Profile image uploaded:', profilePictureUrl);
+
+        await updateProfile(createdUser, { photoURL: profilePictureUrl });
       }
 
-      await updateProfile(createdUser, {
-        displayName: formData.nickname,
-        photoURL: profilePictureUrl || undefined, // Use undefined if no image
-      });
-
-      // Step 4: Create user profile in Firestore
+      // Step 4: Create the user profile in Firestore
       await createUserProfile(createdUser, {
         nickname: formData.nickname,
         favoriteFigure: formData.favoriteFigure,
@@ -212,113 +210,89 @@ export default function EnhancedSignupForm() {
         profilePicture: profilePictureUrl,
       });
 
-      // Step 5: Sign out to force the user to log in after verifying
+      console.log('✅ User profile created.');
+
+      // Step 5: Sign out the user immediately so they can't access protected content until verification
       await signOut(auth);
+      console.log('✅ User signed out. Redirecting to email verification step.');
+
+      // Step 6: Go to the verification step
       setStep('complete');
+    } catch (err) {
+      console.error('❌ Error during account creation:', err);
 
-      setTimeout(() => {
-        router.push('/login?signup=success');
-      }, 3000);
-
-    } catch (err) { // 2. Corrected 'error: any' with a type guard
-      console.error('❌ Account creation error:', err);
+      let errorMessage = 'Failed to create account. Please try again.';
       if (err instanceof Error) {
-        setError(err.message || 'Failed to create account. Please try again.');
-      } else {
-        setError('An unknown error occurred. Please try again.');
+        if ((err as AuthError).code === 'auth/email-already-in-use') {
+          errorMessage = 'This email is already registered. Please use a different email or sign in.';
+        } else if ((err as AuthError).code === 'auth/weak-password') {
+          errorMessage = 'Password is too weak. Please choose a stronger password.';
+        } else if ((err as AuthError).code === 'auth/invalid-email') {
+          errorMessage = 'Invalid email address. Please check and try again.';
+        } else {
+          errorMessage = err.message;
+        }
       }
-      setStep('details'); // Go back to the details form on error
+
+      setError(errorMessage);
+      setStep('details');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Google Sign-in handler
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError('');
+
     try {
       await signInWithGoogle();
       router.push('/');
-    } catch (err) { // 3. Corrected 'error: any' with a type guard for Firebase Auth errors
-      // --- THIS IS THE CRITICAL LOGIC ---
-      if (err instanceof Error && 'code' in err && 'customData' in err) {
-        const authError = err as AuthError & { customData?: { email?: string } };
-        if (authError.code === 'auth/account-exists-with-different-credential') {
-          const email = authError.customData?.email;
-          if (email) {
-            const methods = await fetchSignInMethodsForEmail(auth, email);
-            if (methods.includes('password')) {
-              setError('This email is already registered. Please sign in with your password instead.');
-            } else {
-              setError(`This email is already registered with another provider (${methods.join(', ')}). Please sign in using that method.`);
-            }
-          } else {
-            setError('This account already exists with a different sign-in method.');
-          }
-        } else {
-          setError(authError.message || 'Failed to sign up with Google');
-        }
-      } else if (err instanceof Error) {
-        setError(err.message || 'Failed to sign up with Google');
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || 'Failed to sign in with Google');
       } else {
-        setError('An unknown error occurred with Google Sign-In.');
+        setError('An unexpected error occurred.');
       }
     } finally {
       setIsLoading(false);
     }
   };
 
-  const debouncedCheckNickname = debounce(checkAvailability, 500);
-  const debouncedCheckEmail = debounce(checkAvailability, 500);
-
-  // Form field handlers (remain the same)
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
 
-    // Reset availability status on change
-    if (name === 'nickname') {
-      setNicknameAvailability('idle');
-      setNicknameMessage('');
-    }
-    if (name === 'email') {
-      setEmailAvailability('idle');
-      setEmailMessage('');
-    }
-
     if (type === 'checkbox') {
-      setFormData({ ...formData, [name]: (e.target as HTMLInputElement).checked });
+      const target = e.target as HTMLInputElement;
+      setFormData({ ...formData, [name]: target.checked });
     } else {
       setFormData({ ...formData, [name]: value });
+    }
 
-      if (name === 'nickname') {
-        debouncedCheckNickname('nickname', value);
-      }
-      if (name === 'email') {
-        // Simple regex to check for a basic email format
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (emailRegex.test(value)) {
-          debouncedCheckEmail('email', value);
-        }
-      }
+    if (name === 'email') {
+      setEmailAvailability('idle');
+      debouncedCheckAvailability('email', value);
+    }
+    if (name === 'nickname') {
+      setNicknameAvailability('idle');
+      debouncedCheckAvailability('nickname', value);
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const debouncedCheckAvailability = useRef(
+    debounce((type: 'email' | 'nickname', value: string) => {
+      checkAvailability(type, value);
+    }, 500)
+  ).current;
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Profile picture must be less than 5MB');
-        return;
-      }
-      if (!file.type.startsWith('image/')) {
-        setError('Please select a valid image file');
-        return;
-      }
       setProfileImage(file);
-      setError('');
       const reader = new FileReader();
-      reader.onload = (e) => { setProfileImagePreview(e.target?.result as string); };
+      reader.onloadend = () => {
+        setProfileImagePreview(reader.result as string);
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -326,105 +300,127 @@ export default function EnhancedSignupForm() {
   const renderFeedbackIcon = (status: AvailabilityStatus) => {
     switch (status) {
       case 'loading':
-        return <Loader2 size={20} className="animate-spin text-gray-400" />;
+        return <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={20} />;
       case 'available':
-        return <CheckCircle2 size={20} className="text-green-500" />;
+        return <CheckCircle2 className="text-green-600 dark:text-green-400" size={20} />;
       case 'taken':
+        return <XCircle className="text-key-color dark:text-key-color-dark" size={20} />;
       case 'error':
-        return <XCircle size={20} className="text-red-500" />;
+        return <XCircle className="text-key-color dark:text-key-color-dark" size={20} />;
       default:
         return null;
     }
   };
 
-  // Render different steps
-  if (step === 'complete') {
-    return (
-      // --- UPDATED: 'complete' step UI and text ---
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <div className="mb-6">
-            <Check className="mx-auto text-green-500" size={64} />
-          </div>
-          <h1 className="text-3xl font-bold text-key-color mb-4">Account Created!</h1>
-          <p className="text-gray-600 mb-6">
-            {/* 4. Corrected unescaped entity */}
-            One last step! We&apos;ve sent a verification link to <strong>{formData.email}</strong>.
-            Please check your inbox to complete your registration.
-          </p>
-          <div className="mb-4">
-            <p className="text-sm text-gray-500">Redirecting to login page...</p>
-            <div className="animate-pulse mt-2">
-              <Loader2 className="mx-auto text-key-color animate-spin" size={24} />
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
+  // --- UPDATED: Creating Screen ---
   if (step === 'creating') {
     return (
-      // --- UPDATED: 'creating' step UI and text ---
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="max-w-md mx-auto px-4 text-center">
-          <div className="mb-6">
-            <Loader2 className="mx-auto text-key-color animate-spin" size={64} />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Creating Your Account</h1>
-          <p className="text-gray-600">
-            Please wait while we set up your EHCO account and send a verification email...
-          </p>
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-key-color-dark mx-auto mb-4" size={48} />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Creating Your Account</h2>
+          <p className="text-gray-600 dark:text-gray-400">Setting up your profile and sending verification email...</p>
         </div>
       </div>
     );
   }
 
-  // --- REMOVED: The JSX for 'phone-code' and 'phone-verify' steps is gone ---
-
-  // Details step
-  return (
-    <div className="min-h-screen bg-white">
-      <main className="max-w-md mx-auto px-4 py-16">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-key-color mb-4">Join EHCO</h1>
-          <p className="text-gray-600">Create your account to get started</p>
-          {/* --- UPDATED: Info box text --- */}
-          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-sm text-blue-700 flex items-center justify-center gap-2">
-              <Mail size={16} /> <strong>Required:</strong> An email verification link will be sent to complete registration.
+  // --- UPDATED: Email Verification Screen ---
+  if (step === 'complete') {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black">
+        <main className="max-w-md mx-auto px-4 py-16">
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="text-green-600 dark:text-green-400" size={32} />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Check Your Email</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
+              We&apos;ve sent a verification link to <span className="font-semibold text-gray-900 dark:text-white">{formData.email}</span>
             </p>
           </div>
+
+          <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-lg p-6 mb-6 border border-gray-200 dark:border-gray-800">
+            <h3 className="font-semibold text-gray-900 dark:text-white mb-3">Next Steps:</h3>
+            <ol className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+              <li className="flex gap-2">
+                <span className="font-semibold">1.</span>
+                <span>Check your email inbox (and spam folder)</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold">2.</span>
+                <span>Click the verification link in the email</span>
+              </li>
+              <li className="flex gap-2">
+                <span className="font-semibold">3.</span>
+                <span>Return here and sign in with your credentials</span>
+              </li>
+            </ol>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800 dark:text-blue-300">
+              <span className="font-semibold">Important:</span> You must verify your email before you can sign in.
+            </p>
+          </div>
+
+          <div className="space-y-4">
+            <Link
+              href="/login"
+              className="block w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-key-color-dark transition-colors text-center"
+            >
+              Go to Sign In
+            </Link>
+
+            <button
+              onClick={() => router.push('/')}
+              className="w-full border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium py-3 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+            >
+              Return to Home
+            </button>
+          </div>
+
+          <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
+            Didn&apos;t receive the email?{' '}
+            <button className="text-key-color hover:underline">
+              Resend verification email
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // --- Main Signup Form (step === 'details') ---
+  return (
+    <div className="min-h-screen bg-white dark:bg-black">
+      <main className="max-w-2xl mx-auto px-4 py-16">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-key-color mb-4">Create Your Account</h1>
+          <p className="text-gray-600 dark:text-gray-400">Join EHCO and start exploring verified information</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-key-color-dark rounded-lg">
+            <p className="text-key-color dark:text-key-color-dark text-sm">{error}</p>
           </div>
         )}
 
-        {/* --- UPDATED: form's onSubmit now calls the new handler --- */}
         <form onSubmit={handleCreateAccount} className="space-y-6">
-
-          {/* ... All your form fields (Profile Pic, Nickname, Email, etc.) remain the same ... */}
           {/* Profile Picture Upload */}
-          <div className="text-center">
-            <div className="relative inline-block">
-              {profileImagePreview ? (
-                <img
-                  src={profileImagePreview}
-                  alt="Profile preview"
-                  className="w-24 h-24 rounded-full object-cover border-4 border-key-color"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-gray-200 border-4 border-key-color flex items-center justify-center">
-                  <User className="text-gray-400" size={32} />
-                </div>
-              )}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative">
+              <div className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center overflow-hidden border-2 border-key-color">
+                {profileImagePreview ? (
+                  <img src={profileImagePreview} alt="Profile preview" className="w-full h-full object-cover" />
+                ) : (
+                  <User size={40} className="text-gray-400 dark:text-gray-500" />
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="absolute bottom-0 right-0 bg-key-color text-white rounded-full p-2 hover:bg-pink-700 transition-colors"
+                className="absolute bottom-0 right-0 bg-key-color text-white p-2 rounded-full hover:bg-key-color-dark transition-colors"
               >
                 <Upload size={16} />
               </button>
@@ -433,15 +429,15 @@ export default function EnhancedSignupForm() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
+              onChange={handleImageChange}
               className="hidden"
             />
-            <p className="text-xs text-gray-500 mt-2">Optional • Max 5MB</p>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">Optional profile picture</p>
           </div>
 
           {/* Nickname */}
           <div>
-            <label htmlFor="nickname" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="nickname" className="block text-gray-900 dark:text-white font-medium mb-2">
               Nickname *
             </label>
             <div className="relative">
@@ -451,16 +447,16 @@ export default function EnhancedSignupForm() {
                 name="nickname"
                 value={formData.nickname}
                 onChange={handleChange}
-                placeholder="How should we call you?"
+                placeholder="Choose your display name"
                 required
-                className="w-full px-4 py-3 pr-12 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+                className="w-full px-4 py-3 pr-12 border-2 border-key-color dark:border-key-color rounded-full focus:outline-none focus:border-key-color-dark transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                 {renderFeedbackIcon(nicknameAvailability)}
               </div>
             </div>
             {['available', 'taken', 'error'].includes(nicknameAvailability) && (
-              <p className={`mt-2 text-sm ${nicknameAvailability === 'available' ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`mt-2 text-sm ${nicknameAvailability === 'available' ? 'text-green-600 dark:text-green-400' : 'text-key-color dark:text-key-color-dark'}`}>
                 {nicknameMessage}
               </p>
             )}
@@ -468,7 +464,7 @@ export default function EnhancedSignupForm() {
 
           {/* Email */}
           <div>
-            <label htmlFor="email" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="email" className="block text-gray-900 dark:text-white font-medium mb-2">
               Email Address *
             </label>
             <div className="relative">
@@ -480,14 +476,14 @@ export default function EnhancedSignupForm() {
                 onChange={handleChange}
                 placeholder="your@email.com"
                 required
-                className="w-full px-4 py-3 pr-12 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+                className="w-full px-4 py-3 pr-12 border-2 border-key-color dark:border-key-color rounded-full focus:outline-none focus:border-key-color-dark transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
                 {renderFeedbackIcon(emailAvailability)}
               </div>
             </div>
             {['available', 'taken', 'error'].includes(emailAvailability) && (
-              <p className={`mt-2 text-sm ${emailAvailability === 'available' ? 'text-green-600' : 'text-red-600'}`}>
+              <p className={`mt-2 text-sm ${emailAvailability === 'available' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {emailMessage}
               </p>
             )}
@@ -495,7 +491,7 @@ export default function EnhancedSignupForm() {
 
           {/* Password */}
           <div>
-            <label htmlFor="password" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="password" className="block text-gray-900 dark:text-white font-medium mb-2">
               Password *
             </label>
             <div className="relative">
@@ -509,29 +505,29 @@ export default function EnhancedSignupForm() {
                 onBlur={() => setPasswordFocused(false)}
                 placeholder="Create a secure password"
                 required
-                className="w-full px-4 py-3 pr-12 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+                className="w-full px-4 py-3 pr-12 border-2 border-key-color dark:border-key-color rounded-full focus:outline-none focus:border-key-color-dark transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
 
             {(passwordFocused || formData.password) && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                <p className="text-sm font-medium text-gray-700 mb-2">Password requirements:</p>
+              <div className="mt-3 p-3 bg-gray-50 dark:bg-[#1d1d1f] rounded-lg border border-gray-200 dark:border-gray-800">
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password requirements:</p>
                 <div className="space-y-1">
                   {passwordRequirements.map((req, index) => (
                     <div key={index} className="flex items-center gap-2">
                       {req.test(formData.password) ? (
-                        <Check size={16} className="text-green-600" />
+                        <Check size={16} className="text-green-600 dark:text-green-400" />
                       ) : (
-                        <X size={16} className="text-gray-400" />
+                        <X size={16} className="text-gray-400 dark:text-gray-500" />
                       )}
-                      <span className={`text-sm ${req.test(formData.password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <span className={`text-sm ${req.test(formData.password) ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-400'}`}>
                         {req.label}
                       </span>
                     </div>
@@ -543,7 +539,7 @@ export default function EnhancedSignupForm() {
 
           {/* Confirm Password */}
           <div>
-            <label htmlFor="confirmPassword" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="confirmPassword" className="block text-gray-900 dark:text-white font-medium mb-2">
               Confirm Password *
             </label>
             <div className="relative">
@@ -555,24 +551,24 @@ export default function EnhancedSignupForm() {
                 onChange={handleChange}
                 placeholder="Confirm your password"
                 required
-                className="w-full px-4 py-3 pr-12 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+                className="w-full px-4 py-3 pr-12 border-2 border-key-color dark:border-key-color rounded-full focus:outline-none focus:border-key-color-dark transition-colors bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
               >
                 {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
             </div>
             {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-              <p className="mt-2 text-sm text-red-600">Passwords do not match</p>
+              <p className="mt-2 text-sm text-red-600 dark:text-red-400">Passwords do not match</p>
             )}
           </div>
 
           {/* Favorite Figure */}
           {/* <div>
-            <label htmlFor="favoriteFigure" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="favoriteFigure" className="block text-gray-900 dark:text-white font-medium mb-2">
               <div className="flex items-center gap-2">
                 <Star size={18} />
                 Favorite K-Figure (Optional)
@@ -584,7 +580,7 @@ export default function EnhancedSignupForm() {
               value={formData.favoriteFigure}
               onChange={handleChange}
               disabled={figuresLoading}
-              className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors appearance-none cursor-pointer disabled:opacity-50"
+              className="w-full px-4 py-3 border-2 border-key-color dark:border-pink-700 rounded-full focus:outline-none focus:border-pink-700 transition-colors appearance-none cursor-pointer disabled:opacity-50 bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white"
             >
               <option value="">
                 {figuresLoading ? 'Loading figures...' : 'Select your favorite (optional)'}
@@ -608,9 +604,9 @@ export default function EnhancedSignupForm() {
                 checked={formData.privacyPolicyAccepted}
                 onChange={handleChange}
                 required
-                className="mt-1 w-4 h-4 text-key-color border-2 border-key-color rounded focus:ring-key-color"
+                className="mt-1 w-4 h-4 text-key-color border-2 border-key-color dark:border-pink-700 rounded focus:ring-key-color bg-white dark:bg-[#1d1d1f]"
               />
-              <label htmlFor="privacyPolicyAccepted" className="text-sm text-gray-700">
+              <label htmlFor="privacyPolicyAccepted" className="text-sm text-gray-700 dark:text-gray-300">
                 I agree to the{' '}
                 <Link href="/privacy-policy" className="text-key-color hover:underline" target="_blank">
                   Privacy Policy
@@ -628,7 +624,7 @@ export default function EnhancedSignupForm() {
           <button
             type="submit"
             disabled={isLoading || !formData.privacyPolicyAccepted}
-            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-pink-700 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-key-color-dark transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="animate-spin" size={20} />}
             {isLoading ? 'Creating Account...' : 'Create Account'}
@@ -638,10 +634,10 @@ export default function EnhancedSignupForm() {
         <div className="my-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-300 dark:border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white dark:bg-black text-gray-500 dark:text-gray-400">Or continue with</span>
             </div>
           </div>
         </div>
@@ -649,7 +645,7 @@ export default function EnhancedSignupForm() {
         <button
           onClick={handleGoogleSignIn}
           disabled={isLoading}
-          className="w-full bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+          className="w-full bg-white dark:bg-[#1d1d1f] border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium py-3 rounded-full hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-3"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -660,10 +656,10 @@ export default function EnhancedSignupForm() {
           Continue with Google
         </button>
 
-        <div className="mt-8 text-center text-sm text-gray-600">
+        <div className="mt-8 text-center text-sm text-gray-600 dark:text-gray-400">
           Already have an account?{' '}
           <Link href="/login" className="text-key-color font-medium hover:underline">
-            Sign in here
+            Log in here
           </Link>
         </div>
       </main>

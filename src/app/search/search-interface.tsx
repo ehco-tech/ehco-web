@@ -124,7 +124,7 @@ export default function SearchInterface() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
             {/* Loading Overlay */}
             {isPageLoading && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
@@ -138,10 +138,10 @@ export default function SearchInterface() {
             <main className="w-[92%] sm:w-[90%] md:w-[80%] mx-auto px-2 sm:px-4 py-12 sm:py-16">
                 {/* Header Section */}
                 <section className="text-center mb-8 sm:mb-12">
-                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4 text-black">
+                    <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4 text-black dark:text-white">
                         Search <span className="text-key-color">Figures</span>
                     </h1>
-                    <p className="text-sm sm:text-base md:text-lg text-gray-600 mb-6 sm:mb-8">
+                    <p className="text-sm sm:text-base md:text-lg text-gray-600 dark:text-gray-400 mb-6 sm:mb-8">
                         Find detailed profiles and information about your favorite public figures.
                     </p>
 
@@ -154,12 +154,12 @@ export default function SearchInterface() {
                                     value={searchQuery}
                                     onChange={handleInputChange}
                                     placeholder="Search for a public figure..."
-                                    className="w-full px-4 md:px-6 py-2.5 md:py-3 text-black text-base md:text-lg border-2 border-key-color rounded-full focus:outline-none focus:border-key-color pl-12"
+                                    className="w-full px-4 md:px-6 py-2.5 md:py-3 text-black dark:text-white bg-white dark:bg-slate-800 text-base md:text-lg border-2 border-key-color rounded-full focus:outline-none focus:border-key-color pl-12"
                                     autoFocus
                                 />
                                 {searchQuery ? (
                                     <X
-                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer hover:text-gray-600"
+                                        className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
                                         size={20}
                                         onClick={handleClearSearch}
                                     />
@@ -173,21 +173,21 @@ export default function SearchInterface() {
 
                         {/* Search Results Dropdown */}
                         {isSearching ? (
-                            <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0">
-                                <div className="px-3 py-3 text-sm text-gray-500 text-center">
+                            <div className="absolute z-50 mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg shadow-lg w-full left-0 right-0">
+                                <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                                     Loading...
                                 </div>
                             </div>
                         ) : (
                             <>
                                 {showResults && searchResults.length > 0 && (
-                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0 max-h-96 overflow-y-auto">
+                                    <div className="absolute z-50 mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg shadow-lg w-full left-0 right-0 max-h-96 overflow-y-auto">
                                         <div className="grid grid-cols-1 md:grid-cols-2">
                                             {searchResults.map((result) => (
                                                 <button
                                                     key={result.objectID}
                                                     onClick={() => handleResultClick(result)}
-                                                    className="flex flex-row items-center px-4 py-3 hover:bg-gray-100 w-full text-left"
+                                                    className="flex flex-row items-center px-4 py-3 hover:bg-gray-100 dark:hover:bg-slate-700 w-full text-left"
                                                 >
                                                     <div className="relative w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden flex-shrink-0">
                                                         <Image
@@ -200,13 +200,13 @@ export default function SearchInterface() {
                                                     </div>
 
                                                     <div className="flex-1 pl-4">
-                                                        <div className="font-medium text-sm md:text-md text-black truncate">
+                                                        <div className="font-medium text-sm md:text-md text-black dark:text-white truncate">
                                                             {result._highlightResult?.name ?
                                                                 renderHighlightedText(result._highlightResult.name.value) :
                                                                 result.name}
                                                         </div>
                                                         {result.name_kr && (
-                                                            <div className="text-xs md:text-sm text-gray-500 truncate">
+                                                            <div className="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">
                                                                 {result._highlightResult?.name_kr ?
                                                                     renderHighlightedText(result._highlightResult.name_kr.value) :
                                                                     result.name_kr}
@@ -219,10 +219,10 @@ export default function SearchInterface() {
 
                                         {/* "Search for more results" button */}
                                         {searchQuery && (
-                                            <div className="border-t p-3">
+                                            <div className="border-t dark:border-slate-700 p-3">
                                                 <button
                                                     onClick={handleSearchSubmit}
-                                                    className="w-full text-center text-key-color hover:bg-gray-50 py-2 rounded text-sm font-medium"
+                                                    className="w-full text-center text-key-color hover:bg-gray-50 dark:hover:bg-slate-700 py-2 rounded text-sm font-medium"
                                                 >
                                                     Search for more results →
                                                 </button>
@@ -232,15 +232,15 @@ export default function SearchInterface() {
                                 )}
 
                                 {showResults && searchQuery && searchResults.length === 0 && (
-                                    <div className="absolute z-50 mt-2 bg-white border rounded-lg shadow-lg w-full left-0 right-0">
-                                        <div className="px-3 py-3 text-sm text-gray-500 text-center">
+                                    <div className="absolute z-50 mt-2 bg-white dark:bg-slate-800 border dark:border-slate-700 rounded-lg shadow-lg w-full left-0 right-0">
+                                        <div className="px-3 py-3 text-sm text-gray-500 dark:text-gray-400 text-center">
                                             No results found
                                         </div>
                                         {searchQuery && (
-                                            <div className="border-t p-3">
+                                            <div className="border-t dark:border-slate-700 p-3">
                                                 <button
                                                     onClick={handleSearchSubmit}
-                                                    className="w-full text-center text-key-color hover:bg-gray-50 py-2 rounded text-sm font-medium"
+                                                    className="w-full text-center text-key-color hover:bg-gray-50 dark:hover:bg-slate-700 py-2 rounded text-sm font-medium"
                                                 >
                                                     Search articles instead →
                                                 </button>
@@ -255,13 +255,13 @@ export default function SearchInterface() {
 
                 {/* Default state */}
                 <section className="text-center py-16">
-                    <div className="text-gray-400 mb-6">
+                    <div className="text-gray-400 dark:text-gray-600 mb-6">
                         <Search size={64} className="mx-auto mb-4" />
                     </div>
-                    <h3 className="text-lg font-medium text-gray-600 mb-2">
+                    <h3 className="text-lg font-medium text-gray-600 dark:text-gray-300 mb-2">
                         Start typing to search
                     </h3>
-                    <p className="text-gray-500 mb-8">
+                    <p className="text-gray-500 dark:text-gray-400 mb-8">
                         Enter a name or keyword to find public figures and their detailed profiles.
                     </p>
 

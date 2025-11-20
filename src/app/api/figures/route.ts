@@ -1,6 +1,21 @@
 import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
+
+interface FigureStats {
+    totalFacts: number;
+    totalSources: number;
+}
+
+interface FeaturedUpdate {
+    eventTitle: string;
+    eventSummary: string;
+    eventPointDescription: string;
+    eventPointDate: string;
+    mainCategory: string;
+    subcategory: string;
+    lastUpdated?: Timestamp; // Timestamp
+}
 
 interface PublicFigure {
     id: string;
@@ -12,6 +27,8 @@ interface PublicFigure {
     gender?: string;
     company?: string;
     debutDate?: string;
+    stats: FigureStats;
+    featuredUpdate?: FeaturedUpdate;
 }
 
 export async function POST(request: Request) {
@@ -33,7 +50,7 @@ export async function POST(request: Request) {
         // Firestore 'in' queries are limited to 10 items, so we need to batch them
         const batchSize = 10;
         const batches = [];
-        
+
         for (let i = 0; i < figureIds.length; i += batchSize) {
             const batch = figureIds.slice(i, i + batchSize);
             batches.push(batch);
@@ -47,9 +64,9 @@ export async function POST(request: Request) {
                 collection(db, 'selected-figures'),
                 where('__name__', 'in', batch) // __name__ refers to document ID
             );
-            
+
             const querySnapshot = await getDocs(q);
-            
+
             querySnapshot.docs.forEach(doc => {
                 const data = doc.data();
                 allResults.push({
@@ -62,6 +79,8 @@ export async function POST(request: Request) {
                     gender: data.gender || '',
                     company: data.company || '',
                     debutDate: data.debutDate || '',
+                    stats: data.stats || { totalFacts: 0, totalSources: 0 },
+                    featuredUpdate: data.featuredUpdate || undefined
                 });
             });
         }
@@ -92,17 +111,17 @@ export async function GET(request: Request) {
         // Search by name (case-insensitive contains)
         const q = query(collection(db, 'selected-figures'));
         const querySnapshot = await getDocs(q);
-        
+
         const results: PublicFigure[] = [];
-        
+
         querySnapshot.docs.forEach(doc => {
             const data = doc.data();
             const figureName = (data.name || '').toLowerCase();
             const figureNameKr = (data.name_kr || '').toLowerCase();
             const searchTerm = name.toLowerCase();
-            
+
             // Check if name matches (contains)
-            if (figureName.includes(searchTerm) || 
+            if (figureName.includes(searchTerm) ||
                 figureNameKr.includes(searchTerm) ||
                 searchTerm.includes(figureName)) {
                 results.push({
@@ -115,6 +134,8 @@ export async function GET(request: Request) {
                     gender: data.gender || '',
                     company: data.company || '',
                     debutDate: data.debutDate || '',
+                    stats: data.stats || { totalFacts: 0, totalSources: 0 },
+                    featuredUpdate: data.featuredUpdate || undefined
                 });
             }
         });

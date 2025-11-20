@@ -4,7 +4,6 @@ import { NextResponse } from "next/server";
 
 // --- INTERFACES ---
 
-// For new v2 curated data
 interface CuratedEvent {
     event_title: string;
     event_summary: string;
@@ -22,7 +21,6 @@ interface SubCategoryMap {
     [subCategory: string]: CuratedEvent[];
 }
 
-// This interface is what we want our API to ultimately return for v2.
 interface CuratedTimelineData {
     [mainCategory: string]: {
         description: string;
@@ -32,40 +30,54 @@ interface CuratedTimelineData {
     };
 }
 
-// For old v1 legacy data
-interface WikiContentItem {
-    id: string;
-    category: string;
-    subcategory?: string;
-    content: string;
-    articleIds: string[];
-}
-
-interface LegacyWikiData {
-    categoryContent: WikiContentItem[];
-}
-
-
 // --- HELPER FUNCTIONS ---
 
-async function fetchMainOverview(publicFigureRef: DocumentReference) {
-    // ... (This function is correct, no changes needed)
-    const overviewRef = doc(publicFigureRef, 'wiki-content', 'main-overview');
-    const overviewDoc = await getDoc(overviewRef);
-    if (overviewDoc.exists()) {
-        const data = overviewDoc.data();
-        return {
-            id: 'main-overview',
-            content: data.content || "",
-            articleIds: data.articleIds || []
-        };
+const MAIN_CATEGORIES = [
+    'Creative Works', 
+    'Live & Broadcast', 
+    'Public Relations', 
+    'Personal Milestones', 
+    'Incidents & Controversies'
+];
+
+const formatDisplayName = (id: string): string => 
+    id.split('-')
+      .map(word => word === '&' ? '&' : word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+      .replace(/\s&\s/g, ' & ');
+
+// Combined function to fetch all wiki-content data in one go
+async function fetchWikiContent(publicFigureRef: DocumentReference) {
+    const wikiContentRef = collection(publicFigureRef, 'wiki-content');
+    const wikiContentSnapshot = await getDocs(wikiContentRef);
+
+    let mainOverview = { id: 'main-overview', content: "", articleIds: [] };
+    const categoryDescriptions = new Map<string, string>();
+
+    for (const doc of wikiContentSnapshot.docs) {
+        const data = doc.data();
+        
+        if (doc.id === 'main-overview') {
+            // Get the main overview
+            mainOverview = {
+                id: 'main-overview',
+                content: data.content || "",
+                articleIds: data.articleIds || []
+            };
+        } else {
+            // Check if this is a main category document
+            const formattedId = formatDisplayName(doc.id);
+            if (MAIN_CATEGORIES.includes(formattedId)) {
+                categoryDescriptions.set(formattedId, data.content || "");
+            }
+        }
     }
-    return { id: 'main-overview', content: "", articleIds: [] };
+
+    return { mainOverview, categoryDescriptions };
 }
 
-// MODIFIED: This function is now simplified. Its ONLY job is to get the event data.
-// It no longer needs to worry about descriptions.
-async function fetchNewTimelineData(publicFigureRef: DocumentReference): Promise<Record<string, SubCategoryMap> | null> {
+// Fetch timeline event data from curated-timeline collection
+async function fetchTimelineData(publicFigureRef: DocumentReference): Promise<Record<string, SubCategoryMap> | null> {
     const timelineCollectionRef = collection(publicFigureRef, 'curated-timeline');
     const timelineSnapshot = await getDocs(timelineCollectionRef);
 
@@ -75,39 +87,10 @@ async function fetchNewTimelineData(publicFigureRef: DocumentReference): Promise
 
     const eventData: Record<string, SubCategoryMap> = {};
     for (const doc of timelineSnapshot.docs) {
-        // Just get the raw data, which contains the sub-category fields.
         eventData[doc.id] = doc.data();
     }
     return eventData;
 }
-
-// NO CHANGE: This function is perfect because it already reads the 'wiki-content'
-// documents where our descriptions are stored. We will reuse it.
-async function fetchLegacyWikiData(publicFigureRef: DocumentReference): Promise<LegacyWikiData> {
-    const wikiContentRef = collection(publicFigureRef, 'wiki-content');
-    const wikiContentSnapshot = await getDocs(wikiContentRef);
-
-    const categoryContent: WikiContentItem[] = [];
-    const MAIN_CATEGORIES = ['Creative Works', 'Live & Broadcast', 'Public Relations', 'Personal Milestones', 'Incidents & Controversies'];
-    const formatDisplayName = (id: string): string => id.split('-').map(word => word === '&' ? '&' : word.charAt(0).toUpperCase() + word.slice(1)).join(' ').replace(/\s&\s/g, ' & ');
-
-    for (const doc of wikiContentSnapshot.docs) {
-        if (doc.id === 'main-overview') continue;
-
-        const data = doc.data();
-        const id = doc.id;
-        const formattedId = formatDisplayName(id);
-        if (MAIN_CATEGORIES.includes(formattedId)) {
-            // This captures the main category documents and their content.
-            categoryContent.push({ id, category: formattedId, content: data.content || "", articleIds: data.articleIds || [] });
-        } else if (data.category && MAIN_CATEGORIES.includes(data.category)) {
-            // This captures the sub-category documents for the v1 schema.
-            categoryContent.push({ id, category: data.category, subcategory: formattedId, content: data.content || "", articleIds: data.articleIds || [] });
-        }
-    }
-    return { categoryContent };
-}
-
 
 // --- MAIN GET HANDLER ---
 export async function GET(
@@ -124,53 +107,30 @@ export async function GET(
             return NextResponse.json({ error: 'Public figure not found' }, { status: 404 });
         }
 
-        const mainOverviewData = await fetchMainOverview(publicFigureRef);
-
-        // Fetch both sets of data in parallel
-        const [timelineEventData, wikiData] = await Promise.all([
-            fetchNewTimelineData(publicFigureRef),
-            fetchLegacyWikiData(publicFigureRef)
+        // Fetch both wiki content and timeline data in parallel
+        const [wikiContent, timelineEventData] = await Promise.all([
+            fetchWikiContent(publicFigureRef),
+            fetchTimelineData(publicFigureRef)
         ]);
 
-        // If we have timeline data, we are using the v2 schema.
-        if (timelineEventData) {
-
-            // Create a simple map to easily look up descriptions by category name.
-            const descriptionMap = new Map<string, string>();
-            wikiData.categoryContent.forEach(item => {
-                // We only care about main categories here (items without a subcategory).
-                if (!item.subcategory) {
-                    descriptionMap.set(item.category, item.content);
-                }
-            });
-
-            // Now, we'll build the final data structure the frontend expects.
-            const finalCuratedData: CuratedTimelineData = {};
-
-            for (const mainCategory in timelineEventData) {
-                finalCuratedData[mainCategory] = {
-                    // Get the description from our map.
-                    description: descriptionMap.get(mainCategory) || "",
-                    // The event data becomes the subCategories.
-                    subCategories: timelineEventData[mainCategory]
-                };
-            }
-
-            return NextResponse.json({
-                main_overview: mainOverviewData,
-                timeline_content: {
-                    schema_version: 'v2_curated',
-                    data: finalCuratedData // Send the newly merged data!
-                }
-            });
+        if (!timelineEventData) {
+            return NextResponse.json({ error: 'Timeline data not found' }, { status: 404 });
         }
 
-        // Fallback to legacy schema if no timeline data exists.
+        // Build the final data structure with descriptions merged in
+        const finalCuratedData: CuratedTimelineData = {};
+
+        for (const mainCategory in timelineEventData) {
+            finalCuratedData[mainCategory] = {
+                description: wikiContent.categoryDescriptions.get(mainCategory) || "",
+                subCategories: timelineEventData[mainCategory]
+            };
+        }
+
         return NextResponse.json({
-            main_overview: mainOverviewData,
+            main_overview: wikiContent.mainOverview,
             timeline_content: {
-                schema_version: 'v1_legacy',
-                data: wikiData
+                data: finalCuratedData
             }
         });
 

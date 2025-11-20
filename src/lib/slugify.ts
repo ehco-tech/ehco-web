@@ -18,8 +18,9 @@ export function createUrlSlug(text: string): string {
     const normalized = text
         .toLowerCase()
         .normalize('NFD') // Decomposes accented characters
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\s+/g, ''); // Removes the accent marks (diacritics)
+        .replace(/[\u0300-\u036f]/g, '') // Removes the accent marks (diacritics)
+        .replace(/\s+/g, '')
+        .replace(/-/g, '');
     
     // URL encode the result to handle special characters safely
     return encodeURIComponent(normalized);

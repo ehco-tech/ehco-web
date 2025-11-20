@@ -45,16 +45,16 @@ export default function ForgotPasswordForm() {
 
   if (emailSent) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-white dark:bg-black">
         <main className="max-w-md mx-auto px-4 py-16">
           <div className="text-center">
             <CheckCircle className="mx-auto mb-6 text-green-500" size={64} />
             <h1 className="text-3xl font-bold text-key-color mb-4">Check Your Email</h1>
-            <p className="text-gray-600 mb-8">
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
               {/* 2. Fixed unescaped entity */}
-              We&apos;ve sent a password reset link to <strong>{email}</strong>
+              We&apos;ve sent a password reset link to <strong className='dark:text-white'>{email}</strong>
             </p>
-            <p className="text-sm text-gray-500 mb-8">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
               {/* 3. Fixed unescaped entity */}
               Didn&apos;t receive the email? Check your spam folder or try again.
             </p>
@@ -62,14 +62,14 @@ export default function ForgotPasswordForm() {
             <div className="space-y-4">
               <button
                 onClick={() => setEmailSent(false)}
-                className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-pink-700 transition-colors"
+                className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-key-color-dark transition-colors"
               >
                 Send Another Email
               </button>
 
               <Link
                 href="/login"
-                className="w-full bg-white border-2 border-gray-300 text-gray-700 font-medium py-3 rounded-full hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full bg-white dark:bg-[#1d1d1f] border-2 border-gray-300 dark:border-gray-800 text-gray-700 dark:text-gray-400 font-medium py-3 rounded-full hover:bg-gray-50 hover:dark:bg-gray-800 transition-colors flex items-center justify-center gap-2"
               >
                 <ArrowLeft size={20} />
                 Back to Login
@@ -82,11 +82,11 @@ export default function ForgotPasswordForm() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-black">
       <main className="max-w-md mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-key-color mb-4">Reset Password</h1>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             {/* 4. Fixed unescaped entity */}
             Enter your email address and we&apos;ll send you a link to reset your password.
           </p>
@@ -100,7 +100,7 @@ export default function ForgotPasswordForm() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-gray-900 font-medium mb-2">
+            <label htmlFor="email" className="block text-gray-900 dark:text-white font-medium mb-2">
               Email Address
             </label>
             <input
@@ -110,14 +110,14 @@ export default function ForgotPasswordForm() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
               required
-              className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 transition-colors"
+              className="w-full px-4 py-3 border-2 border-key-color rounded-full focus:outline-none focus:border-key-color-dark transition-colors dark:bg-[#1d1d1f]"
             />
           </div>
 
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-pink-700 transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="w-full bg-key-color text-white font-medium py-3 rounded-full hover:bg-key-color-dark transition-colors disabled:opacity-75 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isLoading && <Loader2 className="animate-spin" size={20} />}
             {isLoading ? 'Sending...' : 'Send Reset Link'}

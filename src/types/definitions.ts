@@ -2,11 +2,11 @@
 
 // --- SHARED INTERFACES ---
 
-// For v2 Curated Data (using the correct definition with sourceIds)
+// For Curated Timeline Data
 export interface TimelinePoint {
     date: string;
     description: string;
-    sourceIds?: string[]; // The required property
+    sourceIds?: string[];
     sources?: { id?: string }[];
 }
 
@@ -15,7 +15,7 @@ export interface CuratedEvent {
     event_summary: string;
     event_years: number[];
     primary_date: string;
-    timeline_points: TimelinePoint[]; // Uses the TimelinePoint interface
+    timeline_points: TimelinePoint[];
     status: string;
     sources: { id?: string }[];
 }
@@ -29,45 +29,22 @@ export interface CuratedTimelineData {
     };
 }
 
-
-// For v1 Legacy Data
-export interface WikiContentItem {
-    id: string;
-    category: string;
-    subcategory?: string;
-    content: string;
-    articleIds: string[];
-}
-
-export interface LegacyWikiData {
-    categoryContent: WikiContentItem[];
-}
-
-
-// For the overall API Response
+// Main Overview
 export interface MainOverview {
     id: string;
     content: string;
     articleIds: string[];
 }
 
-export interface V1TimelineContent {
-    schema_version: 'v1_legacy';
-    data: LegacyWikiData;
-}
-
-export interface V2TimelineContent {
-    schema_version: 'v2_curated';
+// API Response Structure (simplified - no more schema versioning)
+export interface TimelineContent {
     data: CuratedTimelineData;
 }
-
-export type TimelineContent = V1TimelineContent | V2TimelineContent;
 
 export interface ApiContentResponse {
     main_overview: MainOverview;
     timeline_content: TimelineContent;
 }
-
 
 // For Articles & Summaries
 export interface Article {
@@ -89,3 +66,34 @@ export interface ArticleSummary {
     content?: string;
     title?: string;
 }
+
+// ============================================================================
+// DEPRECATED - Keeping these temporarily for reference, but they're no longer used
+// Remove these once you've confirmed everything works
+// ============================================================================
+
+// For v1 Legacy Data (DEPRECATED)
+export interface WikiContentItem {
+    id: string;
+    category: string;
+    subcategory?: string;
+    content: string;
+    articleIds: string[];
+}
+
+export interface LegacyWikiData {
+    categoryContent: WikiContentItem[];
+}
+
+export interface V1TimelineContent {
+    schema_version: 'v1_legacy';
+    data: LegacyWikiData;
+}
+
+export interface V2TimelineContent {
+    schema_version: 'v2_curated';
+    data: CuratedTimelineData;
+}
+
+// Old type that included both v1 and v2 (DEPRECATED)
+// export type TimelineContent = V1TimelineContent | V2TimelineContent;

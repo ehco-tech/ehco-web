@@ -10,7 +10,9 @@ export default function robots(): MetadataRoute.Robots {
             disallow: [
                 '/admin/',
                 '/login',
-                '/signup'
+                '/signup',
+                '/profile',
+                '/notifications'
             ],
         },
         sitemap: 'https://www.ehco.ai/sitemap.xml',

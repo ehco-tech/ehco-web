@@ -9,6 +9,7 @@ import JsonLd from '@/components/JsonLd';
 import Link from 'next/link';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Providers } from './providers';
+import ScrollToTop from '@/components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -126,24 +127,26 @@ export default function RootLayout({
         <meta name="naver-site-verification" content="264ce0fdcec0f8516f15473b626bad62bc29202e" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1708240738390806"
           crossOrigin="anonymous"></script>
+        
       </head>
       <body className={inter.className}>
         <Providers>
+          <ScrollToTop />
           <div className="fixed top-0 left-0 right-0 z-50 shadow-md">
             <Header />
           </div>
           {/* <ProfileCompletionBanner /> */}
-          <main className="min-h-screen pt-16 bg-white">
+          <main className="min-h-screen pt-16 bg-gray-50 dark:bg-black">
             {children}
             <JsonLd data={websiteSchema} />
           </main>
 
           {/* Footer - white background with only copyright and links */}
-          <footer className="mt-0 bg-white border-t border-gray-200 py-8">
+          <footer className="mt-0 bg-white dark:bg-[#1d1d1f] border-t border-gray-200 dark:border-gray-800 py-8">
             <div className="w-[90%] md:w-[80%] mx-auto px-4">
               <div className="text-center">
-                <p className="text-xs md:text-sm mb-4 text-gray-600">© 2025 EHCO. All rights reserved.</p>
-                <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-600">
+                <p className="text-xs md:text-sm mb-4 text-gray-600 dark:text-gray-400">© 2025 EHCO. All rights reserved.</p>
+                <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                   <Link
                     href="/about-ehco"
                     className='hover:underline'

@@ -6,12 +6,13 @@ export default {
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
+  darkMode: 'media',
   theme: {
     extend: {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        "key-color" : "#d10041",
+        "key-color": "#d10041",
         'key-color-dark': '#f87171',
       },
     },

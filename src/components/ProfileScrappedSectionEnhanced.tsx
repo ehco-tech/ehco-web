@@ -99,7 +99,7 @@ const TimelineSources: React.FC<TimelineSourcesProps> = ({ sourceIds, articlesMa
             {/* Sources Header with Toggle and Count */}
             <button
                 onClick={() => setIsVisible(!isVisible)}
-                className="flex items-center gap-2 text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100 transition-colors"
+                className="flex items-center gap-2 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             >
                 <span>Sources ({relevantArticles.length})</span>
                 <ChevronDown
@@ -117,20 +117,20 @@ const TimelineSources: React.FC<TimelineSourcesProps> = ({ sourceIds, articlesMa
                             href={article.link}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center gap-2 p-2 border rounded-lg hover:bg-gray-50 transition-all duration-200 shadow-sm"
+                            className="flex items-center gap-2 p-2 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-all duration-200 shadow-sm"
                         >
                             {article.imageUrls?.[0] && (
                                 <img
                                     src={article.imageUrls[0]}
                                     alt={article.subTitle || 'Source image'}
-                                    className="w-12 h-12 object-cover rounded-md flex-shrink-0 bg-gray-100"
+                                    className="w-12 h-12 object-cover rounded-md flex-shrink-0 bg-gray-100 dark:bg-gray-700"
                                 />
                             )}
                             <div className="flex flex-col min-w-0 flex-1">
-                                <h6 className="font-medium text-xs text-blue-700 hover:underline leading-tight truncate">
+                                <h6 className="font-medium text-xs text-blue-700 dark:text-blue-400 hover:underline leading-tight truncate">
                                     {article.subTitle || article.title || 'Source Article'}
                                 </h6>
-                                <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+                                <div className="flex items-center gap-1 mt-1 text-xs text-gray-500 dark:text-gray-400">
                                     {article.source && <span className="truncate">{article.source}</span>}
                                     {article.source && article.sendDate && <span>&middot;</span>}
                                     {article.sendDate && (
@@ -179,14 +179,14 @@ const TimelinePointDisplay: React.FC<TimelinePointProps> = ({ point, isLast, art
     return (
         <div className="relative pb-3">
             {/* Timeline dot */}
-            <div className="absolute w-2 h-2 bg-key-color rounded-full left-[-12px] top-1 border border-white"></div>
+            <div className="absolute w-2 h-2 bg-key-color rounded-full left-[-12px] top-1 border border-white dark:border-gray-900"></div>
             {/* Timeline line */}
-            {!isLast && <div className="absolute w-px h-full bg-gray-200 left-[-8px] top-3"></div>}
+            {!isLast && <div className="absolute w-px h-full bg-gray-200 dark:bg-gray-700 left-[-8px] top-3"></div>}
 
             {/* Content */}
             <div className="ml-4">
-                <p className="text-xs font-medium text-gray-500 mb-1">{formatDate(point.date)}</p>
-                <p className="text-sm text-gray-700 mb-1">{point.description.replaceAll("*", "'")}</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">{formatDate(point.date)}</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-1">{point.description.replaceAll("*", "'")}</p>
 
                 {/* Sources */}
                 {sourceIds.length > 0 && (
@@ -251,16 +251,16 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
     };
 
     return (
-        <div className={`bg-white rounded-xl border border-gray-200 hover:shadow-md transition-shadow ${isFullView ? 'p-6' : 'p-4'}`}>
+        <div className={`bg-white dark:bg-[#2c2c2e] rounded-xl border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow ${isFullView ? 'p-6' : 'p-4'}`}>
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2 flex-wrap">
-                    <Tag className="text-blue-500" size={14} />
-                    <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded">
+                    <Tag className="text-blue-500 dark:text-blue-400" size={14} />
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded">
                         {scrappedEvent.subcategory}
                     </span>
                     {formatEventYears() && (
-                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
                             {formatEventYears()}
                         </span>
                     )}
@@ -268,7 +268,7 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
                 <button
                     onClick={() => onRemove(scrappedEvent.id)}
                     disabled={isRemoving}
-                    className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors disabled:opacity-50 flex-shrink-0"
+                    className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-colors disabled:opacity-50 flex-shrink-0"
                     title="Remove from scrapped events"
                 >
                     {isRemoving ? <Loader2 className="animate-spin" size={14} /> : <Trash2 size={14} />}
@@ -278,9 +278,9 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
             {/* Figure Info with Profile Picture */}
             <div className="mb-3">
                 <Link href={`/${createUrlSlug(scrappedEvent.figureId)}`}>
-                    <div className="flex items-center gap-3 hover:text-key-color transition-colors">
+                    <div className="flex items-center gap-3 hover:text-key-color dark:hover:text-pink-400 transition-colors">
                         {/* Profile Picture */}
-                        <div className="w-12 h-12 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
+                        <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex items-center justify-center flex-shrink-0">
                             {figure?.profilePic ? (
                                 <Image
                                     src={figure.profilePic}
@@ -291,16 +291,16 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
                                     unoptimized
                                 />
                             ) : (
-                                <UserIcon size={20} className="text-gray-400" />
+                                <UserIcon size={20} className="text-gray-400 dark:text-gray-500" />
                             )}
                         </div>
 
                         {/* Figure Info */}
                         <div>
-                            <h3 className="font-medium text-gray-900 text-sm">
+                            <h3 className="font-medium text-gray-900 dark:text-white text-sm">
                                 {scrappedEvent.figureName}
                             </h3>
-                            <p className="text-xs text-gray-500">{scrappedEvent.figureNameKr}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{scrappedEvent.figureNameKr}</p>
                         </div>
                     </div>
                 </Link>
@@ -308,27 +308,27 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
 
             {/* Event Info */}
             <div className="mb-4">
-                <h4 className="font-semibold text-gray-800 mb-1 text-base">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-1 text-base">
                     {formatEventTitle()}
                 </h4>
 
                 {formatEventSummary() && (
-                    <p className="text-sm text-gray-600 italic mb-2">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 italic mb-2">
                         {formatEventSummary()}
                     </p>
                 )}
 
                 {/* Category Path */}
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">
                     {scrappedEvent.mainCategory} → {scrappedEvent.subcategory}
                 </div>
 
                 {/* Timeline Preview/Toggle */}
                 {hasTimelinePoints && (
-                    <div className="border-t border-gray-100 pt-3">
+                    <div className="border-t border-gray-100 dark:border-gray-700 pt-3">
                         <button
                             onClick={() => setIsExpanded(!isExpanded)}
-                            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                            className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300 transition-colors"
                         >
                             <Clock size={14} />
                             <span>{timelinePoints.length} timeline point{timelinePoints.length !== 1 ? 's' : ''}</span>
@@ -337,7 +337,7 @@ const ScrappedEventCard: React.FC<ScrappedEventCardProps> = ({
 
                         {/* Timeline Points with Sources */}
                         {isExpanded && (
-                            <div className="mt-3 pl-4 border-l-2 border-gray-100">
+                            <div className="mt-3 pl-4 border-l-2 border-gray-100 dark:border-gray-700">
                                 <div className="relative">
                                     {/* 2. Replaced 'any' with the 'TimelinePoint' type */}
                                     {timelinePoints.map((point: TimelinePoint, index: number) => (
@@ -403,26 +403,26 @@ export default function ProfileScrappedSectionEnhanced({
     if (isFullView) {
         // Full view layout for the main scrapped events tab
         return (
-            <div className="bg-gray-50 rounded-2xl p-8">
+            <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-8">
                 <div className="hidden md:flex md:flex-row items-center justify-between mb-6">
                     <div className="flex items-center gap-2">
-                        <Bookmark className="text-blue-500 fill-blue-500" size={24} />
-                        <h2 className="text-2xl font-bold text-gray-900">Scrapped Events</h2>
+                        <Bookmark className="text-blue-500 dark:text-blue-400 fill-blue-500 dark:fill-blue-400" size={24} />
+                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Scrapped Events</h2>
                     </div>
-                    <span className="text-sm text-gray-500 bg-gray-200 px-3 py-1 mt-2 md:mt-0 rounded-full">
+                    <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-3 py-1 mt-2 md:mt-0 rounded-full">
                         {scrappedEvents.length} event{scrappedEvents.length !== 1 ? 's' : ''}
                     </span>
                 </div>
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-12">
-                        <Loader2 className="animate-spin text-gray-400" size={32} />
+                        <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={32} />
                     </div>
                 ) : scrappedEvents.length === 0 ? (
                     <div className="text-center py-12">
-                        <Bookmark className="mx-auto mb-4 text-gray-300" size={64} />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No scrapped events yet</h3>
-                        <p className="text-gray-500 text-sm mb-6">Start scrapping events from timelines to see them here</p>
+                        <Bookmark className="mx-auto mb-4 text-gray-300 dark:text-gray-600" size={64} />
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No scrapped events yet</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Start scrapping events from timelines to see them here</p>
                         <Link
                             href="/all-figures"
                             className="inline-block bg-key-color text-white font-medium py-3 px-6 rounded-full hover:bg-pink-700 transition-colors"
@@ -451,11 +451,11 @@ export default function ProfileScrappedSectionEnhanced({
 
     // Compact view for profile overview
     return (
-        <div className="bg-gray-50 rounded-2xl p-6">
+        <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-6">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                    <Bookmark className="text-blue-500 fill-blue-500" size={24} />
-                    <h2 className="text-xl font-bold text-gray-900">Scrapped Events</h2>
+                    <Bookmark className="text-blue-500 dark:text-blue-400 fill-blue-500 dark:fill-blue-400" size={24} />
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">Scrapped Events</h2>
                 </div>
                 {scrappedEvents.length > maxItems && (
                     <span className="text-key-color hover:underline text-sm font-medium cursor-pointer">
@@ -466,12 +466,12 @@ export default function ProfileScrappedSectionEnhanced({
 
             {isLoading ? (
                 <div className="flex items-center justify-center py-8">
-                    <Loader2 className="animate-spin text-gray-400" size={24} />
+                    <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={24} />
                 </div>
             ) : scrappedEvents.length === 0 ? (
                 <div className="text-center py-8">
-                    <Bookmark className="mx-auto mb-3 text-gray-300" size={48} />
-                    <p className="text-gray-500 text-sm mb-4">No scrapped events yet</p>
+                    <Bookmark className="mx-auto mb-3 text-gray-300 dark:text-gray-600" size={48} />
+                    <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">No scrapped events yet</p>
                     <Link
                         href="/all-figures"
                         className="inline-block bg-key-color text-white text-sm font-medium py-2 px-4 rounded-full hover:bg-pink-700 transition-colors"

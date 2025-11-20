@@ -1,6 +1,6 @@
 // src/app/signup/page.tsx
 import { Metadata } from 'next';
-import EnhancedSignupForm from './enhanced-signup-form';
+import EnhancedSignupForm from './signup-form';
 
 export const metadata: Metadata = {
   title: 'Sign Up - EHCO',

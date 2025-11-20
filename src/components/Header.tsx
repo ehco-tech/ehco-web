@@ -8,12 +8,14 @@ import SearchSlider from './SearchSlider';
 import UserMenu from './UserMenu';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
+import NotificationCenter from './NotificationCenter';
+import { useAuth } from '@/context/AuthContext';
 
 const LoadingOverlay = () => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg flex items-center space-x-3">
-      <Loader2 className="animate-spin text-slate-600" size={24} />
-      <span className="text-slate-600 font-medium">Loading...</span>
+  <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-[60] flex items-center justify-center">
+    <div className="bg-white dark:bg-[#1d1d1f] p-6 rounded-lg flex items-center space-x-3">
+      <Loader2 className="animate-spin text-slate-600 dark:text-white" size={24} />
+      <span className="text-slate-600 dark:text-white font-medium">Loading...</span>
     </div>
   </div>
 );
@@ -24,6 +26,7 @@ export default function Header() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { user, loading } = useAuth();
 
   // Check if current page is home page
   const isHomePage = pathname === '/';
@@ -41,12 +44,12 @@ export default function Header() {
 
   return (
     <>
-      <header className="w-full border-b bg-white">
+      <header className="w-full border-b bg-white dark:bg-[#1d1d1f] dark:border-gray-800">
         <div className="w-[90%] md:w-[80%] mx-auto px-4 h-16 flex justify-center items-center">
           <div className="w-full h-full flex">
             {/* Left section with menu */}
-            <div className="flex justify-start items-center w-1/3 text-black">
-              <Menu onClick={() => setIsMenuOpen(!isMenuOpen)} className="cursor-pointer" />
+            <div className="flex justify-start items-center w-1/3 text-black dark:text-white">
+              <Menu onClick={() => setIsMenuOpen(!isMenuOpen)} className="cursor-pointer hover:dark:text-key-color-dark" />
             </div>
 
             {/* Center section with logo */}
@@ -59,6 +62,7 @@ export default function Header() {
                     fill
                     className="object-contain"
                     sizes="80px"
+                    priority
                   />
                 </div>
               </Link>
@@ -70,17 +74,26 @@ export default function Header() {
                 {/* Search icon - show on all pages except home and all-figures */}
                 {!isHomePage && !isAllFiguresPage && (
                   <>
-                    <div className="text-black mr-2">
+                    <div className="text-black dark:text-white mr-2">
                       <Search
-                        className="cursor-pointer hover:text-gray-600 transition-colors"
+                        className="cursor-pointer hover:text-gray-600 hover:dark:text-key-color-dark transition-colors"
                         size={20}
                         onClick={() => setIsSearchOpen(true)}
                       />
                     </div>
                   </>
                 )}
-                {/* UserMenu is self-contained and handles its own responsiveness */}
-                <UserMenu />
+
+                {!loading && (
+                  <>
+                    {user && (
+                      <div className="hidden sm:block mr-2">
+                        <NotificationCenter />
+                      </div>
+                    )}
+                    <UserMenu />
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -90,9 +103,9 @@ export default function Header() {
       {isLoading && <LoadingOverlay />}
 
       <Suspense fallback={
-        <div className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50 transform -translate-x-full">
-          <div className='w-full h-16 px-8 flex justify-start items-center border-b border-b-black'>
-            <p className='text-xl font-bold text-black'>Loading...</p>
+        <div className="fixed top-0 left-0 h-full w-64 bg-white dark:bg-[#1d1d1f] shadow-lg z-50 transform -translate-x-full">
+          <div className='w-full h-16 px-8 flex justify-start items-center border-b border-b-black dark:border-b-gray-700'>
+            <p className='text-xl font-bold text-black dark:text-white'>Loading...</p>
           </div>
         </div>
       }>
@@ -100,7 +113,9 @@ export default function Header() {
       </Suspense>
 
       {/* Search slider for all screen sizes */}
-      <SearchSlider isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <Suspense fallback={null}>
+        <SearchSlider isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      </Suspense>
     </>
   );
 }

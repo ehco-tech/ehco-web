@@ -11,7 +11,9 @@ import {
   onAuthStateChanged,
   updateProfile,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -33,6 +35,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setPersistence(auth, browserLocalPersistence)
+      .catch((error) => {
+        console.error("Error setting persistence:", error);
+      });
+    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -42,7 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+    // Check if email is verified
+    if (!userCredential.user.emailVerified) {
+      // Sign out the user immediately
+      await firebaseSignOut(auth);
+      throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+    }
   };
 
   const signUp = async (email: string, password: string, displayName: string) => {
@@ -62,12 +76,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isNewUser = !userDoc.exists();
 
     if (isNewUser) {
-      // Create user profile for new Google users
+      // Create user profile for new Google users with emailVerified set to true
+      // (Google accounts are already verified by Google)
       await createUserProfile(result.user, {
         nickname: result.user.displayName || 'User',
         favoriteFigure: '',
         phoneNumber: '',
         phoneVerified: false, // They still need to verify phone
+        emailVerified: true, // Google accounts are pre-verified
         profilePicture: result.user.photoURL || '',
       });
     }

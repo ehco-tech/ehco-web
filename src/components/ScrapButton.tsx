@@ -1,7 +1,7 @@
 // src/components/ScrapButton.tsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Bookmark, BookmarkCheck, LogIn, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { addToScrappedEvents, removeFromScrappedEvents, isScrapped } from '@/lib/scrapping-service';
@@ -87,54 +87,55 @@ export default function ScrapButton({
   const [isScrappedState, setIsScrappedState] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
-  const [scrollPosition, setScrollPosition] = useState(0);
 
+  // Use ref to track if modal is actually open (not just state change)
+  const isModalOpenRef = useRef(false);
+  const savedScrollRef = useRef(0);
+
+  // Handle modal open/close with scroll prevention
   useEffect(() => {
     if (showLoginPrompt) {
+      // Mark that modal is actually open
+      isModalOpenRef.current = true;
+
       // Save current scroll position
-      const currentScroll = window.scrollY;
-      setScrollPosition(currentScroll);
+      savedScrollRef.current = window.scrollY;
 
       // Prevent body scroll while maintaining position
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
-      document.body.style.top = `-${currentScroll}px`;
+      document.body.style.top = `-${savedScrollRef.current}px`;
       document.body.style.left = '0';
       document.body.style.right = '0';
-    } else {
-      // Restore body styles first
+      document.body.style.width = '100%';
+    } else if (isModalOpenRef.current) {
+      // Only restore if modal was actually open (not on filter changes)
+      isModalOpenRef.current = false;
+
+      // Restore body styles
       document.body.style.overflow = '';
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
       document.body.style.right = '';
+      document.body.style.width = '';
 
-      // Use requestAnimationFrame to ensure DOM has updated before scrolling
-      requestAnimationFrame(() => {
-        window.scrollTo(0, scrollPosition);
-      });
+      // Restore scroll position
+      window.scrollTo(0, savedScrollRef.current);
     }
 
+    // Cleanup on unmount - only restore if modal is open
     return () => {
-      // Cleanup
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-    };
-  }, [showLoginPrompt]);
-
-  // Also add this cleanup when component unmounts
-  useEffect(() => {
-    return () => {
-      if (scrollPosition > 0) {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollPosition);
-        });
+      if (isModalOpenRef.current) {
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
       }
     };
-  }, []);
+  }, [showLoginPrompt]);
 
   // Size variants
   const sizeClasses = {
@@ -198,7 +199,6 @@ export default function ScrapButton({
       }
     } catch (error) {
       console.error('Error updating scrapped events:', error);
-      // You might want to show a toast notification here
     } finally {
       setIsLoading(false);
     }

@@ -3,7 +3,7 @@
 // This component is interactive and uses hooks, so it must be a Client Component.
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { Search, X, Loader2, CheckSquare, Square } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -49,15 +49,15 @@ const CATEGORY_ORDER = [
 ];
 
 const LoadingOverlay = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
-        <div className="bg-white p-6 rounded-lg flex items-center space-x-3">
-            <Loader2 className="animate-spin text-slate-600" size={24} />
-            <span className="text-slate-600 font-medium">Loading...</span>
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-[60] flex items-center justify-center">
+        <div className="bg-white dark:bg-[#1d1d1f] p-6 rounded-lg flex items-center space-x-3">
+            <Loader2 className="animate-spin text-slate-600 dark:text-white" size={24} />
+            <span className="text-slate-600 dark:text-white font-medium">Loading...</span>
         </div>
     </div>
 );
 
-export default function AllFiguresContent() {
+function AllFiguresContentInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -154,6 +154,11 @@ export default function AllFiguresContent() {
     const isSearchMode = !!searchQuery.trim();
 
     // --- Side Effects ---
+    // Scroll to top when component mounts
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, []);
+
     // Handle click outside to close the category dropdown
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -250,9 +255,9 @@ export default function AllFiguresContent() {
 
     // --- Render Logic ---
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-white dark:bg-black">
             <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-900">
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-8 sm:mb-12 text-gray-900 dark:text-white">
                     All Figures
                 </h1>
 
@@ -265,12 +270,12 @@ export default function AllFiguresContent() {
                             placeholder="Search for a public figure..."
                             value={searchQuery}
                             onChange={handleInputChange}
-                            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 text-base border-2 border-key-color rounded-full focus:outline-none focus:border-pink-700 pl-10 sm:pl-12 text-black"
+                            className="w-full px-4 sm:px-6 py-2.5 sm:py-3 text-base border-2 border-key-color dark:border-key-color-dark rounded-full focus:outline-none focus:border-key-color pl-10 sm:pl-12 text-black dark:text-white bg-white dark:bg-[#1d1d1f] placeholder-gray-500 dark:placeholder-gray-400"
                         />
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-key-color" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-key-color dark:text-key-color-dark" />
                         {searchQuery && (
                             <X
-                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 cursor-pointer"
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 cursor-pointer hover:text-gray-600 dark:hover:text-gray-300"
                                 size={20}
                                 onClick={() => handleInputChange({ target: { value: '' } } as React.ChangeEvent<HTMLInputElement>)}
                             />
@@ -279,24 +284,24 @@ export default function AllFiguresContent() {
 
                     {/* Category Filter */}
                     <div className="flex justify-center items-center gap-2 relative" ref={categoryDropdownRef}>
-                        <label className="text-gray-700 whitespace-nowrap">Categories:</label>
+                        <label className="text-gray-700 dark:text-gray-300 whitespace-nowrap">Categories:</label>
                         <div className="relative">
                             <button
                                 onClick={() => setShowCategoryDropdown(!showCategoryDropdown)}
-                                className="bg-white border-2 border-key-color rounded-full px-4 py-1 text-left flex items-center justify-between focus:outline-none w-48"
+                                className="bg-white dark:bg-[#1d1d1f] border-2 border-key-color dark:border-key-color-dark rounded-full px-4 py-1 text-left flex items-center justify-between focus:outline-none w-48"
                             >
-                                <span className="truncate text-gray-700">
+                                <span className="truncate text-gray-700 dark:text-gray-300">
                                     {selectedCategories.includes('All') ? 'All Categories' : `${selectedCategories.length} selected`}
                                 </span>
-                                <svg className={`fill-current h-4 w-4 transition-transform ${showCategoryDropdown ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                                <svg className={`fill-current h-4 w-4 transition-transform text-gray-700 dark:text-gray-300 ${showCategoryDropdown ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                             </button>
                             {showCategoryDropdown && (
-                                <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                <div className="absolute z-10 mt-1 w-full bg-white dark:bg-[#1d1d1f] border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                                     <ul className="py-1">
                                         {categories.map(category => (
-                                            <li key={category} className="px-3 py-2 hover:bg-gray-100 cursor-pointer flex items-center" onClick={() => handleCategoryChange(category)}>
-                                                {selectedCategories.includes(category) ? <CheckSquare className="mr-2 h-5 w-5 text-key-color" /> : <Square className="mr-2 h-5 w-5 text-gray-400" />}
-                                                <span className="text-gray-800">{category}</span>
+                                            <li key={category} className="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer flex items-center" onClick={() => handleCategoryChange(category)}>
+                                                {selectedCategories.includes(category) ? <CheckSquare className="mr-2 h-5 w-5 text-key-color dark:text-key-color-dark" /> : <Square className="mr-2 h-5 w-5 text-gray-400 dark:text-gray-500" />}
+                                                <span className="text-gray-800 dark:text-gray-200">{category}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -308,7 +313,7 @@ export default function AllFiguresContent() {
                     {/* Selected Filters Display */}
                     <div className="flex flex-wrap justify-center items-center gap-2 min-h-[32px]">
                         {!selectedCategories.includes('All') && selectedCategories.map(category => (
-                            <div key={category} className="bg-key-color text-white px-3 py-1 rounded-full text-sm flex items-center gap-1 cursor-pointer" onClick={() => handleCategoryChange(category)}>
+                            <div key={category} className="bg-key-color text-white px-3 py-1 rounded-full text-sm flex items-center gap-1 cursor-pointer hover:bg-pink-700 transition-colors" onClick={() => handleCategoryChange(category)}>
                                 <span>{category}</span><X className="h-4 w-4" />
                             </div>
                         ))}
@@ -318,7 +323,7 @@ export default function AllFiguresContent() {
                 {/* Clear Filters Button */}
                 {(!selectedCategories.includes('All') || searchQuery) && (
                     <div className="flex justify-center mb-6">
-                        <button onClick={clearAllFilters} className="text-sm text-gray-500 hover:text-gray-700 underline transition-colors">
+                        <button onClick={clearAllFilters} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline transition-colors">
                             Clear all filters
                         </button>
                     </div>
@@ -327,45 +332,62 @@ export default function AllFiguresContent() {
 
                 {/* Main Content Area */}
                 {isLoading && (
-                    <div className="text-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-key-color mx-auto"></div><p className="mt-4 text-gray-600">Loading figures...</p></div>
+                    <div className="text-center py-12"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-key-color mx-auto"></div><p className="mt-4 text-gray-600 dark:text-gray-400">Loading figures...</p></div>
                 )}
                 {isError && (
-                    <div className="text-center py-12 text-red-600">{error.message}</div>
+                    <div className="text-center py-12 text-key-color dark:text-key-color-dark">{error.message}</div>
                 )}
                 {!isLoading && !isError && figures.length > 0 && (
                     <>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
                             {figures.map((figure) => (
                                 <Link href={`/${createUrlSlug(figure.id)}`} key={figure.id} className="flex flex-col items-center group">
-                                    <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-40 lg:h-40 relative mb-3 rounded-full overflow-hidden border-2 border-gray-200 group-hover:border-key-color transition-colors">
-                                        <Image src={figure.profilePic || '/images/default-profile.png'} alt={figure.name} fill sizes="(max-width: 640px) 6rem, 10rem" className="object-cover" priority />
+                                    <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-40 lg:h-40 relative mb-3 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 group-hover:border-key-color dark:group-hover:border-key-color-dark transition-colors">
+                                        <Image
+                                            src={figure.profilePic || '/images/default-profile.png'}
+                                            alt={figure.name}
+                                            fill
+                                            sizes="(max-width: 640px) 96px, (max-width: 1024px) 112px, 160px"
+                                            className="object-cover object-center"
+                                            quality={100}
+                                            unoptimized={figure.profilePic?.includes('googleusercontent.com')}
+                                        />
                                     </div>
-                                    <span className="text-center text-gray-900 font-medium text-sm sm:text-base truncate w-full">{figure.name}</span>
-                                    {figure.occupation?.[0] && <span className="text-xs text-gray-500 mt-1 truncate w-full text-center">{figure.occupation[0]}</span>}
+                                    <span className="text-center text-gray-900 dark:text-white font-medium text-sm sm:text-base truncate w-full">{figure.name}</span>
+                                    {figure.occupation?.[0] && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate w-full text-center">{figure.occupation[0]}</span>}
                                 </Link>
                             ))}
                         </div>
                         {totalPages > 1 && (
                             <div className="flex justify-center items-center gap-1 sm:gap-2 flex-wrap">
-                                <button onClick={() => handlePageChange(1)} disabled={currentPage === 1} className="px-2 py-1 text-gray-600 disabled:opacity-50" aria-label="First page">«</button>
-                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-2 py-1 text-gray-600 disabled:opacity-50" aria-label="Previous page">‹</button>
+                                <button onClick={() => handlePageChange(1)} disabled={currentPage === 1} className="px-2 py-1 text-gray-600 dark:text-gray-400 disabled:opacity-50" aria-label="First page">«</button>
+                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="px-2 py-1 text-gray-600 dark:text-gray-400 disabled:opacity-50" aria-label="Previous page">‹</button>
                                 {getPageNumbers().map(page => (
-                                    <button key={page} onClick={() => handlePageChange(page)} className={`px-3 py-1 rounded-full ${currentPage === page ? 'bg-key-color text-white' : 'text-gray-600 hover:bg-gray-100'}`} aria-label={`Page ${page}`} aria-current={currentPage === page ? 'page' : undefined}>{page}</button>
+                                    <button key={page} onClick={() => handlePageChange(page)} className={`px-3 py-1 rounded-full ${currentPage === page ? 'bg-key-color text-white' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'}`} aria-label={`Page ${page}`} aria-current={currentPage === page ? 'page' : undefined}>{page}</button>
                                 ))}
-                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-2 py-1 text-gray-600 disabled:opacity-50" aria-label="Next page">›</button>
-                                <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="px-2 py-1 text-gray-600 disabled:opacity-50" aria-label="Last page">»</button>
+                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="px-2 py-1 text-gray-600 dark:text-gray-400 disabled:opacity-50" aria-label="Next page">›</button>
+                                <button onClick={() => handlePageChange(totalPages)} disabled={currentPage === totalPages} className="px-2 py-1 text-gray-600 dark:text-gray-400 disabled:opacity-50" aria-label="Last page">»</button>
                             </div>
                         )}
-                        <div className="text-center mt-4 text-sm text-gray-500">
+                        <div className="text-center mt-4 text-sm text-gray-500 dark:text-gray-400">
                             Showing {figures.length} of {totalCount} figures | Page {currentPage} of {totalPages}
                         </div>
                     </>
                 )}
                 {!isLoading && figures.length === 0 && (
-                    <div className="text-center py-12 text-gray-600">{isSearchMode ? `No figures found for "${searchQuery}"` : 'No figures match the selected categories'}</div>
+                    <div className="text-center py-12 text-gray-600 dark:text-gray-400">{isSearchMode ? `No figures found for "${searchQuery}"` : 'No figures match the selected categories'}</div>
                 )}
             </main>
-            {isFetching && !isLoading && <LoadingOverlay />}
+            {/* Show loading overlay when fetching new page/filter data, but not during background refetches */}
+            {isFetching && !isLoading && data && <LoadingOverlay />}
         </div>
+    );
+}
+
+export default function AllFiguresContent() {
+    return (
+        <Suspense fallback={<LoadingOverlay />}>
+            <AllFiguresContentInner />
+        </Suspense>
     );
 }

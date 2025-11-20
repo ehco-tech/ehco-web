@@ -14,9 +14,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             <LoadingProvider>
                 <AuthProvider>
-                    <FiguresProvider>
-                        {children}
-                    </FiguresProvider>
+                    {children}
                 </AuthProvider>
             </LoadingProvider>
         </QueryClientProvider>

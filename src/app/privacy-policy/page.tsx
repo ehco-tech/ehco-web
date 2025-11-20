@@ -9,24 +9,24 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicy() {
     return (
-        <div className="min-h-screen bg-white">
-            <div className="max-w-3xl mx-auto px-4 py-8 text-black">
+        <div className="min-h-screen bg-white dark:bg-black">
+            <div className="max-w-3xl mx-auto px-4 py-8 text-black dark:text-white">
                 <h1 className="text-3xl font-bold text-center mb-8 text-key-color">Privacy Policy</h1>
 
-                <p className="text-gray-600 mb-8">Last Updated: May 4, 2025</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-8">Last Updated: May 4, 2025</p>
 
                 <div className="prose max-w-none">
-                    <p className="mb-6">
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">
                         Welcome to EHCO (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;). We are committed to protecting your privacy. This Privacy Policy explains how
                         we collect, use, and disclose information when you use our website and services (the &ldquo;Service&rdquo;).
                     </p>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">1. Information We Collect</h2>
-                    <p className="mb-4">
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">
                         We collect minimal information to operate our Service effectively. The types of information we collect depend on how
                         you interact with us:
                     </p>
-                    <ul className="list-disc ml-6 mb-6">
+                    <ul className="list-disc ml-6 mb-6 text-gray-700 dark:text-gray-300">
                         <li><span className="font-bold">Newsletter Subscription:</span>
                             If you choose to subscribe to our newsletter, we collect your email address solely for the purpose of
                             sending you updates and news related to EHCO.
@@ -48,8 +48,8 @@ export default function PrivacyPolicy() {
                     </ul>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">2. How We Use Your Information</h2>
-                    <p className="mb-4">We use the information we collect for the following purposes:</p>
-                    <ul className="list-disc ml-6 mb-6">
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">We use the information we collect for the following purposes:</p>
+                    <ul className="list-disc ml-6 mb-6 text-gray-700 dark:text-gray-300">
                         <li>To send you newsletters and other communications if you have subscribed.</li>
                         <li>To respond to your inquiries, feedback, or requests for support.</li>
                         <li>To operate, maintain, and improve our Service, including analyzing usage trends and ensuring security.</li>
@@ -57,19 +57,19 @@ export default function PrivacyPolicy() {
                     </ul>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">3. Cookies and Similar Technologies</h2>
-                    <p className="mb-6">
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">
                         We may use cookies (small text files placed on your device) and similar technologies to help operate the Service,
                         enhance your experience, and gather usage data. For example, cookies may help us remember preferences or analyze
                         site performance. You can typically control cookies through your web browser&apos;s settings.
                     </p>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">4. Data Sharing and Disclosure</h2>
-                    <p className="mb-4">
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">
                         We do not sell, rent, or trade your personal information (such as your email address) with third parties for their
                         marketing purposes.
                     </p>
-                    <p className="mb-4">We may share information in the following limited circumstances:</p>
-                    <ul className="list-disc ml-6 mb-6">
+                    <p className="mb-4 text-gray-700 dark:text-gray-300">We may share information in the following limited circumstances:</p>
+                    <ul className="list-disc ml-6 mb-6 text-gray-700 dark:text-gray-300">
                         <li><span className="font-bold">Service Providers:</span> We may share information with third-party vendors
                             and service providers who perform services on our behalf, such as email delivery services for our newsletter or analytics providers.
                             These providers are expected to protect your information and use it only for the purposes we specify.
@@ -81,14 +81,14 @@ export default function PrivacyPolicy() {
                     </ul>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">5. Data Security</h2>
-                    <p className="mb-6">
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">
                         We implement reasonable administrative, technical, and physical measures to protect the information we collect from
                         unauthorized access, use, or disclosure. However, no internet transmission or electronic storage method is 100%
                         secure, and we cannot guarantee absolute security.
                     </p>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">6. Your Choices and Rights</h2>
-                    <ul className="list-disc ml-6 mb-6">
+                    <ul className="list-disc ml-6 mb-6 text-gray-700 dark:text-gray-300">
                         <li><span className="font-bold">Newsletter:</span> You can unsubscribe from our newsletter at any time by
                             clicking the &ldquo;unsubscribe&rdquo; link provided in the emails.
                         </li>
@@ -99,17 +99,17 @@ export default function PrivacyPolicy() {
                     </ul>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">7. Changes to This Privacy Policy</h2>
-                    <p className="mb-6">
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">
                         We may update this Privacy Policy from time to time. When we do, we will post the updated policy on this page and
                         revise the &ldquo;Last Updated&rdquo; date at the top. We encourage you to review this policy periodically.
                     </p>
 
                     <h2 className="text-xl font-bold text-key-color mt-8 mb-4">8. Contact Us</h2>
-                    <p className="mb-2">If you have any questions or concerns about this Privacy Policy or our privacy practices, please contact us at:</p>
-                    <p className="mb-6">Email: <span className="underline">info@ehco.com</span>
+                    <p className="mb-2 text-gray-700 dark:text-gray-300">If you have any questions or concerns about this Privacy Policy or our privacy practices, please contact us at:</p>
+                    <p className="mb-6 text-gray-700 dark:text-gray-300">Email: <span className="underline">info@ehco.com</span>
                     </p>
 
-                    <p className="text-center text-gray-500 mt-12">© 2025 EHCO. All rights reserved.</p>
+                    <p className="text-center text-gray-500 dark:text-gray-400 mt-12">© 2025 EHCO. All rights reserved.</p>
                 </div>
             </div>
         </div>

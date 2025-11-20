@@ -50,4 +50,4 @@ firestore.rules
 /functions/.env.*
 
 # venv
-/crawler_env
+/news

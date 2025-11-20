@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 
 // A simple loading fallback for Suspense
 const LoadingOverlay = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-[60] flex items-center justify-center">
-        <div className="bg-white p-6 rounded-lg flex items-center space-x-3">
-            <Loader2 className="animate-spin text-slate-600" size={24} />
-            <span className="text-slate-600 font-medium">Loading...</span>
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-[60] flex items-center justify-center">
+        <div className="bg-white dark:bg-[#1d1d1f] p-6 rounded-lg flex items-center space-x-3">
+            <Loader2 className="animate-spin text-slate-600 dark:text-white" size={24} />
+            <span className="text-slate-600 dark:text-white font-medium">Loading...</span>
         </div>
     </div>
 );
