@@ -368,8 +368,8 @@ async function DiscographySectionWrapper({
     if (!spotifyUrl || spotifyUrl.length === 0) {
         return (
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Discography</h2>
+                <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                    <h2 className="text-3xl font-bold text-key-color dark:text-key-color-dark mb-2">Discography</h2>
                     <p className="text-gray-600 dark:text-gray-300 mb-8">Chart-topping albums and singles that defined a generation</p>
                     <div className="text-gray-500 dark:text-gray-400 text-center py-12">
                         No Spotify profile linked for {artistName}.
