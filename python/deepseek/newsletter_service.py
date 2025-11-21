@@ -268,11 +268,13 @@ class NewsletterService:
                         font-weight: 600;
                         color: #1a1a1a;
                         font-size: 18px;
-                        margin-bottom: 4px;
+                        margin-bottom: 8px;
+                        line-height: 1.3;
                     }}
                     .event-count {{
                         color: #657786;
                         font-size: 14px;
+                        line-height: 1.4;
                     }}
                     .events-list {{
                         padding: 20px;
@@ -346,16 +348,19 @@ class NewsletterService:
                 events = update['events']
                 figure_id = update['figureId']
                 
-                # Get figure image URL (you may need to adjust this based on how you store profile pics)
+                # Get figure image URL and construct full URL
                 figure_image_url = update.get('figureImageUrl', '')
-                
+
                 # Limit to top 3 events for email brevity
                 display_events = events[:3]
                 remaining_count = len(events) - len(display_events)
-                
+
                 # Build avatar HTML - use image if available, otherwise fallback to colored circle
                 if figure_image_url:
-                    avatar_html = f'<img src="{figure_image_url}" class="figure-avatar" alt="{figure_name}" />'
+                    # Construct full URL: remove leading slash if present, then combine with base_url
+                    image_path = figure_image_url.lstrip('/')
+                    full_image_url = f"{self.base_url}/{image_path}"
+                    avatar_html = f'<img src="{full_image_url}" class="figure-avatar" alt="{figure_name}" />'
                 else:
                     avatar_html = '<div class="figure-avatar"></div>'
                 
@@ -363,9 +368,9 @@ class NewsletterService:
                     <div class="figure-update">
                         <div class="figure-header">
                             {avatar_html}
-                            <div class="figure-info">
-                                <div class="figure-name">{figure_name}</div>
-                                <div class="event-count">{len(events)} new event{'s' if len(events) != 1 else ''}</div>
+                            <div class="figure-info" style="flex: 1; min-width: 0; padding-left: 12px;">
+                                <div class="figure-name" style="font-weight: 600; color: #1a1a1a; font-size: 18px; margin: 0 0 6px 0; line-height: 1.4;">{figure_name}</div>
+                                <div class="event-count" style="color: #657786; font-size: 14px; margin: 0; line-height: 1.5;">{len(events)} new event{'s' if len(events) != 1 else ''}</div>
                             </div>
                         </div>
                         <div class="events-list">
@@ -400,7 +405,7 @@ class NewsletterService:
                 html_content += f"""
                         </div>
                         <div style="text-align: center; padding: 15px;">
-                            <a href="{self.base_url}/{figure_id}" class="cta-button">View All Updates</a>
+                            <a href="{self.base_url}/{figure_id}" class="cta-button" style="display: inline-block; background: #e91e63; color: #ffffff !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 10px 5px;">View All Updates</a>
                         </div>
                     </div>
                 """
@@ -547,7 +552,7 @@ class NewsletterService:
                     if figure_doc.exists:
                         figure_data = figure_doc.to_dict()
                         figure_name = figure_data.get('name', figure_id)
-                        figure_image_url = figure_data.get('profilePictureUrl', '')
+                        figure_image_url = figure_data.get('profilePic', '')
                     else:
                         figure_name = figure_id
                         figure_image_url = ''
@@ -606,9 +611,11 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser(description="Newsletter service CLI")
-    parser.add_argument('--action', choices=['daily', 'weekly', 'process', 'test'], 
+    parser.add_argument('--action', choices=['daily', 'weekly', 'process', 'test'],
                        default='process', help='Action to perform')
     parser.add_argument('--batch-id', help='Specific batch ID to process')
+    parser.add_argument('--test-email', help='Email address to send test newsletter to')
+    parser.add_argument('--send-test', action='store_true', help='Actually send the test email (default: just preview HTML)')
     
     args = parser.parse_args()
     
@@ -628,27 +635,68 @@ if __name__ == "__main__":
             # Test with sample data
             test_updates = [
                 {
-                    'figureId': 'test_figure',
-                    'figureName': 'Test Celebrity',
+                    'figureId': 'bangchan',
+                    'figureName': 'Bang Chan',
+                    'figureImageUrl': '/images/bangchan.png',  # Test with real image
                     'events': [
                         {
-                            'event_title': 'Test Event',
-                            'event_summary': 'This is a test event for the newsletter system',
+                            'event_title': 'New Album Release Announcement',
+                            'event_summary': 'Bang Chan announces upcoming solo album with a heartfelt message to fans. The album is set to feature collaborations with several renowned artists.',
                             'main_category': 'Entertainment',
                             'subcategory': 'Music',
+                            'event_date': datetime.now()
+                        },
+                        {
+                            'event_title': 'Instagram Live Session',
+                            'event_summary': 'Hosted a surprise live session discussing music production tips and answering fan questions.',
+                            'main_category': 'Social Media',
+                            'subcategory': 'Instagram',
+                            'event_date': datetime.now()
+                        }
+                    ]
+                },
+                {
+                    'figureId': 'aespa',
+                    'figureName': 'Aespa',
+                    'figureImageUrl': '/images/aespa.png',
+                    'events': [
+                        {
+                            'event_title': 'World Tour Dates Announced',
+                            'event_summary': 'aespa reveals their 2024 world tour schedule, including stops in North America, Europe, and Asia.',
+                            'main_category': 'Entertainment',
+                            'subcategory': 'Concerts',
                             'event_date': datetime.now()
                         }
                     ]
                 }
             ]
-            
+
+            # Use provided email or default
+            test_email = args.test_email if args.test_email else 'test@example.com'
+
             test_user_prefs = {
                 'name': 'Test User',
-                'email': 'test@example.com'
+                'email': test_email
             }
-            
+
             html = await service._generate_newsletter_html(test_user_prefs, test_updates)
-            print("Generated HTML preview:")
-            print(html[:500] + "...")
+
+            if args.send_test:
+                # Actually send the test email
+                print(f"Sending test newsletter to {test_email}...")
+                subject = await service._generate_newsletter_subject(test_updates)
+                await service._send_email(
+                    to_email=test_email,
+                    subject=subject,
+                    html_content=html,
+                    user_id='test_user'
+                )
+                print(f"✅ Test newsletter sent to {test_email}")
+            else:
+                # Just preview the HTML
+                print("Generated HTML preview (use --send-test to actually send):")
+                print(html[:500] + "...")
+                print("\nTo send a test email, run:")
+                print(f"  python newsletter_service.py --action test --test-email your@email.com --send-test")
     
     asyncio.run(main())

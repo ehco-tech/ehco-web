@@ -74,6 +74,8 @@ type TrendingUpdate = {
   timeAgo: string;
   source?: string;
   verified: boolean;
+  figureId: string;
+  eventTitle: string;
 };
 
 // Interface matching the API response from /api/updates
@@ -119,6 +121,13 @@ const getInitials = (name: string): string => {
     .toUpperCase()
     .slice(0, 2);
 };
+
+// Slugify function for creating URL-friendly hash anchors
+const slugify = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with -
+    .replace(/[^\w-]+/g, ''); // Remove all non-word chars
 
 // Format event date based on available precision
 const formatEventDate = (dateStr: string): string => {
@@ -224,7 +233,9 @@ const mockTrendingUpdates: TrendingUpdate[] = [
     description: 'Netflix confirms "Queen of Tears" reached #1 on global non-English TV chart with 19.5M viewing hours, marking Kim Soo-Hyun\'s biggest international success.',
     timeAgo: '2 hours ago',
     source: 'Netflix Press Release',
-    verified: true
+    verified: true,
+    figureId: 'kim-soo-hyun',
+    eventTitle: 'Queen of Tears Success'
   },
   {
     id: '2',
@@ -234,7 +245,9 @@ const mockTrendingUpdates: TrendingUpdate[] = [
     },
     description: 'Celebrity sightings discussion: Awaiting official statement.',
     timeAgo: '4 hours ago',
-    verified: true
+    verified: true,
+    figureId: 'jennie',
+    eventTitle: 'New Jennie'
   },
   {
     id: '3',
@@ -244,7 +257,9 @@ const mockTrendingUpdates: TrendingUpdate[] = [
     },
     description: '1st comeback February 2025 confirmed with full lineup.',
     timeAgo: '1 day ago',
-    verified: true
+    verified: true,
+    figureId: 'babymonster',
+    eventTitle: 'BABYMONSTER'
   },
   {
     id: '4',
@@ -254,7 +269,9 @@ const mockTrendingUpdates: TrendingUpdate[] = [
     },
     description: 'Asia tour finale next tour dates announced.',
     timeAgo: '2 days ago',
-    verified: true
+    verified: true,
+    figureId: 'seventeen',
+    eventTitle: 'SEVENTEEN'
   }
 ];
 
@@ -381,10 +398,12 @@ export default function Home() {
             description: update.eventPointDescription || 'No description available',
             timeAgo: formatTimeAgo(update.lastUpdated), // Use the updated formatTimeAgo with lastUpdated timestamp
             source: update.subcategory || update.mainCategory,
-            verified: true
+            verified: true,
+            figureId: update.figureId,
+            eventTitle: update.eventTitle
           };
         });
-        console.log(formattedUpdates);
+        // console.log(formattedUpdates);
         setTrendingUpdates(formattedUpdates);
       } catch (error) {
         console.error('Error fetching trending updates:', error);
@@ -540,7 +559,7 @@ export default function Home() {
         @keyframes fadeInUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(60px);
           }
           to {
             opacity: 1;
@@ -550,17 +569,17 @@ export default function Home() {
 
         .section-animate {
           opacity: 0;
-          transform: translateY(20px);
+          transform: translateY(60px);
         }
 
         .animate-fade-in {
-          animation: fadeInUp 0.6s ease forwards;
+          animation: fadeInUp 1s ease-out forwards;
         }
       `}</style>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section with Search - Full Height */}
-        <section ref={searchSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+        <section ref={searchSectionRef} className="section-animate flex flex-col justify-center mb-12 pt-16 md:pt-24">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
               Understanding <span className="text-key-color">Their Story</span>
@@ -705,7 +724,7 @@ export default function Home() {
         </section>
 
         {/* What's Happening Section - Full Height */}
-        <section ref={whatsSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+        <section ref={whatsSectionRef} className="section-animate flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
           <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">What&apos;s Happening</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Live updates on trending stories</p>
 
@@ -720,10 +739,10 @@ export default function Home() {
                 <div>
                   {trendingUpdates.map((update) => (
                     <div key={update.id} className="flex gap-3 py-3 border-t border-gray-100 dark:border-gray-800">
-                      <div className="flex-shrink-0 flex flex-col items-center gap-1">
+                      <div className="flex-shrink-0 flex flex-col items-center justify-center gap-1 w-20">
                         {update.user.profilePic ? (
-                          <Link href={`/${createUrlSlug(update.user.name!)}`}>
-                            <div className="w-14 h-14 rounded-full overflow-hidden">
+                          <Link href={`/${createUrlSlug(update.user.name!)}`} className="flex flex-col items-center gap-1">
+                            <div className="w-14 h-14 rounded-full overflow-hidden mx-auto">
                               <Image
                                 src={update.user.profilePic}
                                 alt={update.user.initials}
@@ -732,20 +751,23 @@ export default function Home() {
                                 className="object-cover w-full h-full"
                               />
                             </div>
-                            <div className="text-xs text-gray-900 dark:text-white font-medium text-center max-w-[70px] truncate">
+                            <div className="text-xs text-gray-900 dark:text-white font-medium text-center w-full truncate px-1">
                               {update.user.name}
                             </div>
                           </Link>
 
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold">
+                          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold mx-auto">
                             {update.user.initials}
                           </div>
                         )}
                       </div>
-                      <div className="flex-1">
+                      <Link
+                        href={`/${update.figureId}#${slugify(update.eventTitle)}`}
+                        className="flex-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 rounded transition-colors cursor-pointer"
+                      >
                         <p className="text-sm text-gray-600 dark:text-gray-400">{update.title}</p>
-                        <h3 className="font-medium mb-1 text-gray-900 dark:text-white">{update.description}</h3>
+                        <h3 className="font-medium mb-1 text-gray-900 dark:text-white line-clamp-2">{update.description}</h3>
                         <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
                           <span>{update.timeAgo}</span>
                           {update.source && (
@@ -755,8 +777,8 @@ export default function Home() {
                             </>
                           )}
                         </div>
-                      </div>
-                      <div className="flex-shrink-0 self-start">
+                      </Link>
+                      <div className="flex-shrink-0 self-center">
                         {update.verified && (
                           <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs">Verified</span>
                         )}
@@ -769,14 +791,14 @@ export default function Home() {
 
           </div>
           <div className="text-center mt-6">
-            <Link href="/updates" className="text-key-color text-sm font-medium">
+            <Link href="/updates" className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors">
               See All Updates →
             </Link>
           </div>
         </section>
 
         {/* Featured Figures Section - Full Height */}
-        <section ref={featuredSectionRef} className="section-animate min-h-screen flex flex-col justify-center mb-12">
+        <section ref={featuredSectionRef} className="section-animate flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
           <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Featured Figures</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Complete profiles with full verification</p>
 
@@ -872,7 +894,7 @@ export default function Home() {
           )}
 
           <div className="text-center mt-6">
-            <Link href="/all-figures" className="text-key-color text-sm font-medium">
+            <Link href="/all-figures" className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors">
               Browse All Figures →
             </Link>
           </div>

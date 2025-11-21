@@ -323,7 +323,8 @@ const CuratedTimelineView: React.FC<CuratedTimelineViewProps> = ({
                                 {sortEventsByMostRecentDate(events).map((event, eventIndex) => (
                                     <div
                                         key={`${subCategoryKey}-${eventIndex}`}
-                                        className="bg-white dark:bg-[#1d1d1f] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow relative"
+                                        id={slugify(event.event_title)}
+                                        className="bg-white dark:bg-[#1d1d1f] border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow relative scroll-mt-24"
                                     >
                                         {/* Action Buttons */}
                                         <div className="absolute top-4 right-4 flex gap-1">
@@ -381,7 +382,8 @@ const CuratedTimelineView: React.FC<CuratedTimelineViewProps> = ({
                                     return (
                                         <div
                                             key={`mobile-${subCategoryKey}-${eventIndex}`}
-                                            className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#1d1d1f] relative"
+                                            id={slugify(event.event_title)}
+                                            className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-[#1d1d1f] relative scroll-mt-24"
                                         >
                                             {/* Action Buttons */}
                                             <div className="absolute top-4 right-4 z-10 flex gap-1">

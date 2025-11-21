@@ -49,13 +49,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
-    // Check if email is verified
-    if (!userCredential.user.emailVerified) {
-      // Sign out the user immediately
-      await firebaseSignOut(auth);
-      throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+      // Check if email is verified
+      if (!userCredential.user.emailVerified) {
+        // Sign out the user immediately
+        await firebaseSignOut(auth);
+        throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
+      }
+    } catch (error: any) {
+      // Map Firebase errors to user-friendly messages
+      const errorCode = error.code;
+      let errorMessage = 'Failed to sign in. Please try again.';
+
+      switch (errorCode) {
+        case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+        case 'auth/user-not-found':
+          errorMessage = 'Invalid email or password. If you signed up with Google, please use the "Continue with Google" button.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/user-disabled':
+          errorMessage = 'This account has been disabled. Please contact support.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many failed login attempts. Please try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        default:
+          // For any other errors, use the original message if it's not a Firebase error code
+          if (!errorCode || !errorCode.startsWith('auth/')) {
+            errorMessage = error.message || errorMessage;
+          }
+      }
+
+      throw new Error(errorMessage);
     }
   };
 
@@ -68,27 +101,58 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
 
-    // Check if this is a new user
-    const userDoc = await getDoc(doc(db, 'users', result.user.uid));
-    const isNewUser = !userDoc.exists();
+      // Check if this is a new user
+      const userDoc = await getDoc(doc(db, 'users', result.user.uid));
+      const isNewUser = !userDoc.exists();
 
-    if (isNewUser) {
-      // Create user profile for new Google users with emailVerified set to true
-      // (Google accounts are already verified by Google)
-      await createUserProfile(result.user, {
-        nickname: result.user.displayName || 'User',
-        favoriteFigure: '',
-        phoneNumber: '',
-        phoneVerified: false, // They still need to verify phone
-        emailVerified: true, // Google accounts are pre-verified
-        profilePicture: result.user.photoURL || '',
-      });
+      if (isNewUser) {
+        // Create user profile for new Google users with emailVerified set to true
+        // (Google accounts are already verified by Google)
+        await createUserProfile(result.user, {
+          nickname: result.user.displayName || 'User',
+          favoriteFigure: '',
+          phoneNumber: '',
+          phoneVerified: false, // They still need to verify phone
+          emailVerified: true, // Google accounts are pre-verified
+          profilePicture: result.user.photoURL || '',
+        });
+      }
+
+      return { isNewUser };
+    } catch (error: any) {
+      // Map Firebase errors to user-friendly messages
+      const errorCode = error.code;
+      let errorMessage = 'Failed to sign in with Google. Please try again.';
+
+      switch (errorCode) {
+        case 'auth/popup-closed-by-user':
+          errorMessage = 'Sign-in was cancelled. Please try again.';
+          break;
+        case 'auth/popup-blocked':
+          errorMessage = 'Pop-up was blocked by your browser. Please enable pop-ups and try again.';
+          break;
+        case 'auth/cancelled-popup-request':
+          errorMessage = 'Sign-in was cancelled. Please try again.';
+          break;
+        case 'auth/account-exists-with-different-credential':
+          errorMessage = 'An account already exists with this email using a different sign-in method.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        default:
+          // For any other errors, use the original message if it's not a Firebase error code
+          if (!errorCode || !errorCode.startsWith('auth/')) {
+            errorMessage = error.message || errorMessage;
+          }
+      }
+
+      throw new Error(errorMessage);
     }
-
-    return { isNewUser };
   };
 
   const signOut = async () => {

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { removeFromFavorites } from '@/lib/favorites-service';
-import ProfileScrappedSectionEnhanced from '@/components/ProfileScrappedSectionEnhanced';
+import ProfileScrappedSectionEnhanced from '@/components/ProfileScrappedSection';
 import NotificationSettings from '@/components/NotificationSettings';
 import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell } from 'lucide-react';
 

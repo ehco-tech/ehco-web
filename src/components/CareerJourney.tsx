@@ -60,6 +60,52 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
     const scrollPositionRef = useRef<number | null>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+    // Handle hash anchor scrolling on mount
+    useLayoutEffect(() => {
+        const hash = window.location.hash;
+        if (hash) {
+            // Remove the # from the hash
+            const targetEventSlug = hash.substring(1);
+
+            // Find which category and subcategory contains this event
+            let foundMainCategory: string | null = null;
+            let foundSubCategory: string | null = null;
+
+            Object.entries(timelineData).forEach(([mainCat, mainCatData]) => {
+                Object.entries(mainCatData.subCategories).forEach(([subCat, events]) => {
+                    const hasEvent = events.some(event => {
+                        const eventSlug = event.event_title
+                            .toLowerCase()
+                            .replace(/\s+/g, '-')
+                            .replace(/[^\w-]+/g, '');
+                        return eventSlug === targetEventSlug;
+                    });
+
+                    if (hasEvent) {
+                        foundMainCategory = mainCat;
+                        foundSubCategory = subCat;
+                    }
+                });
+            });
+
+            // Set the filters to show the event
+            if (foundMainCategory) {
+                setActiveMainCategory(foundMainCategory);
+                if (foundSubCategory) {
+                    setActiveSubCategory(foundSubCategory);
+                }
+            }
+
+            // Scroll to the element after filters are set and content is rendered
+            setTimeout(() => {
+                const element = document.getElementById(targetEventSlug);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300);
+        }
+    }, [timelineData]);
+
     // Get available categories and their event counts
     const availableCategories = MAIN_CATEGORIES.filter(cat => timelineData[cat]);
 

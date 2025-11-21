@@ -160,7 +160,7 @@ class NotificationService:
             print(f"Error getting user preferences for {user_id}: {e}")
             return {'notifications': {'enabled': True}}
     
-    async def add_to_newsletter_queue(self, figure_id: str, figure_name: str, events: List[Dict[str, Any]], affected_users: List[str]):
+    async def add_to_newsletter_queue(self, figure_id: str, figure_name: str, figure_image_url: str, events: List[Dict[str, Any]], affected_users: List[str]):
         """Add events to newsletter queue for batch processing"""
         try:
             if not affected_users or not events:
@@ -200,6 +200,7 @@ class NotificationService:
                     figure_update = {
                         'figureId': figure_id,
                         'figureName': figure_name,
+                        'figureImageUrl': figure_image_url,
                         'events': []
                     }
                     batch_data['userUpdates'][user_id]['favoriteUpdates'].append(figure_update)
@@ -234,20 +235,21 @@ class NotificationService:
             
             figure_data = figure_doc.to_dict()
             figure_name = figure_data.get('name', figure_id)
-            
+            figure_image_url = figure_data.get('profilePic', '')
+
             # 1. Find all users who have this figure in favorites
             affected_users = await self.get_users_with_favorited_figure(figure_id)
-            
+
             if not affected_users:
                 print(f"No users have {figure_id} in favorites")
                 return
-            
+
             # 2. Create notifications for each user
             for user_id in affected_users:
                 await self.create_user_notifications(user_id, figure_id, figure_name, new_events)
-            
+
             # 3. Add to newsletter queue for batch processing
-            await self.add_to_newsletter_queue(figure_id, figure_name, new_events, affected_users)
+            await self.add_to_newsletter_queue(figure_id, figure_name, figure_image_url, new_events, affected_users)
             
             print(f"✅ Notifications triggered for {len(affected_users)} users with {len(new_events)} events")
             
