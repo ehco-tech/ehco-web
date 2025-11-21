@@ -58,9 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await firebaseSignOut(auth);
         throw new Error('Please verify your email before signing in. Check your inbox for the verification link.');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Map Firebase errors to user-friendly messages
-      const errorCode = error.code;
+      const errorCode = (error as { code?: string; message?: string }).code;
       let errorMessage = 'Failed to sign in. Please try again.';
 
       switch (errorCode) {
@@ -84,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         default:
           // For any other errors, use the original message if it's not a Firebase error code
           if (!errorCode || !errorCode.startsWith('auth/')) {
-            errorMessage = error.message || errorMessage;
+            errorMessage = (error as { message?: string }).message || errorMessage;
           }
       }
 
@@ -123,9 +123,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return { isNewUser };
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Map Firebase errors to user-friendly messages
-      const errorCode = error.code;
+      const errorCode = (error as { code?: string; message?: string }).code;
       let errorMessage = 'Failed to sign in with Google. Please try again.';
 
       switch (errorCode) {
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         default:
           // For any other errors, use the original message if it's not a Firebase error code
           if (!errorCode || !errorCode.startsWith('auth/')) {
-            errorMessage = error.message || errorMessage;
+            errorMessage = (error as { message?: string }).message || errorMessage;
           }
       }
 
