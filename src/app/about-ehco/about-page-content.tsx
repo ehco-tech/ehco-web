@@ -59,17 +59,22 @@ export default function AboutPageContent() {
             <section className="py-16 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">Our Story</h2>
-                    <p className="text-center text-gray-500 dark:text-gray-400 mb-12">How it all began</p>
+                    <p className="text-center text-gray-500 dark:text-gray-400 mb-12">Why EHCO exists</p>
 
                     <div className="bg-white dark:bg-[#1d1d1f] rounded-lg p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-800">
                         <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                            We started out with a simple question about who Taeil, but how over half a month later when a lot more is known: Can I trust what I see? Since then, we&apos;ve realized that only having news is sometimes not enough for people to understand the full picture and can even lead to more confusion.
+                            The internet is full of information about public figures. But how much of it is actually true? When a fan
+                            wants to learn about their favorite artist, or a journalist needs to fact-check a claim, they&apos;re faced with
+                            <span className='text-key-color'> scattered rumors, outdated wikis, and contradictory sources.</span>
                         </p>
                         <p className="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
-                            Mainstream media organizations are increasingly dependent on click-driven sensationalism and are no longer as trusted as they once were. People read this news then turn to unverified, ad hoc sources like X or Reddit to make sense of situations, and many questions remain in people&apos;s heads: But who is in the wrong?
+                            We built EHCO because we believe there&apos;s a better way. A place where every fact is verified, every
+                            source is transparent, and every update happens in real-time. Not to fuel gossip, but to
+                            <span className='text-key-color'> foster understanding.</span>
                         </p>
                         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                            This shouldn&apos;t be the case. Information should be accessible to everyone, but it should come from trusted sources and not have any one interpretation of the events that shape our culture.
+                            EHCO isn&apos;t about judgment. It&apos;s about giving you the complete picture—backed by sources you can trust
+                            —so you can form your own understanding of the people who shape our culture.
                         </p>
                     </div>
                 </div>
@@ -81,24 +86,28 @@ export default function AboutPageContent() {
                     <h2 className="text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">What We Stand For</h2>
                     <p className="text-center text-gray-500 dark:text-gray-400 mb-16">Our core principles</p>
 
-                    <div className="grid md:grid-cols-3 gap-8">
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
                         {/* Truth First */}
-                        <div className="text-center">
+                        <div className="text-center border border-gray-200 dark:border-gray-800 p-4 rounded-lg">
                             <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
                                 <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
-                                    <svg className="w-6 h-6 text-key-color dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="w-6 h-6 text-key-color" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
                                 </div>
                             </div>
                             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Truth First</h3>
                             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                Facts are the building blocks of informed opinions. We start with established news sources and continuously expand our capabilities to offer comprehensive context.
+                                Every fact on EHCO is
+                                verified against multiple
+                                credible sources. No
+                                speculation, no gossip—just
+                                information you can trust.
                             </p>
                         </div>
 
                         {/* Total Transparency */}
-                        <div className="text-center">
+                        <div className="text-center border border-gray-200 dark:border-gray-800 p-4 rounded-lg">
                             <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
                                 <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
                                     <svg className="w-6 h-6 text-key-color dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,12 +118,15 @@ export default function AboutPageContent() {
                             </div>
                             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Total Transparency</h3>
                             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                All facts link directly to their original sources. Our goal is clarity not just in what we present, but in where it came from.
+                                We show our sources for
+                                everything. You don&apos;t have to
+                                trust us blindly—you can
+                                verify every claim yourself.
                             </p>
                         </div>
 
                         {/* Real-Time Updates */}
-                        <div className="text-center">
+                        <div className="text-center border border-gray-200 dark:border-gray-800 p-4 rounded-lg">
                             <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
                                 <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
                                     <svg className="w-6 h-6 text-key-color dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,21 +136,32 @@ export default function AboutPageContent() {
                             </div>
                             <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Real-Time Updates</h3>
                             <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                                Stories change. Our system updates facts as new, legitimate sources report additional details, reflecting the evolving landscape of events.
+                                News moves fast. Our AI
+                                monitors thousands of
+                                sources 24/7, with human
+                                editors verifying every update
+                                within hours.
                             </p>
                         </div>
-                    </div>
-                </div>
-            </section>
 
-            {/* Respect & Context Section */}
-            <section className="py-16 px-4">
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white dark:bg-[#1d1d1f] rounded-lg p-8 md:p-12 shadow-sm border border-gray-200 dark:border-gray-800">
-                        <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Respect & Context</h3>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                            Public figures are human. We prioritize careful fact-checking above speed and aim to help users see the full picture before forming conclusions. Our goal is to reduce knee-jerk reactions and give people the tools to make well-informed decisions.
-                        </p>
+                        {/* Real-Time Updates */}
+                        <div className="text-center border border-gray-200 dark:border-gray-800 p-4 rounded-lg">
+                            <div className="w-16 h-16 mx-auto mb-6 flex items-center justify-center">
+                                <div className="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-lg flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-key-color dark:text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Respect & Context</h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
+                                Public figures are people. We
+                                present facts with context
+                                and nuance, never
+                                sensationalizing or reducing
+                                them to headlines.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -173,27 +196,27 @@ export default function AboutPageContent() {
             </section>
 
             {/* Our Impact Section */}
-            <section className="py-16 px-4 bg-white dark:bg-black">
+            <section className="py-16 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">Our Impact</h2>
                     <p className="text-center text-gray-500 dark:text-gray-400 mb-16">Building trust through transparency</p>
 
                     <div className="grid md:grid-cols-3 gap-8 mb-8">
-                        <div className="text-center bg-gray-50 dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <div className="text-center bg-white dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
                             <div className="text-4xl font-bold text-key-color mb-2">
                                 {statsData.totalFigures.toLocaleString()}
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Total Figures</p>
                             <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">across all profiles</p>
                         </div>
-                        <div className="text-center bg-gray-50 dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <div className="text-center bg-white dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
                             <div className="text-4xl font-bold text-key-color mb-2">
                                 {statsData.totalFacts >= 1000 ? `${(statsData.totalFacts / 1000).toFixed(0)}K+` : statsData.totalFacts}
                             </div>
                             <p className="text-gray-600 dark:text-gray-400 text-sm">verified facts</p>
                             <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">in our database</p>
                         </div>
-                        <div className="text-center bg-gray-50 dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
+                        <div className="text-center bg-white dark:bg-[#1d1d1f] p-8 rounded-lg border border-gray-200 dark:border-gray-800">
                             <div className="text-4xl font-bold text-key-color mb-2">24/7</div>
                             <p className="text-gray-600 dark:text-gray-400 text-sm">Monitoring</p>
                             <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">round-the-clock tracking</p>
@@ -203,7 +226,7 @@ export default function AboutPageContent() {
             </section>
 
             {/* How We Work Section */}
-            <section className="py-16 px-4">
+            {/* <section className="py-16 px-4">
                 <div className="max-w-4xl mx-auto">
                     <h2 className="text-4xl font-bold text-center mb-4 text-gray-900 dark:text-white">How We Work</h2>
                     <p className="text-center text-gray-500 dark:text-gray-400 mb-16">Each accuracy update is validated through multiple verification levels and credible representatives</p>
@@ -235,7 +258,7 @@ export default function AboutPageContent() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section> */}
 
             {/* Our Journey Section */}
             <section className="py-16 px-4 bg-white dark:bg-black">
