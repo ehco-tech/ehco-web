@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { FiguresProvider } from '@/context/FiguresContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { LoadingProvider } from '@/context/LoadingContext';
+import { HomeDataProvider } from '@/context/HomeDataContext';
 
 export function Providers({ children }: { children: React.ReactNode }) {
     // This ensures a new QueryClient is not created on every render
@@ -14,7 +15,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <QueryClientProvider client={queryClient}>
             <LoadingProvider>
                 <AuthProvider>
-                    {children}
+                    <HomeDataProvider>
+                        {children}
+                    </HomeDataProvider>
                 </AuthProvider>
             </LoadingProvider>
         </QueryClientProvider>

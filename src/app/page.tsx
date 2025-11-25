@@ -9,6 +9,7 @@ import { createUrlSlug } from '@/lib/slugify';
 import algoliasearch from 'algoliasearch';
 import { Timestamp } from 'firebase/firestore';
 import WelcomeBanner from '@/components/WelcomeBanner';
+import { useHomeData } from '@/context/HomeDataContext';
 
 // Setup Algolia client
 const searchClient = algoliasearch(
@@ -277,6 +278,9 @@ const mockTrendingUpdates: TrendingUpdate[] = [
 
 // Main Page Component
 export default function Home() {
+  // Get home data context
+  const { cachedData, setCachedData, isCacheValid } = useHomeData();
+
   // State for welcome banner
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
 
@@ -286,8 +290,8 @@ export default function Home() {
   const [featuredError, setFeaturedError] = useState<string | null>(null);
 
   // State for trending updates
-  const [trendingUpdates, setTrendingUpdates] = useState<TrendingUpdate[]>(mockTrendingUpdates);
-  const [updatesLoading, setUpdatesLoading] = useState<boolean>(false);
+  const [trendingUpdates, setTrendingUpdates] = useState<TrendingUpdate[]>([]);
+  const [updatesLoading, setUpdatesLoading] = useState<boolean>(true);
 
   // State for stats counters
   const [statsData, setStatsData] = useState<{ totalFigures: number; totalFacts: number }>({
@@ -326,58 +330,52 @@ export default function Home() {
     localStorage.setItem('hasVisitedEhco', 'true');
   };
 
-  // Fetch featured figures (IU, BLACKPINK, BTS)
+  // Fetch all home page data with caching
   useEffect(() => {
-    const fetchFeaturedFigures = async () => {
+    const fetchAllData = async () => {
+      // Check if we have valid cached data
+      if (isCacheValid() && cachedData) {
+        // Use cached data
+        setFeaturedFigures(cachedData.featuredFigures);
+        setTrendingUpdates(cachedData.trendingUpdates);
+        setStatsData(cachedData.stats);
+        setFeaturedLoading(false);
+        setUpdatesLoading(false);
+        setStatsLoading(false);
+        return;
+      }
+
+      // Otherwise, fetch fresh data
       try {
-        setFeaturedLoading(true);
-
-        // Using the /api/figures endpoint to fetch specific figures
-        const response = await fetch('/api/figures', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            figureIds: ['iu(leejieun)', 'blackpink', 'bts']
+        // Fetch all three data sources in parallel
+        const [figuresResponse, updatesResponse, statsResponse] = await Promise.all([
+          fetch('/api/figures', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ figureIds: ['iu(leejieun)', 'blackpink', 'bts'] }),
           }),
-        });
+          fetch('/api/updates?limit=4'),
+          fetch('/api/stats'),
+        ]);
 
-        if (!response.ok) {
+        if (!figuresResponse.ok) {
           throw new Error('Failed to fetch featured figures');
         }
-
-        const data: PublicFigure[] = await response.json();
-
-        // Data now includes stats and featuredUpdate from API
-        setFeaturedFigures(data);
-      } catch (error) {
-        console.error('Error fetching featured figures:', error);
-        setFeaturedError('Failed to load featured figures');
-      } finally {
-        setFeaturedLoading(false);
-      }
-    };
-
-    fetchFeaturedFigures();
-  }, []);
-
-  // Fetch updates
-  useEffect(() => {
-    const fetchUpdates = async () => {
-      try {
-        setUpdatesLoading(true);
-        const response = await fetch('/api/updates?limit=4');
-
-        if (!response.ok) {
+        if (!updatesResponse.ok) {
           throw new Error('Failed to fetch updates');
         }
+        if (!statsResponse.ok) {
+          throw new Error('Failed to fetch stats');
+        }
 
-        const data = await response.json();
+        const [figuresData, updatesData, statsData] = await Promise.all([
+          figuresResponse.json(),
+          updatesResponse.json(),
+          statsResponse.json(),
+        ]);
 
-        // Transform the API response to match your UI format
-        const formattedUpdates = data.updates.map((update: UpdateDocument) => {
-          // Safe function to get initials
+        // Transform updates data
+        const formattedUpdates = updatesData.updates.map((update: UpdateDocument) => {
           const getInitials = (name: string | undefined): string => {
             if (!name) return '??';
             return name.split(' ')
@@ -396,52 +394,44 @@ export default function Home() {
               name: update.figureName
             },
             description: update.eventPointDescription || 'No description available',
-            timeAgo: formatTimeAgo(update.lastUpdated), // Use the updated formatTimeAgo with lastUpdated timestamp
+            timeAgo: formatTimeAgo(update.lastUpdated),
             source: update.subcategory || update.mainCategory,
             verified: true,
             figureId: update.figureId,
             eventTitle: update.eventTitle
           };
         });
-        // console.log(formattedUpdates);
+
+        const formattedStats = {
+          totalFigures: statsData.totalFigures || 0,
+          totalFacts: statsData.totalFacts || 0
+        };
+
+        // Update state
+        setFeaturedFigures(figuresData);
         setTrendingUpdates(formattedUpdates);
-      } catch (error) {
-        console.error('Error fetching trending updates:', error);
-        // Fallback to mock data if needed
-        setTrendingUpdates(mockTrendingUpdates);
-      } finally {
-        setUpdatesLoading(false);
-      }
-    };
-    fetchUpdates();
-  }, []);
+        setStatsData(formattedStats);
 
-  // Fetch stats counters
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setStatsLoading(true);
-        const response = await fetch('/api/stats');
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch stats');
-        }
-
-        const data = await response.json();
-        setStatsData({
-          totalFigures: data.totalFigures || 0,
-          totalFacts: data.totalFacts || 0
+        // Cache the data
+        setCachedData({
+          featuredFigures: figuresData,
+          trendingUpdates: formattedUpdates,
+          stats: formattedStats,
+          timestamp: Date.now(),
         });
+
       } catch (error) {
-        console.error('Error fetching stats:', error);
-        // Keep default values (0) on error
+        console.error('Error fetching home page data:', error);
+        setFeaturedError('Failed to load data');
       } finally {
+        setFeaturedLoading(false);
+        setUpdatesLoading(false);
         setStatsLoading(false);
       }
     };
 
-    fetchStats();
-  }, []);
+    fetchAllData();
+  }, [cachedData, isCacheValid, setCachedData]);
 
   // Intersection Observer for scroll animations
   useEffect(() => {
