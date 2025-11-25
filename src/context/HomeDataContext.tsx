@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Types matching the home page
 interface FeaturedUpdate {
@@ -69,22 +69,26 @@ const HomeDataContext = createContext<HomeDataContextType | undefined>(undefined
 const CACHE_KEY = 'ehco_home_data_cache';
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-export function HomeDataProvider({ children }: { children: ReactNode }) {
-  const [cachedData, setCachedDataState] = useState<CachedHomeData | null>(null);
+// Load initial cache synchronously to avoid flash
+const loadInitialCache = (): CachedHomeData | null => {
+  if (typeof window === 'undefined') return null;
 
-  // Load cached data from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(CACHE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored) as CachedHomeData;
-        setCachedDataState(parsed);
-      }
-    } catch (error) {
-      console.error('Error loading cached home data:', error);
+  try {
+    const stored = localStorage.getItem(CACHE_KEY);
+    if (stored) {
+      return JSON.parse(stored) as CachedHomeData;
+    }
+  } catch (error) {
+    console.error('Error loading cached home data:', error);
+    if (typeof window !== 'undefined') {
       localStorage.removeItem(CACHE_KEY);
     }
-  }, []);
+  }
+  return null;
+};
+
+export function HomeDataProvider({ children }: { children: ReactNode }) {
+  const [cachedData, setCachedDataState] = useState<CachedHomeData | null>(loadInitialCache);
 
   // Check if cache is still valid (less than 1 hour old)
   const isCacheValid = (): boolean => {
