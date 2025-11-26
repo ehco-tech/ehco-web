@@ -272,7 +272,8 @@ export default function AboutPageContent() {
                             <div>
                                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">The Beginning</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Started out with a simple question: &quot;Who is Taeil?&quot; It led to the realization that people often can&apos;t trust what they see and need a verified, comprehensive source for public figure information.
+                                    Started with a simple question: Why is it so hard to find accurate information about K-pop artists?
+                                    Launched EHCO to solve this problem.
                                 </p>
                             </div>
                         </div>
@@ -282,7 +283,8 @@ export default function AboutPageContent() {
                             <div>
                                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Expanding Coverage</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Grew the platform to cover thousands of public figures, implementing automated fact-checking systems while maintaining human oversight for quality and accuracy.
+                                    Grew from K-pop to K-drama, then to global entertainment figures. Our verification system proved it
+                                    could scale while maintaining accuracy.
                                 </p>
                             </div>
                         </div>
@@ -292,7 +294,8 @@ export default function AboutPageContent() {
                             <div>
                                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Building the Future</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Continuously improving our platform with real-time updates, enhanced transparency features, and expanding our coverage to serve users seeking truth in an age of information overload.
+                                    Thousands of public figures, millions of verified facts, and a community that values truth. We&apos;re just
+                                    getting started.
                                 </p>
                             </div>
                         </div>
@@ -305,7 +308,7 @@ export default function AboutPageContent() {
                 <div className="max-w-4xl mx-auto text-center">
                     <h2 className="text-4xl font-bold mb-6 text-gray-900 dark:text-white">Join Us in Building Trust</h2>
                     <p className="text-gray-600 dark:text-gray-400 mb-8 text-lg">
-                        Get a trusted and verified information about the celebrities you care about
+                        Start exploring verified information about the people you care about
                     </p>
                     <div className="flex gap-4 justify-center flex-wrap">
                         <Link
