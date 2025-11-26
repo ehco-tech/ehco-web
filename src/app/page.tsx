@@ -401,22 +401,23 @@ export default function Home() {
       });
     }, observerOptions);
 
-    // Observe all section refs
-    const sections = [
-      searchSectionRef.current,
-      whatsSectionRef.current,
-      featuredSectionRef.current,
-      ctaSectionRef.current
+    // Only observe sections that need animation
+    // Hero section never animates
+    // What's Happening only animates on mobile/tablet (handled by CSS)
+    const sectionsToObserve = [
+      whatsSectionRef.current, // Will animate on mobile/tablet via CSS + observer
+      featuredSectionRef.current, // Always animates
+      ctaSectionRef.current // Always animates
     ];
 
-    sections.forEach(section => {
+    sectionsToObserve.forEach(section => {
       if (section) {
         observer.observe(section);
       }
     });
 
     return () => {
-      sections.forEach(section => {
+      sectionsToObserve.forEach(section => {
         if (section) {
           observer.unobserve(section);
         }
@@ -510,7 +511,34 @@ export default function Home() {
           }
         }
 
+        /* Hero section - always visible, no animation, higher z-index for search dropdown */
+        .hero-section {
+          position: relative;
+          z-index: 30;
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        /* What's Happening - animate on mobile/tablet, visible on desktop */
+        .whats-section {
+          position: relative;
+          z-index: 10;
+          opacity: 0;
+          transform: translateY(60px);
+        }
+
+        /* On large screens (desktop), What's Happening is immediately visible */
+        @media (min-width: 1024px) {
+          .whats-section {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        /* Featured and CTA sections - always animate */
         .section-animate {
+          position: relative;
+          z-index: 10;
           opacity: 0;
           transform: translateY(60px);
         }
@@ -522,7 +550,7 @@ export default function Home() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section with Search - Full Height */}
-        <section ref={searchSectionRef} className="section-animate flex flex-col justify-center mb-12 pt-16 md:pt-24">
+        <section ref={searchSectionRef} className="hero-section flex flex-col justify-center mb-12 pt-16 md:pt-24">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
               Understanding <span className="text-key-color">Their Story</span>
@@ -567,7 +595,7 @@ export default function Home() {
             {/* Search Results Dropdown */}
             {showResults && (
               <>
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1d1d1f] rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-20 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1d1d1f] rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 z-50 overflow-hidden">
                   <div className="max-h-96 overflow-y-auto">
                     {isSearching ? (
                       <div className="py-8 text-center">
@@ -667,7 +695,7 @@ export default function Home() {
         </section>
 
         {/* What's Happening Section - Full Height */}
-        <section ref={whatsSectionRef} className="section-animate flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
+        <section ref={whatsSectionRef} className="whats-section flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
           <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">What&apos;s Happening</h2>
           <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Live updates on trending stories</p>
 
