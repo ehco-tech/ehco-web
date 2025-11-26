@@ -384,7 +384,7 @@ export default function Home() {
     };
 
     fetchAllData();
-  }, [cachedData, isCacheValid, setCachedData]);
+  }, [isCacheValid, setCachedData]); // Removed cachedData to prevent re-render loop
 
   // Intersection Observer for scroll animations
   useEffect(() => {

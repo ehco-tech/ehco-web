@@ -71,12 +71,15 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // Load initial cache synchronously to avoid flash
 const loadInitialCache = (): CachedHomeData | null => {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === 'undefined') {
+    return null;
+  }
 
   try {
     const stored = localStorage.getItem(CACHE_KEY);
     if (stored) {
-      return JSON.parse(stored) as CachedHomeData;
+      const parsed = JSON.parse(stored) as CachedHomeData;
+      return parsed;
     }
   } catch (error) {
     console.error('Error loading cached home data:', error);
@@ -88,14 +91,19 @@ const loadInitialCache = (): CachedHomeData | null => {
 };
 
 export function HomeDataProvider({ children }: { children: ReactNode }) {
-  const [cachedData, setCachedDataState] = useState<CachedHomeData | null>(loadInitialCache);
+  const [cachedData, setCachedDataState] = useState<CachedHomeData | null>(() => {
+    return loadInitialCache();
+  });
 
   // Check if cache is still valid (less than 1 hour old) - memoized to prevent re-renders
   const isCacheValid = useCallback((): boolean => {
-    if (!cachedData) return false;
+    if (!cachedData) {
+      return false;
+    }
     const now = Date.now();
     const age = now - cachedData.timestamp;
-    return age < CACHE_DURATION;
+    const isValid = age < CACHE_DURATION;
+    return isValid;
   }, [cachedData]);
 
   // Set cached data and persist to localStorage - memoized to prevent re-renders
