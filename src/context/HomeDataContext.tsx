@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 // Types matching the home page
 interface FeaturedUpdate {
@@ -90,29 +90,29 @@ const loadInitialCache = (): CachedHomeData | null => {
 export function HomeDataProvider({ children }: { children: ReactNode }) {
   const [cachedData, setCachedDataState] = useState<CachedHomeData | null>(loadInitialCache);
 
-  // Check if cache is still valid (less than 1 hour old)
-  const isCacheValid = (): boolean => {
+  // Check if cache is still valid (less than 1 hour old) - memoized to prevent re-renders
+  const isCacheValid = useCallback((): boolean => {
     if (!cachedData) return false;
     const now = Date.now();
     const age = now - cachedData.timestamp;
     return age < CACHE_DURATION;
-  };
+  }, [cachedData]);
 
-  // Set cached data and persist to localStorage
-  const setCachedData = (data: CachedHomeData) => {
+  // Set cached data and persist to localStorage - memoized to prevent re-renders
+  const setCachedData = useCallback((data: CachedHomeData) => {
     try {
       setCachedDataState(data);
       localStorage.setItem(CACHE_KEY, JSON.stringify(data));
     } catch (error) {
       console.error('Error saving cached home data:', error);
     }
-  };
+  }, []);
 
-  // Clear cache
-  const clearCache = () => {
+  // Clear cache - memoized to prevent re-renders
+  const clearCache = useCallback(() => {
     setCachedDataState(null);
     localStorage.removeItem(CACHE_KEY);
-  };
+  }, []);
 
   return (
     <HomeDataContext.Provider
