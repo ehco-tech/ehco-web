@@ -473,16 +473,20 @@ export default function Home() {
     performSearch(query);
   };
 
-  const handleResultClick = (figureId: string, name: string) => {
+  // Generic navigation handler with loading state
+  const handleNavigate = (url: string) => {
     setIsPageLoading(true);
+    router.push(url);
+  };
+
+  const handleResultClick = (figureId: string, name: string) => {
     const slug = createUrlSlug(name);
-    router.push(`/${slug}`);
+    handleNavigate(`/${slug}`);
   };
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
-      setIsPageLoading(true);
-      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      handleNavigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -549,6 +553,33 @@ export default function Home() {
       `}</style>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Video Section - Above Hero */}
+        {/* <section className="relative w-full mb-12 rounded-2xl overflow-hidden" style={{ height: '400px' }}> */}
+          {/* Video Background */}
+          {/* <video
+            className="absolute inset-0 w-full h-full object-cover"
+            autoPlay
+            loop
+            muted
+            playsInline
+          > */}
+            {/* <source src="/videos/EHCOai_Video_Production_Request.mp4" type="video/mp4" /> */}
+            {/* <source src="/videos/Futuristic_K_Pop_Data_Visualization.mp4" type="video/mp4" /> */}
+            {/* Your browser does not support the video tag.
+          </video> */}
+
+          {/* Optional: Dark overlay for better text contrast */}
+          {/* <div className="absolute inset-0 bg-black bg-opacity-30"></div> */}
+
+          {/* Optional: Content overlay on the video */}
+          {/* <div className="relative z-10 flex items-center justify-center h-full text-white text-center px-4">
+            <div>
+              <h2 className="text-4xl md:text-5xl font-bold mb-4">Welcome to EHCO</h2>
+              <p className="text-xl md:text-2xl">Your trusted source for verified celebrity information</p>
+            </div>
+          </div> */}
+        {/* </section> */}
+
         {/* Hero Section with Search - Full Height */}
         <section ref={searchSectionRef} className="hero-section flex flex-col justify-center mb-12 pt-16 md:pt-24">
           <div className="text-center mb-8">
@@ -712,7 +743,14 @@ export default function Home() {
                     <div key={update.id} className="flex gap-3 py-3 border-t border-gray-100 dark:border-gray-800">
                       <div className="flex-shrink-0 flex flex-col items-center justify-center gap-1 w-20">
                         {update.user.profilePic ? (
-                          <Link href={`/${createUrlSlug(update.user.name!)}`} className="flex flex-col items-center gap-1">
+                          <Link
+                            href={`/${createUrlSlug(update.user.name!)}`}
+                            className="flex flex-col items-center gap-1"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleNavigate(`/${createUrlSlug(update.user.name!)}`);
+                            }}
+                          >
                             <div className="w-14 h-14 rounded-full overflow-hidden mx-auto">
                               <Image
                                 src={update.user.profilePic}
@@ -736,6 +774,10 @@ export default function Home() {
                       <Link
                         href={`/${update.figureId}#${slugify(update.eventTitle)}`}
                         className="flex-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 rounded transition-colors cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavigate(`/${update.figureId}#${slugify(update.eventTitle)}`);
+                        }}
                       >
                         <p className="text-sm text-gray-600 dark:text-gray-400">{update.title}</p>
                         <h3 className="font-medium mb-1 text-gray-900 dark:text-white line-clamp-2">{update.description}</h3>
@@ -762,7 +804,14 @@ export default function Home() {
 
           </div>
           <div className="text-center mt-6">
-            <Link href="/updates" className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors">
+            <Link
+              href="/updates"
+              className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigate('/updates');
+              }}
+            >
               See All Updates →
             </Link>
           </div>
@@ -796,7 +845,13 @@ export default function Home() {
                     <div className="flex items-center mb-4">
                       <div className="flex-shrink-0">
                         <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-key-color">
-                          <Link href={`/${createUrlSlug(figure.name)}`}>
+                          <Link
+                            href={`/${createUrlSlug(figure.name)}`}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleNavigate(`/${createUrlSlug(figure.name)}`);
+                            }}
+                          >
                             <Image
                               src={figure.profilePic || '/images/default-profile.png'}
                               alt={figure.name}
@@ -808,7 +863,13 @@ export default function Home() {
                         </div>
                       </div>
                       <div className="ml-3">
-                        <Link href={`/${createUrlSlug(figure.name)}`}>
+                        <Link
+                          href={`/${createUrlSlug(figure.name)}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate(`/${createUrlSlug(figure.name)}`);
+                          }}
+                        >
                           <h3 className="font-bold text-lg text-gray-900 dark:text-white">{figure.name}</h3>
                         </Link>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -869,7 +930,14 @@ export default function Home() {
           )}
 
           <div className="text-center mt-6">
-            <Link href="/all-figures" className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors">
+            <Link
+              href="/all-figures"
+              className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                handleNavigate('/all-figures');
+              }}
+            >
               Browse All Figures →
             </Link>
           </div>
@@ -884,6 +952,10 @@ export default function Home() {
           <Link
             href="/search"
             className="inline-flex items-center bg-key-color hover:bg-red-700 text-white font-medium py-2 px-6 rounded-full transition-colors"
+            onClick={(e) => {
+              e.preventDefault();
+              handleNavigate('/search');
+            }}
           >
             Start Searching
             <Search className="ml-2 w-4 h-4" />

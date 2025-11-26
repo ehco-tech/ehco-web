@@ -56,7 +56,7 @@ export default function UserMenu() {
 
   const handleProfileNavigation = () => {
     setIsOpen(false);
-    handleNavigation('/profile', 'Loading your profile...');
+    handleNavigation('/profile', 'Loading...');
   };
 
   // NEW: Handle notification menu toggle
@@ -77,7 +77,7 @@ export default function UserMenu() {
           <button
             onClick={() => {
               sessionStorage.setItem('redirectPath', pathname);
-              handleNavigation('/login', 'Redirecting to login...');
+              handleNavigation('/login', 'Loading...');
             }}
             className="text-sm font-medium text-gray-700 dark:text-white hover:text-key-color dark:hover:text-key-color-dark transition-colors"
           >
@@ -87,7 +87,7 @@ export default function UserMenu() {
           <button
             onClick={() => {
               sessionStorage.setItem('redirectPath', pathname);
-              handleNavigation('/signup', 'Redirecting to signup...');
+              handleNavigation('/signup', 'Loading...');
             }}
             className="text-sm font-medium bg-key-color dark:bg-key-color text-white px-3 py-1.5 rounded-full hover:bg-key-color-dark transition-colors"
           >
@@ -97,7 +97,7 @@ export default function UserMenu() {
         <button
           onClick={() => {
             sessionStorage.setItem('redirectPath', pathname);
-            handleNavigation('/login', 'Redirecting to login...');
+            handleNavigation('/login', 'Loading...');
           }}
           className="sm:hidden text-black"
         >
