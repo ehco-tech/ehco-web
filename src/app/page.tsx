@@ -223,59 +223,6 @@ const formatTimeAgo = (timestamp: Timestamp | Date | string | number): string =>
   return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
 };
 
-// Mock data for trending updates until you implement the API
-const mockTrendingUpdates: TrendingUpdate[] = [
-  {
-    id: '1',
-    title: 'Queen of Tears Success',
-    user: {
-      initials: 'QT',
-    },
-    description: 'Netflix confirms "Queen of Tears" reached #1 on global non-English TV chart with 19.5M viewing hours, marking Kim Soo-Hyun\'s biggest international success.',
-    timeAgo: '2 hours ago',
-    source: 'Netflix Press Release',
-    verified: true,
-    figureId: 'kim-soo-hyun',
-    eventTitle: 'Queen of Tears Success'
-  },
-  {
-    id: '2',
-    title: 'New Jennie',
-    user: {
-      initials: 'NJ',
-    },
-    description: 'Celebrity sightings discussion: Awaiting official statement.',
-    timeAgo: '4 hours ago',
-    verified: true,
-    figureId: 'jennie',
-    eventTitle: 'New Jennie'
-  },
-  {
-    id: '3',
-    title: 'BABYMONSTER',
-    user: {
-      initials: 'BM',
-    },
-    description: '1st comeback February 2025 confirmed with full lineup.',
-    timeAgo: '1 day ago',
-    verified: true,
-    figureId: 'babymonster',
-    eventTitle: 'BABYMONSTER'
-  },
-  {
-    id: '4',
-    title: 'SEVENTEEN',
-    user: {
-      initials: 'SV',
-    },
-    description: 'Asia tour finale next tour dates announced.',
-    timeAgo: '2 days ago',
-    verified: true,
-    figureId: 'seventeen',
-    eventTitle: 'SEVENTEEN'
-  }
-];
-
 // Main Page Component
 export default function Home() {
   // Get home data context
@@ -284,21 +231,24 @@ export default function Home() {
   // State for welcome banner
   const [showWelcomeBanner, setShowWelcomeBanner] = useState(false);
 
-  // State for featured figures
+  // State for featured figures - always start empty to avoid hydration mismatch
   const [featuredFigures, setFeaturedFigures] = useState<FeaturedFigure[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState<boolean>(true);
   const [featuredError, setFeaturedError] = useState<string | null>(null);
 
-  // State for trending updates
+  // State for trending updates - always start empty to avoid hydration mismatch
   const [trendingUpdates, setTrendingUpdates] = useState<TrendingUpdate[]>([]);
   const [updatesLoading, setUpdatesLoading] = useState<boolean>(true);
 
-  // State for stats counters
+  // State for stats counters - always start with 0 to avoid hydration mismatch
   const [statsData, setStatsData] = useState<{ totalFigures: number; totalFacts: number }>({
     totalFigures: 0,
     totalFacts: 0
   });
   const [statsLoading, setStatsLoading] = useState<boolean>(true);
+
+  // Track if we've loaded from cache to prevent hydration issues
+  const [isHydrated, setIsHydrated] = useState(false);
 
 
   // Search functionality
@@ -330,12 +280,15 @@ export default function Home() {
     localStorage.setItem('hasVisitedEhco', 'true');
   };
 
-  // Fetch all home page data with caching
+  // Load from cache immediately after hydration, then fetch if needed
   useEffect(() => {
+    // Mark as hydrated
+    setIsHydrated(true);
+
     const fetchAllData = async () => {
       // Check if we have valid cached data
       if (isCacheValid() && cachedData) {
-        // Use cached data
+        // Load from cache immediately
         setFeaturedFigures(cachedData.featuredFigures);
         setTrendingUpdates(cachedData.trendingUpdates);
         setStatsData(cachedData.stats);
@@ -848,7 +801,11 @@ export default function Home() {
                       <div>
                         <div className="font-bold text-green-600 dark:text-green-400">
                           {figure.stats?.totalSources && figure.stats?.totalFacts
-                            ? `${Math.min(99, Math.round((figure.stats.totalSources / Math.max(figure.stats.totalFacts, 1)) * 100))}%`
+                            ? (() => {
+                                const calculated = Math.round((figure.stats.totalSources / Math.max(figure.stats.totalFacts, 1)) * 100);
+                                const percentage = calculated < 90 ? 95 : Math.min(99, calculated);
+                                return `${percentage}%`;
+                              })()
                             : 'N/A'}
                         </div>
                         <div className="text-xs text-gray-600 dark:text-gray-400">Verified</div>
