@@ -100,7 +100,7 @@ export let analytics: Analytics | null = null;
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
   try {
     analytics = getAnalytics(app);
-    console.log('📊 Firebase Analytics initialized');
+    // console.log('📊 Firebase Analytics initialized');
   } catch (error) {
     console.error('Analytics error:', error);
   }
