@@ -272,8 +272,7 @@ export default function AboutPageContent() {
                             <div>
                                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">The Beginning</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Started with a simple question: Why is it so hard to find accurate information about K-pop artists?
-                                    Launched EHCO to solve this problem.
+                                    Started with a simple question: Why is it so hard to find accurate information about K-pop artists? Launched EHCO to solve this problem.
                                 </p>
                             </div>
                         </div>
@@ -283,8 +282,7 @@ export default function AboutPageContent() {
                             <div>
                                 <h3 className="text-xl font-bold mb-3 text-gray-900 dark:text-white">Expanding Coverage</h3>
                                 <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                                    Grew from K-pop to K-drama, then to global entertainment figures. Our verification system proved it
-                                    could scale while maintaining accuracy.
+                                    Grew from K-pop to K-drama, then to global entertainment figures. Our verification system proved it could scale while maintaining accuracy.
                                 </p>
                             </div>
                         </div>
