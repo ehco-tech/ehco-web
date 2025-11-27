@@ -1,6 +1,11 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, limit, startAfter, orderBy, getCountFromServer, where } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { NextResponse } from "next/server";
+
+// Cache for all figures data
+let cachedFigures: PublicFigure[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 // Optimized interface with only necessary fields
 interface PublicFigureBase {
@@ -172,17 +177,27 @@ export async function GET(request: Request) {
 
         // console.log('Category filters:', categoryFilters);
 
-        // Get total count of documents (we'll filter these in memory for now)
         const collectionRef = collection(db, 'selected-figures');
 
-        // For now, we'll fetch all documents and filter in memory
-        // This is not optimal for large datasets, but works for category filtering
-        const allDocsQuery = query(collection(db, 'selected-figures'), orderBy('name'));
-        const allDocsSnapshot = await getDocs(allDocsQuery);
+        // Check if cache is valid
+        const now = Date.now();
+        const isCacheValid = cachedFigures !== null && (now - cacheTimestamp) < CACHE_DURATION;
 
-        // Transform all documents to our interface
-        const allFigures: PublicFigure[] = allDocsSnapshot.docs.map(docRef => {
-            const data = docRef.data();
+        let allFigures: PublicFigure[];
+
+        if (isCacheValid && cachedFigures) {
+            // Use cached data
+            // console.log('Using cached figures data');
+            allFigures = cachedFigures;
+        } else {
+            // Fetch fresh data from Firestore
+            // console.log('Fetching fresh figures data from Firestore');
+            const firestoreQuery = query(collectionRef, orderBy('name'));
+            const allDocsSnapshot = await getDocs(firestoreQuery);
+
+            // Transform all documents to our interface
+            allFigures = allDocsSnapshot.docs.map(docRef => {
+                const data = docRef.data();
 
             // Parse occupation array - split combined occupations
             const occupations: string[] = [];
@@ -240,17 +255,12 @@ export async function GET(request: Request) {
                     group: data.group || ''
                 } as IndividualPerson;
             }
-        });
+            });
 
-        // Debug: Log some examples of parsed occupations
-        const sampleFigures = allFigures.slice(0, 3);
-        // console.log('Sample parsed figures:', sampleFigures.map(f => ({
-        //     name: f.name,
-        //     originalOccupation: allDocsSnapshot.docs.find(d => d.id === f.id)?.data().occupation,
-        //     parsedOccupation: f.occupation,
-        //     gender: f.gender,
-        //     nationality: f.nationality
-        // })));
+            // Update cache
+            cachedFigures = allFigures;
+            cacheTimestamp = now;
+        }
 
         // Apply category filters
         const filteredFigures = allFigures.filter(figure =>
@@ -307,7 +317,12 @@ export async function GET(request: Request) {
         //     appliedFilters: categoryFilters
         // });
 
-        return NextResponse.json(response);
+        // Return with cache headers
+        return NextResponse.json(response, {
+            headers: {
+                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+            }
+        });
     } catch (error) {
         console.error('Error in API route:', error);
 
