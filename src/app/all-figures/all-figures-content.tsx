@@ -79,7 +79,6 @@ function AllFiguresContentInner() {
         'Female': [{ field: 'gender', value: 'Female' }],
         'Group': [{ field: 'gender', value: 'Group' }],
         'Singer': [{ field: 'occupation', value: 'Singer' }],
-        'Singer-Songwriter': [{ field: 'occupation', value: 'Singer-Songwriter' }],
         'Film Director': [{ field: 'occupation', value: 'Film Director' }],
         'Rapper': [{ field: 'occupation', value: 'Rapper' }],
         'Actor': [{ field: 'occupation', value: 'Actor' }],
