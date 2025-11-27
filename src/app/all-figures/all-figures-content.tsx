@@ -4,7 +4,6 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
-import Link from 'next/link';
 import { Search, X, Loader2, CheckSquare, Square } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import algoliasearch from 'algoliasearch';
@@ -67,10 +66,11 @@ function AllFiguresContentInner() {
     const [selectedCategories, setSelectedCategories] = useState<string[]>(['All']);
     const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
+    const [isNavigating, setIsNavigating] = useState(false);
     const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
     const categories = [
-        'All', 'Male', 'Female', 'Group', 'Singer', 'Singer-Songwriter',
+        'All', 'Male', 'Female', 'Group', 'Singer',
         'Film Director', 'Rapper', 'Actor', 'Actress', 'South Korean'
     ];
 
@@ -133,7 +133,10 @@ function AllFiguresContentInner() {
                     });
                 }
 
-                const response = await fetch(`/api/public-figures?${params}`);
+                const response = await fetch(`/api/public-figures?${params}`, {
+                    // Add cache control headers to enable browser caching
+                    next: { revalidate: 300 } // Cache for 5 minutes
+                });
                 if (!response.ok) throw new Error(await response.text());
                 const jsonData = await response.json();
                 return {
@@ -145,6 +148,7 @@ function AllFiguresContentInner() {
         },
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 5, // 5 minutes
+        gcTime: 1000 * 60 * 10, // Keep cached data for 10 minutes
     });
 
     // Derived state from useQuery for cleaner rendering
@@ -237,6 +241,12 @@ function AllFiguresContentInner() {
         setSearchQuery('');
         setCurrentPage(1);
         router.replace('/all-figures', { scroll: false });
+    };
+
+    const handleFigureClick = (e: React.MouseEvent, figureId: string) => {
+        e.preventDefault();
+        setIsNavigating(true);
+        router.push(`/${createUrlSlug(figureId)}`);
     };
 
     const getPageNumbers = () => {
@@ -341,7 +351,11 @@ function AllFiguresContentInner() {
                     <>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
                             {figures.map((figure) => (
-                                <Link href={`/${createUrlSlug(figure.id)}`} key={figure.id} className="flex flex-col items-center group">
+                                <div
+                                    key={figure.id}
+                                    onClick={(e) => handleFigureClick(e, figure.id)}
+                                    className="flex flex-col items-center group cursor-pointer"
+                                >
                                     <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-40 lg:h-40 relative mb-3 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700 group-hover:border-key-color dark:group-hover:border-key-color-dark transition-colors">
                                         <Image
                                             src={figure.profilePic || '/images/default-profile.png'}
@@ -355,7 +369,7 @@ function AllFiguresContentInner() {
                                     </div>
                                     <span className="text-center text-gray-900 dark:text-white font-medium text-sm sm:text-base truncate w-full">{figure.name}</span>
                                     {figure.occupation?.[0] && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate w-full text-center">{figure.occupation[0]}</span>}
-                                </Link>
+                                </div>
                             ))}
                         </div>
                         {totalPages > 1 && (
@@ -380,6 +394,8 @@ function AllFiguresContentInner() {
             </main>
             {/* Show loading overlay when fetching new page/filter data, but not during background refetches */}
             {isFetching && !isLoading && data && <LoadingOverlay />}
+            {/* Show loading overlay when navigating to a figure page */}
+            {isNavigating && <LoadingOverlay />}
         </div>
     );
 }
