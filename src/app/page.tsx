@@ -250,6 +250,9 @@ export default function Home() {
   // Track if we've loaded from cache to prevent hydration issues
   const [isHydrated, setIsHydrated] = useState(false);
 
+  // Master loading state for all content sections (except Hero)
+  const [allContentLoaded, setAllContentLoaded] = useState<boolean>(false);
+
 
   // Search functionality
   const [searchQuery, setSearchQuery] = useState('');
@@ -295,6 +298,8 @@ export default function Home() {
         setFeaturedLoading(false);
         setUpdatesLoading(false);
         setStatsLoading(false);
+        // Mark all content as loaded
+        setAllContentLoaded(true);
         return;
       }
 
@@ -380,6 +385,8 @@ export default function Home() {
         setFeaturedLoading(false);
         setUpdatesLoading(false);
         setStatsLoading(false);
+        // Mark all content as loaded after everything is ready
+        setAllContentLoaded(true);
       }
     };
 
@@ -555,24 +562,24 @@ export default function Home() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Video Section - Above Hero */}
         {/* <section className="relative w-full mb-12 rounded-2xl overflow-hidden" style={{ height: '400px' }}> */}
-          {/* Video Background */}
-          {/* <video
+        {/* Video Background */}
+        {/* <video
             className="absolute inset-0 w-full h-full object-cover"
             autoPlay
             loop
             muted
             playsInline
           > */}
-            {/* <source src="/videos/EHCOai_Video_Production_Request.mp4" type="video/mp4" /> */}
-            {/* <source src="/videos/Futuristic_K_Pop_Data_Visualization.mp4" type="video/mp4" /> */}
-            {/* Your browser does not support the video tag.
+        {/* <source src="/videos/EHCOai_Video_Production_Request.mp4" type="video/mp4" /> */}
+        {/* <source src="/videos/Futuristic_K_Pop_Data_Visualization.mp4" type="video/mp4" /> */}
+        {/* Your browser does not support the video tag.
           </video> */}
 
-          {/* Optional: Dark overlay for better text contrast */}
-          {/* <div className="absolute inset-0 bg-black bg-opacity-30"></div> */}
+        {/* Optional: Dark overlay for better text contrast */}
+        {/* <div className="absolute inset-0 bg-black bg-opacity-30"></div> */}
 
-          {/* Optional: Content overlay on the video */}
-          {/* <div className="relative z-10 flex items-center justify-center h-full text-white text-center px-4">
+        {/* Optional: Content overlay on the video */}
+        {/* <div className="relative z-10 flex items-center justify-center h-full text-white text-center px-4">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold mb-4">Welcome to EHCO</h2>
               <p className="text-xl md:text-2xl">Your trusted source for verified celebrity information</p>
@@ -725,242 +732,279 @@ export default function Home() {
           </section>
         </section>
 
-        {/* What's Happening Section - Full Height */}
-        <section ref={whatsSectionRef} className="whats-section flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
-          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">What&apos;s Happening</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Live updates on trending stories</p>
+        {/* All Content Sections Loading State */}
+        {!allContentLoaded ? (
+          <div className="flex flex-col items-center justify-center py-32">
+            <Loader2 className="animate-spin w-12 h-12 mb-4 text-key-color" />
+            <p className="text-lg text-gray-600 dark:text-gray-400">Loading content...</p>
+          </div>
+        ) : (
+          <>
+            {/* What's Happening Section - Full Height */}
+            <section ref={whatsSectionRef} className="whats-section flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
+              <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">What&apos;s Happening</h2>
+              <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Live updates on trending stories</p>
 
-          <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
-            <div className="px-4">
-              {updatesLoading ? (
-                <div className="py-8 text-center">
-                  <Loader2 className="animate-spin w-6 h-6 mx-auto mb-2 text-key-color" />
-                  <p className="text-gray-500 dark:text-gray-400">Loading updates...</p>
-                </div>
-              ) : (
-                <div>
-                  {trendingUpdates.map((update) => (
-                    <div key={update.id} className="flex gap-3 py-3 border-t border-gray-100 dark:border-gray-800">
-                      <div className="flex-shrink-0 flex flex-col items-center justify-center gap-1 w-20">
-                        {update.user.profilePic ? (
-                          <Link
-                            href={`/${createUrlSlug(update.user.name!)}`}
-                            className="flex flex-col items-center gap-1"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleNavigate(`/${createUrlSlug(update.user.name!)}`);
-                            }}
-                          >
-                            <div className="w-14 h-14 rounded-full overflow-hidden mx-auto">
-                              <Image
-                                src={update.user.profilePic}
-                                alt={update.user.initials}
-                                width={56}
-                                height={56}
-                                className="object-cover w-full h-full"
-                              />
-                            </div>
-                            <div className="text-xs text-gray-900 dark:text-white font-medium text-center w-full truncate px-1">
-                              {update.user.name}
-                            </div>
-                          </Link>
+              <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
+                <div className="px-4">{updatesLoading ? (
+                  <div className="py-8 text-center">
+                    <Loader2 className="animate-spin w-6 h-6 mx-auto mb-2 text-key-color" />
+                    <p className="text-gray-500 dark:text-gray-400">Loading updates...</p>
+                  </div>
+                ) : (
+                  <div>
+                    {trendingUpdates.map((update) => (
+                      <div key={update.id} className="flex gap-3 py-3 border-t border-gray-100 dark:border-gray-800">
+                        <div className="flex-shrink-0 flex flex-col items-center justify-center gap-1 w-20">
+                          {update.user.profilePic ? (
+                            <Link
+                              href={`/${createUrlSlug(update.user.name!)}`}
+                              className="flex flex-col items-center gap-1"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleNavigate(`/${createUrlSlug(update.user.name!)}`);
+                              }}
+                            >
+                              <div className="w-14 h-14 rounded-full overflow-hidden mx-auto">
+                                <Image
+                                  src={update.user.profilePic}
+                                  alt={update.user.initials}
+                                  width={56}
+                                  height={56}
+                                  className="object-cover w-full h-full"
+                                />
+                              </div>
+                              <div className="text-xs text-gray-900 dark:text-white font-medium text-center w-full truncate px-1">
+                                {update.user.name}
+                              </div>
+                            </Link>
 
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold mx-auto">
-                            {update.user.initials}
-                          </div>
-                        )}
-                      </div>
-                      <Link
-                        href={`/${update.figureId}#${slugify(update.eventTitle)}`}
-                        className="flex-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 rounded transition-colors cursor-pointer"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavigate(`/${update.figureId}#${slugify(update.eventTitle)}`);
-                        }}
-                      >
-                        <p className="text-sm text-gray-600 dark:text-gray-400">{update.title}</p>
-                        <h3 className="font-medium mb-1 text-gray-900 dark:text-white line-clamp-2">{update.description}</h3>
-                        <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
-                          <span>{update.timeAgo}</span>
-                          {update.source && (
-                            <>
-                              <span className="mx-1">•</span>
-                              <span>{update.source}</span>
-                            </>
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-semibold mx-auto">
+                              {update.user.initials}
+                            </div>
                           )}
                         </div>
-                      </Link>
-                      <div className="flex-shrink-0 self-center">
-                        {update.verified && (
-                          <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs">Verified</span>
-                        )}
+                        <Link
+                          href={`/${update.figureId}?event=${slugify(update.eventTitle)}&modal=true#${slugify(update.eventTitle)}`}
+                          className="flex-1 hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 rounded transition-colors cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavigate(`/${update.figureId}?event=${slugify(update.eventTitle)}&modal=true#${slugify(update.eventTitle)}`);
+                          }}
+                        >
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{update.title}</p>
+                          <h3 className="font-medium mb-1 text-gray-900 dark:text-white line-clamp-2">{update.description}</h3>
+                          <div className="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                            <span>{update.timeAgo}</span>
+                            {update.source && (
+                              <>
+                                <span className="mx-1">•</span>
+                                <span>{update.source}</span>
+                              </>
+                            )}
+                          </div>
+                        </Link>
+                        <div className="flex-shrink-0 self-center">
+                          {update.verified && (
+                            <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs">Verified</span>
+                          )}
+                        </div>
                       </div>
+                    ))}
+                  </div>
+                )}
+                </div>
+
+              </div>
+              <div className="text-center mt-6">
+                <Link
+                  href="/updates"
+                  className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigate('/updates');
+                  }}
+                >
+                  See All Updates →
+                </Link>
+              </div>
+            </section>
+
+            {/* Featured Figures Section - Full Height */}
+            <section ref={featuredSectionRef} className="section-animate flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
+              <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Featured Figures</h2>
+              <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Complete profiles with full verification</p>
+
+              {featuredLoading ? (
+                <div className="py-12 text-center">
+                  <Loader2 className="animate-spin w-8 h-8 mx-auto mb-4 text-key-color" />
+                  <p className="text-gray-500 dark:text-gray-400">Loading featured profiles...</p>
+                </div>
+              ) : featuredError ? (
+                <div className="py-12 text-center">
+                  <p className="text-red-500 dark:text-red-400 mb-2">{featuredError}</p>
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-key-color text-white rounded hover:bg-red-700 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {featuredFigures.map((figure) => (
+                    <div key={figure.id} className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
+                      <div className="p-4">
+                        <div className="flex items-center mb-4">
+                          <div className="flex-shrink-0">
+                            <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-key-color">
+                              <Link
+                                href={`/${createUrlSlug(figure.name)}`}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleNavigate(`/${createUrlSlug(figure.name)}`);
+                                }}
+                              >
+                                <Image
+                                  src={figure.profilePic || '/images/default-profile.png'}
+                                  alt={figure.name}
+                                  fill
+                                  sizes="48px"
+                                  className="object-cover"
+                                />
+                              </Link>
+                            </div>
+                          </div>
+                          <div className="ml-3">
+                            <Link
+                              href={`/${createUrlSlug(figure.name)}`}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleNavigate(`/${createUrlSlug(figure.name)}`);
+                              }}
+                            >
+                              <h3 className="font-bold text-lg text-gray-900 dark:text-white">{figure.name}</h3>
+                            </Link>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                              {figure.occupation ? figure.occupation.join(', ') : 'Artist'}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between text-center mb-4">
+                          <div>
+                            <div className="font-bold text-key-color">{figure.stats?.totalSources || 85}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">Sources</div>
+                          </div>
+                          <div>
+                            <div className="font-bold text-gray-900 dark:text-white">{figure.stats?.totalFacts.toLocaleString() || '3,500+'}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">Facts</div>
+                          </div>
+                          <div>
+                            <div className="font-bold text-green-600 dark:text-green-400">
+                              {figure.stats?.totalSources && figure.stats?.totalFacts
+                                ? (() => {
+                                  const calculated = Math.round((figure.stats.totalSources / Math.max(figure.stats.totalFacts, 1)) * 100);
+                                  const percentage = calculated < 90 ? 95 : Math.min(99, calculated);
+                                  return `${percentage}%`;
+                                })()
+                                : 'N/A'}
+                            </div>
+                            <div className="text-xs text-gray-600 dark:text-gray-400">Verified</div>
+                          </div>
+                        </div>
+
+                        <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
+                          {figure.featuredUpdate?.eventTitle ? (
+                            <Link
+                              href={`/${createUrlSlug(figure.name)}?event=${slugify(figure.featuredUpdate?.eventTitle || '')}&modal=true#${slugify(figure.featuredUpdate?.eventTitle || '')}`}
+                              className="block hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 py-1 rounded transition-colors cursor-pointer"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleNavigate(`/${createUrlSlug(figure.name)}?event=${slugify(figure.featuredUpdate?.eventTitle || '')}&modal=true#${slugify(figure.featuredUpdate?.eventTitle || '')}`);
+                              }}
+                            >
+                              <div className="flex justify-between items-start mb-1">
+                                <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                                  {figure.featuredUpdate.eventTitle}
+                                </h4>
+                                <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs flex-shrink-0 ml-2">Verified</span>
+                              </div>
+                              <div className="min-h-[60px]"> {/* Fixed height container for description */}
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                  {figure.featuredUpdate.eventPointDescription || 'Recent professional activities and public appearances.'}
+                                </p>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  {figure.featuredUpdate.eventPointDate
+                                    ? formatEventDate(figure.featuredUpdate.eventPointDate)
+                                    : 'No recent updates'
+                                  }
+                                </div>
+                              </div>
+                            </Link>
+                          ) : (
+                            <div>
+                              <div className="flex justify-between items-start mb-1">
+                                <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                                  Latest: {figure.name} update
+                                </h4>
+                                <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs flex-shrink-0 ml-2">Verified</span>
+                              </div>
+                              <div className="min-h-[60px]"> {/* Fixed height container for description */}
+                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                  Recent professional activities and public appearances.
+                                </p>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  No recent updates
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      {/* <div className="bg-gray-50 px-3 py-2"> */}
+                      {/* Empty footer for consistent height */}
+                      {/* </div> */}
                     </div>
                   ))}
                 </div>
               )}
-            </div>
 
-          </div>
-          <div className="text-center mt-6">
-            <Link
-              href="/updates"
-              className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavigate('/updates');
-              }}
-            >
-              See All Updates →
-            </Link>
-          </div>
-        </section>
+              <div className="text-center mt-6">
+                <Link
+                  href="/all-figures"
+                  className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleNavigate('/all-figures');
+                  }}
+                >
+                  Browse All Figures →
+                </Link>
+              </div>
+            </section>
 
-        {/* Featured Figures Section - Full Height */}
-        <section ref={featuredSectionRef} className="section-animate flex flex-col justify-center mb-12 min-h-screen md:min-h-0">
-          <h2 className="text-2xl font-bold text-center mb-2 text-gray-900 dark:text-white">Featured Figures</h2>
-          <p className="text-center text-gray-600 dark:text-gray-400 mb-6">Complete profiles with full verification</p>
-
-          {featuredLoading ? (
-            <div className="py-12 text-center">
-              <Loader2 className="animate-spin w-8 h-8 mx-auto mb-4 text-key-color" />
-              <p className="text-gray-500 dark:text-gray-400">Loading featured profiles...</p>
-            </div>
-          ) : featuredError ? (
-            <div className="py-12 text-center">
-              <p className="text-red-500 dark:text-red-400 mb-2">{featuredError}</p>
-              <button
-                onClick={() => window.location.reload()}
-                className="px-4 py-2 bg-key-color text-white rounded hover:bg-red-700 transition-colors"
+            {/* Call to Action Section */}
+            <section ref={ctaSectionRef} className="section-animate bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md p-8 text-center mb-12">
+              <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Ready to explore?</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-6">
+                Start discovering verified information about your favorite public figures.
+              </p>
+              <Link
+                href="/search"
+                className="inline-flex items-center bg-key-color hover:bg-red-700 text-white font-medium py-2 px-6 rounded-full transition-colors"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleNavigate('/search');
+                }}
               >
-                Retry
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {featuredFigures.map((figure) => (
-                <div key={figure.id} className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md overflow-hidden">
-                  <div className="p-4">
-                    <div className="flex items-center mb-4">
-                      <div className="flex-shrink-0">
-                        <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-key-color">
-                          <Link
-                            href={`/${createUrlSlug(figure.name)}`}
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleNavigate(`/${createUrlSlug(figure.name)}`);
-                            }}
-                          >
-                            <Image
-                              src={figure.profilePic || '/images/default-profile.png'}
-                              alt={figure.name}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          </Link>
-                        </div>
-                      </div>
-                      <div className="ml-3">
-                        <Link
-                          href={`/${createUrlSlug(figure.name)}`}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleNavigate(`/${createUrlSlug(figure.name)}`);
-                          }}
-                        >
-                          <h3 className="font-bold text-lg text-gray-900 dark:text-white">{figure.name}</h3>
-                        </Link>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {figure.occupation ? figure.occupation.join(', ') : 'Artist'}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-between text-center mb-4">
-                      <div>
-                        <div className="font-bold text-key-color">{figure.stats?.totalSources || 85}</div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">Sources</div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 dark:text-white">{figure.stats?.totalFacts.toLocaleString() || '3,500+'}</div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">Facts</div>
-                      </div>
-                      <div>
-                        <div className="font-bold text-green-600 dark:text-green-400">
-                          {figure.stats?.totalSources && figure.stats?.totalFacts
-                            ? (() => {
-                                const calculated = Math.round((figure.stats.totalSources / Math.max(figure.stats.totalFacts, 1)) * 100);
-                                const percentage = calculated < 90 ? 95 : Math.min(99, calculated);
-                                return `${percentage}%`;
-                              })()
-                            : 'N/A'}
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">Verified</div>
-                      </div>
-                    </div>
-
-                    <div className="border-t border-gray-100 dark:border-gray-800 pt-3">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-medium text-sm text-gray-900 dark:text-white">
-                          {figure.featuredUpdate?.eventTitle || `Latest: ${figure.name} update`}
-                        </h4>
-                        <span className="inline-block bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 px-2 py-0.5 rounded text-xs flex-shrink-0 ml-2">Verified</span>
-                      </div>
-                      <div className="min-h-[60px]"> {/* Fixed height container for description */}
-                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                          {figure.featuredUpdate?.eventPointDescription || 'Recent professional activities and public appearances.'}
-                        </p>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {figure.featuredUpdate?.eventPointDate
-                            ? formatEventDate(figure.featuredUpdate.eventPointDate)
-                            : 'No recent updates'
-                          }
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* <div className="bg-gray-50 px-3 py-2"> */}
-                  {/* Empty footer for consistent height */}
-                  {/* </div> */}
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="text-center mt-6">
-            <Link
-              href="/all-figures"
-              className="inline-block bg-key-color hover:bg-red-700 text-white text-sm font-medium px-6 py-2 rounded-full transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                handleNavigate('/all-figures');
-              }}
-            >
-              Browse All Figures →
-            </Link>
-          </div>
-        </section>
-
-        {/* Call to Action Section */}
-        <section ref={ctaSectionRef} className="section-animate bg-white dark:bg-[#1d1d1f] rounded-lg shadow-md p-8 text-center mb-12">
-          <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Ready to explore?</h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Start discovering verified information about your favorite public figures.
-          </p>
-          <Link
-            href="/search"
-            className="inline-flex items-center bg-key-color hover:bg-red-700 text-white font-medium py-2 px-6 rounded-full transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              handleNavigate('/search');
-            }}
-          >
-            Start Searching
-            <Search className="ml-2 w-4 h-4" />
-          </Link>
-        </section>
+                Start Searching
+                <Search className="ml-2 w-4 h-4" />
+              </Link>
+            </section>
+          </>
+        )}
       </main>
       {isPageLoading && <LoadingOverlay />}
       {showWelcomeBanner && <WelcomeBanner onClose={handleCloseWelcomeBanner} />}

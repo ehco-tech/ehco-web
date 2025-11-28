@@ -18,14 +18,15 @@ import { notFound } from 'next/navigation';
 import { extractSpotifyArtistId, getArtistDiscography } from '@/lib/spotify';
 import { getSpotifyDiscographyWithCache } from '@/lib/spotify-cache-service';
 import { getTMDbFilmographyWithCache } from '@/lib/tmdb-cache-service';
+import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
 
 // --- IMPORTED TYPES ---
 import {
     ApiContentResponse,
     ArticleSummary,
     CuratedEvent,
-    TimelinePoint,
-    CuratedTimelineData
+    CuratedTimelineData,
+    TimelineContent
 } from '@/types/definitions';
 
 
@@ -170,37 +171,6 @@ export async function generateMetadata({ params }: { params: Promise<{ publicFig
 
 
 // --- DATA FETCHING FUNCTIONS ---
-
-// Helper function to serialize Firestore data (convert Timestamps to strings)
-function serializeFirestoreData<T>(data: T): T {
-    if (data === null || data === undefined) {
-        return data;
-    }
-
-    // Handle Firestore Timestamp objects
-    if (data && typeof data === 'object' && 'seconds' in data && 'nanoseconds' in data) {
-        return new Date((data as { seconds: number; nanoseconds: number }).seconds * 1000).toISOString() as T;
-    }
-
-    // Handle arrays
-    if (Array.isArray(data)) {
-        return data.map(item => serializeFirestoreData(item)) as T;
-    }
-
-    // Handle objects
-    if (typeof data === 'object') {
-        const serialized: Record<string, unknown> = {};
-        for (const key in data) {
-            if (Object.prototype.hasOwnProperty.call(data, key)) {
-                serialized[key] = serializeFirestoreData((data as Record<string, unknown>)[key]);
-            }
-        }
-        return serialized as T;
-    }
-
-    // Return primitive values as-is
-    return data;
-}
 
 async function getArticleSummaries(publicFigureId: string, articleIds: string[]): Promise<ArticleSummary[]> {
     if (articleIds.length === 0) return [];
@@ -356,6 +326,39 @@ async function getFiguresByIds(ids: string[]): Promise<Array<{ id: string; name:
 
 // --- WRAPPER COMPONENTS ---
 
+async function TimelineSection({
+    timelineContent,
+    uniqueArticleIds,
+    figureId,
+    figureName,
+    figureNameKr
+}: {
+    timelineContent: TimelineContent;
+    uniqueArticleIds: string[];
+    figureId: string;
+    figureName: string;
+    figureNameKr: string;
+}) {
+    // Load ALL articles here - this component loads separately via Suspense
+    const articles = await getArticlesByIds(uniqueArticleIds);
+    const serializedArticles = JSON.parse(JSON.stringify(articles));
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+            <h2 className="text-2xl font-bold mb-6 text-key-color dark:text-key-color-dark">Career Timeline</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-8">Comprehensive chronicle of {figureName}&apos;s journey to global stardom</p>
+            <CareerJourney
+                apiResponse={timelineContent}
+                articles={serializedArticles}
+                allArticleIds={uniqueArticleIds}
+                figureId={figureId}
+                figureName={figureName}
+                figureNameKr={figureNameKr}
+            />
+        </div>
+    );
+}
+
 async function DiscographySectionWrapper({
     spotifyUrl,
     artistName,
@@ -506,36 +509,71 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         const publicFigureData = await getPublicFigureData(publicFigureId);
         const apiResponse = await getPublicFigureContent(publicFigureData.id);
 
-        const allArticleIds: string[] = [...(apiResponse.main_overview.articleIds || [])];
+        // Use Set from the start to avoid duplicate IDs and expensive filtering
+        const allArticleIdsSet = new Set<string>();
 
-        // All data is now v2_curated format
-        const sourcesSet = new Set<string>();
+        // Add main overview article IDs
+        const mainOverviewIds = apiResponse.main_overview.articleIds || [];
 
-        // The outer loop iterates over the main category object
-        Object.values(apiResponse.timeline_content.data).forEach((mainCatData: unknown) => {
-            // Access the .subCategories property
-            if (mainCatData && typeof mainCatData === 'object' && 'subCategories' in mainCatData) {
-                const subCategories = (mainCatData as { subCategories: Record<string, CuratedEvent[]> }).subCategories;
-                Object.values(subCategories).forEach((eventList: CuratedEvent[]) => {
-                    eventList.forEach((event: CuratedEvent) => {
-                        // Check for event.sources
-                        (event.sources || []).forEach((source) => {
-                            if (source.id) sourcesSet.add(source.id);
-                        });
-
-                        // Check for timeline_points which might contain sourceIds
-                        (event.timeline_points || []).forEach((point: TimelinePoint) => {
-                            (point.sourceIds || []).forEach((id: string) => {
-                                if (id) sourcesSet.add(id);
-                            });
-                        });
-                    });
-                });
+        for (let i = 0; i < mainOverviewIds.length; i++) {
+            const id = mainOverviewIds[i];
+            if (typeof id === 'string' && id.length > 0) {
+                allArticleIdsSet.add(id);
             }
-        });
-        allArticleIds.push(...Array.from(sourcesSet));
+        }
 
-        const uniqueArticleIds = allArticleIds.filter((id, index, self) => self.indexOf(id) === index);
+        // Manual iteration to avoid .flatMap() and .flat() which can cause stack overflow
+        // Iterate through main categories
+        const mainCategories = Object.values(apiResponse.timeline_content.data);
+
+        for (let i = 0; i < mainCategories.length; i++) {
+            const mainCatData = mainCategories[i];
+            if (!mainCatData || typeof mainCatData !== 'object' || !('subCategories' in mainCatData)) {
+                continue;
+            }
+
+            const subCategories = (mainCatData as { subCategories: Record<string, CuratedEvent[]> }).subCategories;
+            const subCategoryValues = Object.values(subCategories);
+
+            // Iterate through subcategories
+            for (let j = 0; j < subCategoryValues.length; j++) {
+                const eventList = subCategoryValues[j];
+                if (!Array.isArray(eventList)) continue;
+
+                // Iterate through events in each subcategory
+                for (let k = 0; k < eventList.length; k++) {
+                    const event = eventList[k];
+
+                    // Collect source IDs from event.sources
+                    if (event.sources && Array.isArray(event.sources)) {
+                        for (let m = 0; m < event.sources.length; m++) {
+                            const source = event.sources[m];
+                            if (source && typeof source.id === 'string' && source.id.length > 0) {
+                                allArticleIdsSet.add(source.id);
+                            }
+                        }
+                    }
+
+                    // Collect source IDs from timeline_points
+                    if (event.timeline_points && Array.isArray(event.timeline_points)) {
+                        for (let n = 0; n < event.timeline_points.length; n++) {
+                            const point = event.timeline_points[n];
+                            if (point && point.sourceIds && Array.isArray(point.sourceIds)) {
+                                for (let p = 0; p < point.sourceIds.length; p++) {
+                                    const id = point.sourceIds[p];
+                                    if (typeof id === 'string' && id.length > 0) {
+                                        allArticleIdsSet.add(id);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Convert Set to Array without spread operator to avoid stack overflow
+        const uniqueArticleIds = Array.from(allArticleIdsSet);
 
         const relatedFiguresObject = publicFigureData.related_figures || {};
 
@@ -544,11 +582,12 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
             .map(([figureId]) => figureId)
             .slice(0, 2);
 
-        const [articles, articleSummaries, similarProfiles] = await Promise.all([
-            getArticlesByIds(uniqueArticleIds),
-            getArticleSummaries(publicFigureData.id, uniqueArticleIds),
-            getFiguresByIds(similarFigureIds)
-        ]);
+        // Load initial batch of articles for modal (first 50%)
+        // This ensures the modal can show immediately with data
+        const initialBatchSize = Math.ceil(uniqueArticleIds.length / 2);
+        const initialArticleIds = uniqueArticleIds.slice(0, initialBatchSize);
+        const initialArticles = await getArticlesByIds(initialArticleIds);
+        const serializedInitialArticles = JSON.parse(JSON.stringify(initialArticles));
 
         // Fetch Spotify artist names if spotifyUrl exists
         let spotifyArtistNames: string[] = [];
@@ -600,58 +639,73 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         // Serialize all data before passing to client components
         const serializedPublicFigure = JSON.parse(JSON.stringify(publicFigureData));
         const serializedApiResponse = JSON.parse(JSON.stringify(apiResponse));
-        const serializedArticles = JSON.parse(JSON.stringify(articles));
 
         return (
-            <div className="min-h-screen bg-gray-50 dark:bg-black">
-                <JsonLd data={schemaData} />
+            <PublicFigurePageWrapper
+                timelineData={serializedApiResponse.timeline_content.data}
+                articles={serializedInitialArticles}
+                figureName={serializedPublicFigure.name}
+                figureId={serializedPublicFigure.id}
+            >
+                <div className="min-h-screen bg-gray-50 dark:bg-black">
+                    <JsonLd data={schemaData} />
 
-                {/* Hero Section */}
-                <HeroSection publicFigure={serializedPublicFigure} />
+                    {/* Hero Section */}
+                    <HeroSection publicFigure={serializedPublicFigure} />
 
-                {/* Sticky Tab Navigation */}
-                <TabNavigation />
+                    {/* Sticky Tab Navigation */}
+                    <TabNavigation />
 
-                {/* Content Sections */}
-                <section id="overview">
-                    <OverviewSection
-                        publicFigure={serializedPublicFigure}
-                        mainOverview={serializedApiResponse.main_overview}
-                        spotifyArtistNames={spotifyArtistNames}
-                    />
-                </section>
-
-                <section id="discography">
-                    <DiscographySectionWrapper
-                        spotifyUrl={serializedPublicFigure.spotifyUrl}
-                        artistName={serializedPublicFigure.name}
-                        figureId={serializedPublicFigure.id}
-                    />
-                </section>
-
-                <section id="filmography">
-                    <FilmographySectionWrapper
-                        figureId={serializedPublicFigure.id}
-                        personName={serializedPublicFigure.name}
-                        tmdbId={serializedPublicFigure.tmdb_id}
-                        tmdbVerified={serializedPublicFigure.tmdb_verified}
-                    />
-                </section>
-
-                <section id="timeline">
-                    <div className="max-w-7xl mx-auto px-4 py-8">
-                        <h2 className="text-2xl font-bold mb-6 text-key-color dark:text-key-color-dark">Career Timeline</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-8">Comprehensive chronicle of {serializedPublicFigure.name}&apos;s journey to global stardom</p>
-                        <CareerJourney
-                            apiResponse={serializedApiResponse.timeline_content}
-                            articles={serializedArticles}
-                            figureId={serializedPublicFigure.id}
-                            figureName={serializedPublicFigure.name}
-                            figureNameKr={serializedPublicFigure.name_kr}
+                    {/* Content Sections */}
+                    <section id="overview">
+                        <OverviewSection
+                            publicFigure={serializedPublicFigure}
+                            mainOverview={serializedApiResponse.main_overview}
+                            spotifyArtistNames={spotifyArtistNames}
                         />
-                    </div>
-                </section>
-            </div>
+                    </section>
+
+                    <section id="discography">
+                        <DiscographySectionWrapper
+                            spotifyUrl={serializedPublicFigure.spotifyUrl}
+                            artistName={serializedPublicFigure.name}
+                            figureId={serializedPublicFigure.id}
+                        />
+                    </section>
+
+                    <section id="filmography">
+                        <FilmographySectionWrapper
+                            figureId={serializedPublicFigure.id}
+                            personName={serializedPublicFigure.name}
+                            tmdbId={serializedPublicFigure.tmdb_id}
+                            tmdbVerified={serializedPublicFigure.tmdb_verified}
+                        />
+                    </section>
+
+                    <section id="timeline">
+                        <Suspense fallback={
+                            <div className="max-w-7xl mx-auto px-4 py-8">
+                                <h2 className="text-2xl font-bold mb-6 text-key-color dark:text-key-color-dark">Career Timeline</h2>
+                                <p className="text-gray-600 dark:text-gray-300 mb-8">Comprehensive chronicle of {serializedPublicFigure.name}&apos;s journey to global stardom</p>
+                                <div className="flex items-center justify-center py-12">
+                                    <div className="flex items-center space-x-3">
+                                        <Loader2 className="animate-spin text-key-color dark:text-key-color-dark" size={24} />
+                                        <span className="text-gray-600 dark:text-gray-300">Loading timeline...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }>
+                            <TimelineSection
+                                timelineContent={serializedApiResponse.timeline_content}
+                                uniqueArticleIds={uniqueArticleIds}
+                                figureId={serializedPublicFigure.id}
+                                figureName={serializedPublicFigure.name}
+                                figureNameKr={serializedPublicFigure.name_kr}
+                            />
+                        </Suspense>
+                    </section>
+                </div>
+            </PublicFigurePageWrapper>
         );
     } catch (error) {
         if (error instanceof Error && error.message === 'Public figure not found') {

@@ -151,7 +151,7 @@ const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) 
         } catch (error) { console.error("Could not parse date:", dateString, error); return dateString; }
     };
 
-    if (relevantArticles.length === 0) return null;
+    const loadingCount = articleIds.length - relevantArticles.length;
 
     return (
         <div className="mt-3 pt-3 border-t border-gray-200/80 dark:border-gray-700/80"><div className="grid grid-cols-1 gap-4">
@@ -169,6 +169,15 @@ const EventSources: React.FC<EventSourcesProps> = ({ articleIds, articlesMap }) 
                     </div>
                 </a>
             ))}
+            {loadingCount > 0 && (
+                <div className="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50/50 dark:bg-gray-800/50">
+                    <div className="flex-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 italic">
+                            Loading {loadingCount} more {loadingCount === 1 ? 'source' : 'sources'}...
+                        </p>
+                    </div>
+                </div>
+            )}
         </div></div>
     );
 };
@@ -178,8 +187,11 @@ const TimelinePointWithSources: React.FC<TimelinePointWithSourcesProps> = ({ poi
     const sortedPoints = sortTimelinePoints([point]);
     const sortedPoint = sortedPoints[0];
 
-    // Check if there are any sources to show
-    const hasSourcesCount = (sortedPoint.sourceIds || [])
+    // Count total source IDs (regardless of whether loaded)
+    const totalSourceIds = (sortedPoint.sourceIds || []).length;
+
+    // Count loaded sources
+    const loadedSourcesCount = (sortedPoint.sourceIds || [])
         .filter(id => articlesMap.get(id))
         .length;
 
@@ -201,8 +213,8 @@ const TimelinePointWithSources: React.FC<TimelinePointWithSourcesProps> = ({ poi
                         />
                     </p>
 
-                    {/* Toggle button for sources */}
-                    {hasSourcesCount > 0 && (
+                    {/* Toggle button for sources - show if there are any source IDs */}
+                    {totalSourceIds > 0 && (
                         <button
                             onClick={() => setShowSources(!showSources)}
                             className="flex items-center gap-1.5 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium mb-2 transition-colors"
@@ -210,12 +222,12 @@ const TimelinePointWithSources: React.FC<TimelinePointWithSourcesProps> = ({ poi
                             {showSources ? (
                                 <>
                                     <ChevronUp size={14} />
-                                    Hide sources ({hasSourcesCount})
+                                    Hide sources ({loadedSourcesCount}/{totalSourceIds})
                                 </>
                             ) : (
                                 <>
                                     <ChevronDown size={14} />
-                                    View sources ({hasSourcesCount})
+                                    View sources ({loadedSourcesCount}/{totalSourceIds})
                                 </>
                             )}
                         </button>

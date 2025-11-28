@@ -40,21 +40,26 @@ export async function getArticlesByIds(articleIds: string[]): Promise<Article[]>
         // Wait for all fetches to complete in parallel.
         const snapshots = await Promise.all(promises);
 
-        // Flatten the results from all chunks into a single array.
-        const articles = snapshots.flatMap(snapshot =>
-            snapshot.docs.map(doc => ({
-                id: doc.id,
-                subTitle: doc.data().subTitle || '',
-                link: doc.data().link || '',
-                body: doc.data().body || '',
-                source: doc.data().source || '',
-                imageUrls: doc.data().imageUrls || [],
-                sendDate: doc.data().sendDate || '',
-                // Map other fields from your document here...
-            }))
-        );
+        // Manually flatten to avoid stack overflow with large datasets
+        const articles: Article[] = [];
+        for (let i = 0; i < snapshots.length; i++) {
+            const snapshot = snapshots[i];
+            for (let j = 0; j < snapshot.docs.length; j++) {
+                const doc = snapshot.docs[j];
+                articles.push({
+                    id: doc.id,
+                    subTitle: doc.data().subTitle || '',
+                    link: doc.data().link || '',
+                    body: doc.data().body || '',
+                    source: doc.data().source || '',
+                    imageUrls: doc.data().imageUrls || [],
+                    sendDate: doc.data().sendDate || '',
+                    title: doc.data().title || ''
+                });
+            }
+        }
 
-        return articles as Article[];
+        return articles;
     } catch (error) {
         console.error('Error fetching articles by IDs:', error);
         // Return an empty array in case of an error to prevent the page from crashing.

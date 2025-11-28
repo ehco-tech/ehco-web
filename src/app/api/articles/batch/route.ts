@@ -10,7 +10,7 @@ interface BatchArticleRequest {
 
 const RATE_LIMIT_MAP = new Map<string, { count: number; resetTime: number }>();
 const MAX_REQUESTS_PER_MINUTE = 10;
-const MAX_ARTICLES_PER_REQUEST = 50;
+const MAX_ARTICLES_PER_REQUEST = 600; // Increased to support larger batches
 
 function checkRateLimit(clientId: string): boolean {
     const now = Date.now();

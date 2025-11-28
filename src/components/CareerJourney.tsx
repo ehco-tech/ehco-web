@@ -3,6 +3,7 @@
 import React, { useState, useMemo, useLayoutEffect, useRef } from 'react';
 import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
 import CuratedTimelineView from './CuratedTimelineView';
+import { useProgressiveArticles } from '@/hooks/useProgressiveArticles';
 
 // --- INTERFACES ---
 import {
@@ -18,6 +19,7 @@ interface ApiResponse {
 interface CareerJourneyProps {
     apiResponse: ApiResponse;
     articles: Article[];
+    allArticleIds: string[];
     figureId: string;
     figureName: string;
     figureNameKr: string;
@@ -43,12 +45,23 @@ const ORDERED_SUB_CATEGORIES: { [key: string]: string[] } = {
 // --- COMPONENT ---
 const CareerJourney: React.FC<CareerJourneyProps> = ({
     apiResponse,
-    articles,
+    articles: initialArticles,
+    allArticleIds,
     figureId,
     figureName,
     figureNameKr
 }) => {
     const timelineData = apiResponse.data;
+
+    // Use progressive loading to fetch remaining articles (second half)
+    const { articles, isLoading: isLoadingArticles, progress } = useProgressiveArticles({
+        initialArticles,
+        allArticleIds,
+        figureId,
+        batchSize: 500, // Larger batch size for faster completion
+        enabled: allArticleIds.length > initialArticles.length
+    });
+
     const [activeMainCategory, setActiveMainCategory] = useState<string>('Creative Works');
     const [activeSubCategory, setActiveSubCategory] = useState<string>('All Events');
     const [activeYear, setActiveYear] = useState<string | null>(null);
