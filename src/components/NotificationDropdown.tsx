@@ -1,11 +1,13 @@
 // src/components/NotificationDropdown.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useFigureProfiles } from '@/hooks/useFigureProfile';
 import { Timestamp } from 'firebase/firestore';
 import {
     Bell,
@@ -51,6 +53,14 @@ export default function NotificationDropdown({ onClose, className = '' }: Notifi
     } = useNotifications();
 
     const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+
+    // Extract unique figure IDs from notifications
+    const figureIds = useMemo(() => {
+        return Array.from(new Set(notifications.map(n => n.figureId)));
+    }, [notifications]);
+
+    // Fetch all figure profiles
+    const figureProfiles = useFigureProfiles(figureIds);
 
     const handleNotificationClick = async (notificationId: string, figureId: string) => {
         // Mark as read if unread
@@ -206,7 +216,18 @@ export default function NotificationDropdown({ onClose, className = '' }: Notifi
 
                                     {/* Figure Avatar */}
                                     <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden flex-shrink-0">
-                                        <User size={16} className="text-gray-400 w-full h-full p-2" />
+                                        {figureProfiles[notification.figureId]?.profilePic ? (
+                                            <Image
+                                                src={figureProfiles[notification.figureId].profilePic!}
+                                                alt={notification.figureName}
+                                                width={32}
+                                                height={32}
+                                                className="w-full h-full object-cover"
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <User size={16} className="text-gray-400 w-full h-full p-2" />
+                                        )}
                                     </div>
 
                                     {/* Notification Content */}
