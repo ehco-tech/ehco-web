@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { X } from 'lucide-react';
+import { X, ExternalLink } from 'lucide-react';
 import { SpotifyAlbum, SpotifyAlbumDetails } from '@/lib/spotify';
 import { ArtistAlbumData } from '@/lib/spotify-cache-service';
 
@@ -90,13 +90,20 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tracklist</h3>
                         <div className="space-y-2">
                             {album.tracks.items.map((track) => (
-                                <div key={track.id} className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors">
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-gray-400 dark:text-gray-500 text-sm w-6">{track.track_number}</span>
-                                        <span className="text-gray-900 dark:text-white">{track.name}</span>
+                                <a
+                                    key={track.id}
+                                    href={track.external_urls.spotify}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors group"
+                                >
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <span className="text-gray-400 dark:text-gray-500 text-sm w-6 flex-shrink-0">{track.track_number}</span>
+                                        <span className="text-gray-900 dark:text-white truncate">{track.name}</span>
+                                        <ExternalLink size={14} className="text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                                     </div>
-                                    <span className="text-gray-500 dark:text-gray-400 text-sm">{formatDuration(track.duration_ms)}</span>
-                                </div>
+                                    <span className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
+                                </a>
                             ))}
                         </div>
                     </div>
@@ -111,14 +118,14 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
                     </div>
 
                     {/* Spotify Link */}
-                    {/* <a
+                    <a
                         href={album.external_urls.spotify}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="block w-full bg-[#1DB954] hover:bg-[#1ed760] text-white text-center py-3 rounded-full font-semibold transition-colors"
                     >
-                        Play on Spotify
-                    </a> */}
+                        Open in Spotify
+                    </a>
                 </div>
             </div>
         </div>
