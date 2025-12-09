@@ -147,8 +147,7 @@ export async function getMultiArtistSpotifyDiscographyWithCache(
                             // Also strip available_markets from tracks if they exist
                             if (albumWithoutMarkets.tracks?.items) {
                                 albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
-                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                    const { available_markets: trackMarkets, ...trackWithoutMarkets } = track as any;
+                                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
                                     return trackWithoutMarkets;
                                 });
                             }
@@ -321,8 +320,7 @@ export async function refreshSpotifyCache(
                             // Also strip available_markets from tracks if they exist
                             if (albumWithoutMarkets.tracks?.items) {
                                 albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
-                                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                    const { available_markets: trackMarkets, ...trackWithoutMarkets } = track as any;
+                                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
                                     return trackWithoutMarkets;
                                 });
                             }
@@ -416,8 +414,7 @@ export async function refreshSpotifyCache(
             // Also strip available_markets from tracks if they exist
             if (albumWithoutMarkets.tracks?.items) {
                 albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                    const { available_markets: trackMarkets, ...trackWithoutMarkets } = track as any;
+                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
                     return trackWithoutMarkets;
                 });
             }
