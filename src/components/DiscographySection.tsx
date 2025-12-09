@@ -1,9 +1,9 @@
 // src/components/DiscographySection.tsx
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, Play, Pause } from 'lucide-react';
 import { SpotifyAlbum, SpotifyAlbumDetails } from '@/lib/spotify';
 import { ArtistAlbumData } from '@/lib/spotify-cache-service';
 
@@ -23,6 +23,19 @@ interface AlbumModalProps {
 
 function AlbumModal({ album, onClose }: AlbumModalProps) {
     const imageUrl = album.images[0]?.url || '/default-album-cover.png';
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const [playingTrackId, setPlayingTrackId] = useState<string | null>(null);
+    const [isPlaying, setIsPlaying] = useState(false);
+
+    // Cleanup audio when modal closes
+    useEffect(() => {
+        return () => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+            }
+        };
+    }, []);
 
     const formatDuration = (ms: number) => {
         const minutes = Math.floor(ms / 60000);
@@ -35,6 +48,48 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
+        });
+    };
+
+    const handlePlayPause = (track: { id: string; preview_url: string | null }) => {
+        if (!track.preview_url) return;
+
+        // If clicking the same track that's playing, pause it
+        if (playingTrackId === track.id && isPlaying) {
+            audioRef.current?.pause();
+            setIsPlaying(false);
+            return;
+        }
+
+        // If clicking a different track or resuming
+        if (playingTrackId === track.id && !isPlaying) {
+            audioRef.current?.play();
+            setIsPlaying(true);
+            return;
+        }
+
+        // Playing a new track
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
+
+        const audio = new Audio(track.preview_url);
+        audioRef.current = audio;
+        setPlayingTrackId(track.id);
+        setIsPlaying(true);
+
+        audio.play();
+
+        // Handle when audio ends
+        audio.addEventListener('ended', () => {
+            setIsPlaying(false);
+            setPlayingTrackId(null);
+        });
+
+        // Handle errors
+        audio.addEventListener('error', () => {
+            setIsPlaying(false);
+            setPlayingTrackId(null);
         });
     };
 
@@ -89,22 +144,53 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tracklist</h3>
                         <div className="space-y-2">
-                            {album.tracks.items.map((track) => (
-                                <a
-                                    key={track.id}
-                                    href={track.external_urls.spotify}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors group"
-                                >
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <span className="text-gray-400 dark:text-gray-500 text-sm w-6 flex-shrink-0">{track.track_number}</span>
-                                        <span className="text-gray-900 dark:text-white truncate">{track.name}</span>
-                                        <ExternalLink size={14} className="text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                            {album.tracks.items.map((track) => {
+                                const isCurrentTrack = playingTrackId === track.id;
+                                const isTrackPlaying = isCurrentTrack && isPlaying;
+
+                                return (
+                                    <div
+                                        key={track.id}
+                                        className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors group"
+                                    >
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <span className="text-gray-400 dark:text-gray-500 text-sm w-6 flex-shrink-0">{track.track_number}</span>
+
+                                            {/* Play/Pause Button */}
+                                            {track.preview_url ? (
+                                                <button
+                                                    onClick={() => handlePlayPause(track)}
+                                                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                                    title={isTrackPlaying ? "Pause preview" : "Play 30s preview"}
+                                                >
+                                                    {isTrackPlaying ? (
+                                                        <Pause size={16} className="text-key-color dark:text-key-color-dark" />
+                                                    ) : (
+                                                        <Play size={16} className="text-gray-600 dark:text-gray-400" />
+                                                    )}
+                                                </button>
+                                            ) : (
+                                                <div className="w-8 h-8 flex-shrink-0" /> // Placeholder for alignment
+                                            )}
+
+                                            <span className={`truncate ${isCurrentTrack ? 'text-key-color dark:text-key-color-dark font-semibold' : 'text-gray-900 dark:text-white'}`}>
+                                                {track.name}
+                                            </span>
+
+                                            <a
+                                                href={track.external_urls.spotify}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                                            >
+                                                <ExternalLink size={14} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
+                                            </a>
+                                        </div>
+                                        <span className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
                                     </div>
-                                    <span className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
-                                </a>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -206,7 +292,16 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
     const handleAlbumClick = async (album: SpotifyAlbum) => {
         setIsLoadingAlbum(true);
         try {
-            // Fetch full album details via our API endpoint
+            // Check if album already has track details (from cache)
+            if (album.tracks && album.tracks.items && album.tracks.items.length > 0) {
+                // Use cached data - cast SpotifyAlbum to SpotifyAlbumDetails
+                setSelectedAlbum(album as SpotifyAlbumDetails);
+                setIsLoadingAlbum(false);
+                return;
+            }
+
+            // Fallback: Fetch from API if tracks are not in cache
+            console.warn('Album tracks not in cache, fetching from API...');
             const token = await getToken();
             const response = await fetch(`https://api.spotify.com/v1/albums/${album.id}`, {
                 headers: {
@@ -228,7 +323,7 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
         }
     };
 
-    // Helper to get token (you'll need to implement this based on your setup)
+    // Helper to get token (fallback for albums without cached tracks)
     const getToken = async () => {
         const response = await fetch('/api/spotify/token');
         const data = await response.json();
