@@ -1,7 +1,7 @@
 // src/app/api/reports/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import ReportNotification from '@/emails/report-notification';
 import ReportConfirmation from '@/emails/report-confirmation';
 
@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
     };
 
     // Save to Firestore using Admin SDK
-    const docRef = await adminDb.collection('reports').add(reportData);
+    const docRef = await getAdminDb().collection('reports').add(reportData);
 
     console.log('Report submitted successfully:', docRef.id);
 

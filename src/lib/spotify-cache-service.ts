@@ -1,6 +1,6 @@
 // src/lib/spotify-cache-service.ts
 
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import {
     getArtistDiscography,
     extractSpotifyArtistId,
@@ -71,7 +71,7 @@ export async function getMultiArtistSpotifyDiscographyWithCache(
     }
 
     try {
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         const allAlbums: SpotifyAlbum[] = [];
@@ -217,7 +217,7 @@ export async function getMultiArtistSpotifyDiscographyWithCache(
 
         // Fallback: Try to return stale cache if available
         try {
-            const figureRef = adminDb.collection('selected-figures').doc(figureId);
+            const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
             const figureDoc = await figureRef.get();
 
             if (figureDoc.exists) {
@@ -355,7 +355,7 @@ export async function refreshSpotifyCache(
             last_updated: new Date().toISOString()
         };
 
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         await figureRef.update({
             [CACHE_FIELD]: multiArtistCacheData
         });
@@ -388,7 +388,7 @@ export async function refreshSpotifyCache(
             error: 'No albums found from Spotify API'
         };
 
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         await figureRef.update({
             [CACHE_FIELD]: errorCacheData
         });
@@ -429,7 +429,7 @@ export async function refreshSpotifyCache(
         artist_id: artistId
     };
 
-    const figureRef = adminDb.collection('selected-figures').doc(figureId);
+    const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
     await figureRef.update({
         [CACHE_FIELD]: cacheData
     });
@@ -455,7 +455,7 @@ export async function getSpotifyCacheInfo(figureId: string): Promise<{
     artistCount?: number;
 }> {
     try {
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         if (!figureDoc.exists) {
@@ -516,7 +516,7 @@ export async function getSpotifyCacheInfo(figureId: string): Promise<{
  * Clear Spotify cache for a figure (admin function)
  */
 export async function clearSpotifyCache(figureId: string): Promise<void> {
-    const figureRef = adminDb.collection('selected-figures').doc(figureId);
+    const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
     await figureRef.update({
         [CACHE_FIELD]: null
     });

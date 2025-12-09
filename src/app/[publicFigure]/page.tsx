@@ -15,9 +15,10 @@ import type { JsonLdObject } from '@/components/JsonLd';
 import JsonLd from '@/components/JsonLd';
 import { getArticlesByIds } from '@/lib/article-service';
 import { notFound } from 'next/navigation';
-import { extractSpotifyArtistId, getArtistDiscography } from '@/lib/spotify';
-import { getSpotifyDiscographyWithCache } from '@/lib/spotify-cache-service';
-import { getTMDbFilmographyWithCache } from '@/lib/tmdb-cache-service';
+import { readSpotifyCache } from '@/lib/spotify-cache-reader';
+import { readTMDbCache } from '@/lib/tmdb-cache-reader';
+import { getArtistDiscography, getSpotifyArtist, extractSpotifyArtistId, getAlbumDetails, type SpotifyAlbum } from '@/lib/spotify';
+import { getPersonFilmography } from '@/lib/tmdb';
 import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
 
 // --- IMPORTED TYPES ---
@@ -383,13 +384,79 @@ async function DiscographySectionWrapper({
     }
 
     try {
-        // Cache service handles all validation and ID extraction
-        const discographyData = await getSpotifyDiscographyWithCache(figureId, spotifyUrl);
+        // Step 1: Try to read cache using CLIENT SDK (no Admin SDK initialization)
+        const cachedData = await readSpotifyCache(figureId);
+
+        if (cachedData) {
+            // Cache hit - return immediately (no Admin SDK used!)
+            return (
+                <DiscographySection
+                    albums={cachedData.allAlbums}
+                    artistAlbums={cachedData.byArtist}
+                    artistName={artistName}
+                />
+            );
+        }
+
+        // Step 2: Cache miss - fetch fresh data from Spotify API directly
+        console.log(`📀 No fresh cache for ${figureId}, fetching from Spotify API...`);
+
+        const artistIds = spotifyUrl
+            .map(url => extractSpotifyArtistId(url))
+            .filter((id): id is string => id !== null);
+
+        if (artistIds.length === 0) {
+            throw new Error('No valid Spotify URLs');
+        }
+
+        const allAlbums: SpotifyAlbum[] = [];
+        const byArtist: { artistId: string; artistName: string; albums: SpotifyAlbum[] }[] = [];
+
+        for (const artistId of artistIds) {
+            const [discography, artistInfo] = await Promise.all([
+                getArtistDiscography(artistId),
+                getSpotifyArtist(artistId)
+            ]);
+
+            if (discography.allAlbums && discography.allAlbums.length > 0) {
+                const albumDetailsPromises = discography.allAlbums.map(album => getAlbumDetails(album.id));
+                const albumsWithDetails = await Promise.all(albumDetailsPromises);
+
+                const cleanedAlbums = albumsWithDetails
+                    .filter((album): album is NonNullable<typeof album> => album !== null)
+                    .map(album => {
+                        const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
+                        if (albumWithoutMarkets.tracks?.items) {
+                            albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
+                                const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
+                                return trackWithoutMarkets;
+                            });
+                        }
+                        return albumWithoutMarkets as SpotifyAlbum;
+                    });
+
+                allAlbums.push(...cleanedAlbums);
+                byArtist.push({
+                    artistId,
+                    artistName: artistInfo?.name || 'Unknown Artist',
+                    albums: cleanedAlbums
+                });
+            }
+        }
+
+        // Step 3: Trigger background cache update (fire and forget - no await)
+        // This will use Admin SDK but won't block the page render
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        fetch(`${baseUrl}/api/cache/spotify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ figureId, spotifyUrl })
+        }).catch(err => console.error('Background cache update failed:', err));
 
         return (
             <DiscographySection
-                albums={discographyData.allAlbums}
-                artistAlbums={discographyData.byArtist}
+                albums={allAlbums}
+                artistAlbums={byArtist}
                 artistName={artistName}
             />
         );
@@ -442,11 +509,32 @@ async function FilmographySectionWrapper({
             );
         }
 
-        // Fetch filmography using verified TMDb ID
-        const filmography = await getTMDbFilmographyWithCache(
-            figureId,
-            tmdbId  // ✅ Just pass the ID
-        );
+        // Step 1: Try to read cache using CLIENT SDK (no Admin SDK initialization)
+        const cachedFilmography = await readTMDbCache(figureId, tmdbId);
+
+        if (cachedFilmography) {
+            // Cache hit - return immediately (no Admin SDK used!)
+            return (
+                <FilmographySection
+                    cast={cachedFilmography.cast}
+                    crew={cachedFilmography.crew}
+                    personName={personName}
+                />
+            );
+        }
+
+        // Step 2: Cache miss - fetch fresh data from TMDb API directly
+        console.log(`🎬 No fresh cache for ${figureId}, fetching from TMDb API...`);
+        const filmography = await getPersonFilmography(tmdbId);
+
+        // Step 3: Trigger background cache update (fire and forget - no await)
+        // This will use Admin SDK but won't block the page render
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+        fetch(`${baseUrl}/api/cache/tmdb`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ figureId, tmdbId })
+        }).catch(err => console.error('Background cache update failed:', err));
 
         if (!filmography) {
             return (
@@ -593,11 +681,11 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         let spotifyArtistNames: string[] = [];
         if (publicFigureData.spotifyUrl && publicFigureData.spotifyUrl.length > 0) {
             try {
-                const discographyData = await getSpotifyDiscographyWithCache(
-                    publicFigureData.id,
-                    publicFigureData.spotifyUrl
-                );
-                spotifyArtistNames = discographyData.byArtist.map(artist => artist.artistName);
+                // Use client SDK to read cache (no Admin SDK)
+                const cachedData = await readSpotifyCache(publicFigureData.id);
+                if (cachedData) {
+                    spotifyArtistNames = cachedData.byArtist.map((artist: { artistName: string }) => artist.artistName);
+                }
             } catch (error) {
                 console.error('Error fetching Spotify artist names:', error);
             }
