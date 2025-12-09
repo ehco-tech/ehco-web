@@ -204,21 +204,32 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
 
     // Get filtered albums
     const getFilteredAlbums = () => {
+        let filtered: SpotifyAlbum[];
+
         // Check if filtering by artist
         const artistFilter = artistAlbums.find(a => a.artistId === filter);
         if (artistFilter) {
-            return artistFilter.albums;
+            filtered = artistFilter.albums;
+        } else {
+            // Otherwise filter by type
+            switch (filter) {
+                case 'album':
+                    filtered = albums.filter(a => a.album_type === 'album');
+                    break;
+                case 'single':
+                    filtered = albums.filter(a => a.album_type === 'single');
+                    break;
+                default:
+                    filtered = albums;
+            }
         }
 
-        // Otherwise filter by type
-        switch (filter) {
-            case 'album':
-                return albums.filter(a => a.album_type === 'album');
-            case 'single':
-                return albums.filter(a => a.album_type === 'single');
-            default:
-                return albums;
-        }
+        // Sort by release date (newest first)
+        return filtered.sort((a, b) => {
+            const dateA = new Date(a.release_date).getTime();
+            const dateB = new Date(b.release_date).getTime();
+            return dateB - dateA;
+        });
     };
 
     const filteredAlbums = getFilteredAlbums();
