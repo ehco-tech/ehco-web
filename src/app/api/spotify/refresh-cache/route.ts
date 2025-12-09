@@ -2,7 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { refreshSpotifyCache, getSpotifyCacheInfo } from '@/lib/spotify-cache-service';
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 
 /**
  * API endpoint to manually refresh Spotify cache for a figure
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
         }
 
         // Get figure data to get spotifyUrl
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         if (!figureDoc.exists) {

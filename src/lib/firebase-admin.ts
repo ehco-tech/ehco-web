@@ -1,27 +1,30 @@
 // src/lib/firebase-admin.ts
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
+import { getFirestore, Firestore } from 'firebase-admin/firestore';
 
-// Initialize Firebase Admin SDK
-const initializeFirebaseAdmin = () => {
+let adminApp: App | null = null;
+let adminDbInstance: Firestore | null = null;
+
+// Initialize Firebase Admin SDK (lazy initialization)
+const initializeFirebaseAdmin = (): App => {
   if (getApps().length === 0) {
     try {
       // Parse the service account key from environment variable
       const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-      
+
       if (!serviceAccountKey) {
         throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set');
       }
 
       const serviceAccount = JSON.parse(serviceAccountKey);
 
-      const app = initializeApp({
+      adminApp = initializeApp({
         credential: cert(serviceAccount),
         projectId: process.env.FIREBASE_PROJECT_ID,
       });
 
       console.log('Firebase Admin SDK initialized successfully');
-      return app;
+      return adminApp;
     } catch (error) {
       console.error('Error initializing Firebase Admin SDK:', error);
       throw error;
@@ -31,10 +34,25 @@ const initializeFirebaseAdmin = () => {
   return getApps()[0];
 };
 
-// Initialize the app
-const adminApp = initializeFirebaseAdmin();
+/**
+ * Get the Admin Firestore instance (lazy initialization)
+ * Only initializes the Admin SDK when first called
+ */
+export const getAdminDb = (): Firestore => {
+  if (!adminDbInstance) {
+    const app = initializeFirebaseAdmin();
+    adminDbInstance = getFirestore(app);
+  }
+  return adminDbInstance;
+};
 
-// Export Firestore instance
-export const adminDb = getFirestore(adminApp);
-
-export default adminApp;
+/**
+ * Get the Admin App instance (lazy initialization)
+ * Only initializes the Admin SDK when first called
+ */
+export const getAdminApp = (): App => {
+  if (!adminApp) {
+    adminApp = initializeFirebaseAdmin();
+  }
+  return adminApp;
+};

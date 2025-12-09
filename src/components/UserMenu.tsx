@@ -94,6 +94,7 @@ export default function UserMenu() {
             Sign Up
           </button>
         </div>
+        {showDivider && <div className="sm:hidden h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>}
         <button
           onClick={() => {
             sessionStorage.setItem('redirectPath', pathname);

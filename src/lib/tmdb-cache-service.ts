@@ -1,6 +1,6 @@
 // src/lib/tmdb-cache-service.ts
 
-import { adminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/firebase-admin';
 import {
     getPersonFilmography,
     getPersonDetails,
@@ -58,7 +58,7 @@ export async function getTMDbFilmographyWithCache(
 
     try {
         // Step 1: Try to get cached data from Firebase (using Admin SDK)
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         if (figureDoc.exists) {
@@ -113,7 +113,7 @@ export async function getTMDbFilmographyWithCache(
 
         // Fallback: Try to return stale cache if available
         try {
-            const figureRef = adminDb.collection('selected-figures').doc(figureId);
+            const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
             const figureDoc = await figureRef.get();
 
             if (figureDoc.exists) {
@@ -165,7 +165,7 @@ export async function refreshTMDbCache(
         also_known_as: personDetails.also_known_as
     };
 
-    const figureRef = adminDb.collection('selected-figures').doc(figureId);
+    const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
     await figureRef.update({
         [CACHE_FIELD]: cacheData
     });
@@ -190,7 +190,7 @@ export async function getTMDbCacheInfo(figureId: string): Promise<{
     crewCount?: number;
 }> {
     try {
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         if (!figureDoc.exists) {
@@ -228,7 +228,7 @@ export async function getTMDbCacheInfo(figureId: string): Promise<{
  * Clear TMDb cache for a figure (admin function)
  */
 export async function clearTMDbCache(figureId: string): Promise<void> {
-    const figureRef = adminDb.collection('selected-figures').doc(figureId);
+    const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
     await figureRef.update({
         [CACHE_FIELD]: null
     });
@@ -245,7 +245,7 @@ export async function verifyCachedTMDbId(figureId: string, expectedTmdbId: numbe
     cachedName?: string;
 }> {
     try {
-        const figureRef = adminDb.collection('selected-figures').doc(figureId);
+        const figureRef = getAdminDb().collection('selected-figures').doc(figureId);
         const figureDoc = await figureRef.get();
 
         if (!figureDoc.exists) {
