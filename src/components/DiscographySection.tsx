@@ -88,22 +88,46 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
                     {/* Tracklist */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tracklist</h3>
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                             {album.tracks.items.map((track) => (
-                                <a
+                                <div
                                     key={track.id}
-                                    href={track.external_urls.spotify}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-between py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg transition-colors group"
+                                    className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
                                 >
-                                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                                        <span className="text-gray-400 dark:text-gray-500 text-sm w-6 flex-shrink-0">{track.track_number}</span>
-                                        <span className="text-gray-900 dark:text-white truncate">{track.name}</span>
-                                        <ExternalLink size={14} className="text-gray-400 dark:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                                    {/* Track Info Header */}
+                                    <div className="flex items-center justify-between py-2 px-3 bg-gray-50 dark:bg-gray-800">
+                                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                                            <span className="text-gray-400 dark:text-gray-500 text-sm w-6 flex-shrink-0">{track.track_number}</span>
+                                            <span className="truncate text-gray-900 dark:text-white font-medium">
+                                                {track.name}
+                                            </span>
+                                            <a
+                                                href={track.external_urls.spotify}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                className="flex-shrink-0"
+                                                title="Open in Spotify"
+                                            >
+                                                <ExternalLink size={14} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300" />
+                                            </a>
+                                        </div>
+                                        <span className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
                                     </div>
-                                    <span className="text-gray-500 dark:text-gray-400 text-sm flex-shrink-0 ml-2">{formatDuration(track.duration_ms)}</span>
-                                </a>
+
+                                    {/* Spotify Embed Player */}
+                                    <div className="bg-white dark:bg-gray-900">
+                                        <iframe
+                                            src={`https://open.spotify.com/embed/track/${track.id}?utm_source=generator&theme=0`}
+                                            width="100%"
+                                            height="80"
+                                            style={{ border: 0 }}
+                                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                                            loading="lazy"
+                                            title={`Spotify player for ${track.name}`}
+                                        />
+                                    </div>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -178,10 +202,6 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
     const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbumDetails | null>(null);
     const [isLoadingAlbum, setIsLoadingAlbum] = useState(false);
 
-    // Organize albums by type
-    const studioAlbums = albums.filter(a => a.album_type === 'album');
-    const singles = albums.filter(a => a.album_type === 'single');
-
     // Get filtered albums
     const getFilteredAlbums = () => {
         // Check if filtering by artist
@@ -206,7 +226,16 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
     const handleAlbumClick = async (album: SpotifyAlbum) => {
         setIsLoadingAlbum(true);
         try {
-            // Fetch full album details via our API endpoint
+            // Check if album already has track details (from cache)
+            if (album.tracks && album.tracks.items && album.tracks.items.length > 0) {
+                // Use cached data - cast SpotifyAlbum to SpotifyAlbumDetails
+                setSelectedAlbum(album as SpotifyAlbumDetails);
+                setIsLoadingAlbum(false);
+                return;
+            }
+
+            // Fallback: Fetch from API if tracks are not in cache
+            console.warn('Album tracks not in cache, fetching from API...');
             const token = await getToken();
             const response = await fetch(`https://api.spotify.com/v1/albums/${album.id}`, {
                 headers: {
@@ -228,7 +257,7 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
         }
     };
 
-    // Helper to get token (you'll need to implement this based on your setup)
+    // Helper to get token (fallback for albums without cached tracks)
     const getToken = async () => {
         const response = await fetch('/api/spotify/token');
         const data = await response.json();

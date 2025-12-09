@@ -5,6 +5,7 @@ import {
     getArtistDiscography,
     extractSpotifyArtistId,
     getSpotifyArtist,
+    getAlbumDetails,
     SpotifyAlbum
 } from '@/lib/spotify';
 
@@ -130,11 +131,29 @@ export async function getMultiArtistSpotifyDiscographyWithCache(
                 ]);
 
                 if (discography.allAlbums && discography.allAlbums.length > 0) {
-                    // Strip out available_markets before caching
-                    const cleanedAlbums = discography.allAlbums.map(album => {
-                        const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
-                        return albumWithoutMarkets as SpotifyAlbum;
-                    });
+                    // Fetch full details for each album (including tracks with preview URLs)
+                    console.log(`🎵 Fetching full details for ${discography.allAlbums.length} albums...`);
+                    const albumDetailsPromises = discography.allAlbums.map(album =>
+                        getAlbumDetails(album.id)
+                    );
+                    const albumsWithDetails = await Promise.all(albumDetailsPromises);
+
+                    // Strip out available_markets from both albums and tracks before caching
+                    const cleanedAlbums = albumsWithDetails
+                        .filter((album): album is NonNullable<typeof album> => album !== null)
+                        .map(album => {
+                            const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
+
+                            // Also strip available_markets from tracks if they exist
+                            if (albumWithoutMarkets.tracks?.items) {
+                                albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
+                                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
+                                    return trackWithoutMarkets;
+                                });
+                            }
+
+                            return albumWithoutMarkets as SpotifyAlbum;
+                        });
 
                     artistCacheDataArray.push({
                         albums: cleanedAlbums,
@@ -143,7 +162,7 @@ export async function getMultiArtistSpotifyDiscographyWithCache(
                         artist_name: artistInfo?.name || 'Unknown Artist'
                     });
                     allAlbums.push(...cleanedAlbums);
-                    console.log(`📀 Fetched ${cleanedAlbums.length} albums for artist ${artistId} (${artistInfo?.name || 'Unknown'})`);
+                    console.log(`📀 Fetched ${cleanedAlbums.length} albums with full track details for artist ${artistId} (${artistInfo?.name || 'Unknown'})`);
                 } else {
                     // Cache error state for this artist
                     artistCacheDataArray.push({
@@ -285,13 +304,37 @@ export async function refreshSpotifyCache(
                 ]);
 
                 if (discography.allAlbums && discography.allAlbums.length > 0) {
+                    // Fetch full details for each album (including tracks with preview URLs)
+                    console.log(`🎵 Refreshing full details for ${discography.allAlbums.length} albums...`);
+                    const albumDetailsPromises = discography.allAlbums.map(album =>
+                        getAlbumDetails(album.id)
+                    );
+                    const albumsWithDetails = await Promise.all(albumDetailsPromises);
+
+                    // Strip out available_markets from both albums and tracks before caching
+                    const cleanedAlbums = albumsWithDetails
+                        .filter((album): album is NonNullable<typeof album> => album !== null)
+                        .map(album => {
+                            const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
+
+                            // Also strip available_markets from tracks if they exist
+                            if (albumWithoutMarkets.tracks?.items) {
+                                albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
+                                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
+                                    return trackWithoutMarkets;
+                                });
+                            }
+
+                            return albumWithoutMarkets as SpotifyAlbum;
+                        });
+
                     artistCacheDataArray.push({
-                        albums: discography.allAlbums,
+                        albums: cleanedAlbums,
                         last_updated: new Date().toISOString(),
                         artist_id: artistId,
                         artist_name: artistInfo?.name
                     });
-                    allAlbums.push(...discography.allAlbums);
+                    allAlbums.push(...cleanedAlbums);
                 } else {
                     artistCacheDataArray.push({
                         albums: [],
@@ -355,9 +398,33 @@ export async function refreshSpotifyCache(
 
     console.log(`📀 Fetched ${discography.allAlbums.length} albums from Spotify`);
 
+    // Fetch full details for each album (including tracks with preview URLs)
+    console.log(`🎵 Fetching full details for ${discography.allAlbums.length} albums...`);
+    const albumDetailsPromises = discography.allAlbums.map(album =>
+        getAlbumDetails(album.id)
+    );
+    const albumsWithDetails = await Promise.all(albumDetailsPromises);
+
+    // Strip out available_markets from both albums and tracks before caching
+    const cleanedAlbums = albumsWithDetails
+        .filter((album): album is NonNullable<typeof album> => album !== null)
+        .map(album => {
+            const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
+
+            // Also strip available_markets from tracks if they exist
+            if (albumWithoutMarkets.tracks?.items) {
+                albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
+                    const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
+                    return trackWithoutMarkets;
+                });
+            }
+
+            return albumWithoutMarkets as SpotifyAlbum;
+        });
+
     // Save to Firebase
     const cacheData: SpotifyCacheData = {
-        albums: discography.allAlbums,
+        albums: cleanedAlbums,
         last_updated: new Date().toISOString(),
         artist_id: artistId
     };

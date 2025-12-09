@@ -31,6 +31,12 @@ export interface SpotifyAlbum {
         id: string;
         name: string;
     }>;
+    // Optional fields for cached full album details
+    tracks?: {
+        items: SpotifyTrack[];
+    };
+    label?: string;
+    popularity?: number;
 }
 
 export interface SpotifyTrack {
@@ -39,6 +45,7 @@ export interface SpotifyTrack {
     track_number: number;
     duration_ms: number;
     explicit: boolean;
+    preview_url: string | null;
     external_urls: {
         spotify: string;
     };
