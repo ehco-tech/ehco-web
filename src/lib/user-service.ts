@@ -1,5 +1,5 @@
 // src/lib/user-service.ts
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from './firebase';
 import { User } from 'firebase/auth';
 
@@ -107,7 +107,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function updateUserProfile(
-  uid: string, 
+  uid: string,
   updates: Partial<UserProfile>
 ): Promise<void> {
   const userRef = doc(db, 'users', uid);
@@ -115,4 +115,39 @@ export async function updateUserProfile(
     ...updates,
     updatedAt: new Date(),
   });
+}
+
+export async function deleteUserData(uid: string, email: string): Promise<void> {
+  try {
+    // Delete user profile document
+    const userRef = doc(db, 'users', uid);
+    await deleteDoc(userRef);
+
+    // Delete email-to-uid mapping
+    const emailRef = doc(db, 'user-emails', email.toLowerCase());
+    await deleteDoc(emailRef);
+
+    // Delete all favorites
+    const favoritesQuery = query(collection(db, 'favorites'), where('userId', '==', uid));
+    const favoritesSnapshot = await getDocs(favoritesQuery);
+    const favoritesDeletePromises = favoritesSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(favoritesDeletePromises);
+
+    // Delete all scrapped events
+    const scrappedQuery = query(collection(db, 'scrappedEvents'), where('userId', '==', uid));
+    const scrappedSnapshot = await getDocs(scrappedQuery);
+    const scrappedDeletePromises = scrappedSnapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(scrappedDeletePromises);
+
+    // Delete notification preferences if they exist
+    const notificationPrefsRef = doc(db, 'notificationPreferences', uid);
+    await deleteDoc(notificationPrefsRef).catch(() => {
+      // Ignore if document doesn't exist
+    });
+
+    console.log('User data deleted successfully');
+  } catch (error) {
+    console.error('Error deleting user data:', error);
+    throw error;
+  }
 }

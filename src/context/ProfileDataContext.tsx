@@ -2,13 +2,14 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { getUserProfile } from '@/lib/user-service'; 
+import { getUserProfile } from '@/lib/user-service';
 import { getUserFavorites, FavoriteItem } from '@/lib/favorites-service';
 import { getUserScrappedEvents, ScrappedEventItem } from '@/lib/scrapping-service';
 import { getArticlesByIds } from '@/lib/article-service';
 import { getFiguresByIds, PublicFigure } from '@/lib/figures-service';
+import { getNotificationPreferences, updateNotificationPreferences, NotificationPreferences } from '@/lib/notification-service';
 import { Article } from '@/types/definitions';
 
 interface UserProfile {
@@ -33,10 +34,12 @@ interface ProfileDataContextType {
     scrappedEvents: ScrappedEventItem[];
     articles: Article[];
     figureData: Map<string, PublicFigure>;
+    notificationPreferences: NotificationPreferences | null;
     isLoading: boolean;
     isRouteLoading: boolean; // New: For route transition loading
     setFavorites: React.Dispatch<React.SetStateAction<FavoriteItem[]>>;
-    setScrappedEvents: React.Dispatch<React.SetStateAction<ScrappedEventItem[]>>; 
+    setScrappedEvents: React.Dispatch<React.SetStateAction<ScrappedEventItem[]>>;
+    setNotificationPreferences: React.Dispatch<React.SetStateAction<NotificationPreferences | null>>;
     setRouteLoading: React.Dispatch<React.SetStateAction<boolean>>; // New: Control route loading
 }
 
@@ -46,7 +49,6 @@ const ProfileDataContext = createContext<ProfileDataContextType | undefined>(und
 // Create the Provider component
 export function ProfileDataProvider({ children }: { children: ReactNode }) {
     const { user } = useAuth();
-    const router = useRouter();
     const pathname = usePathname();
 
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -54,6 +56,7 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     const [scrappedEvents, setScrappedEvents] = useState<ScrappedEventItem[]>([]);
     const [articles, setArticles] = useState<Article[]>([]);
     const [figureData, setFigureData] = useState<Map<string, PublicFigure>>(new Map());
+    const [notificationPreferences, setNotificationPreferences] = useState<NotificationPreferences | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRouteLoading, setIsRouteLoading] = useState(false); // New state for route loading
     const [previousPathname, setPreviousPathname] = useState<string>('');
@@ -61,8 +64,19 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
     // Handle route changes for loading overlay
     useEffect(() => {
         if (previousPathname && previousPathname !== pathname) {
+            // Don't show loading overlay for tab switches within the profile page
+            const isProfilePage = pathname.startsWith('/profile');
+            const wasPreviouslyProfilePage = previousPathname.startsWith('/profile');
+
+            // Only show loading if navigating TO or FROM profile page, not between tabs
+            if (isProfilePage && wasPreviouslyProfilePage) {
+                // Both are profile pages, so this is a tab switch - no loading
+                setPreviousPathname(pathname);
+                return;
+            }
+
             setIsRouteLoading(true);
-            
+
             // Set a timeout to hide loading after navigation completes
             const timer = setTimeout(() => {
                 setIsRouteLoading(false);
@@ -79,15 +93,17 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
             const loadAllProfileData = async () => {
                 try {
                     // Fetch everything in parallel for performance
-                    const [profileData, userFavorites, userScrappedEvents] = await Promise.all([
+                    const [profileData, userFavorites, userScrappedEvents, notifPreferences] = await Promise.all([
                         getUserProfile(user.uid),
                         getUserFavorites(user.uid),
-                        getUserScrappedEvents(user.uid)
+                        getUserScrappedEvents(user.uid),
+                        getNotificationPreferences(user.uid)
                     ]);
 
                     setUserProfile(profileData);
                     setFavorites(userFavorites);
                     setScrappedEvents(userScrappedEvents);
+                    setNotificationPreferences(notifPreferences);
 
                     // --- Logic to get articles and figures from scrapped events ---
                     const allSourceIds = new Set<string>();
@@ -137,10 +153,12 @@ export function ProfileDataProvider({ children }: { children: ReactNode }) {
         scrappedEvents,
         articles,
         figureData,
+        notificationPreferences,
         isLoading,
         isRouteLoading, // New: Expose route loading state
         setFavorites, // Pass the setter so children can update state (e.g., remove a favorite)
         setScrappedEvents,
+        setNotificationPreferences,
         setRouteLoading: setIsRouteLoading, // New: Allow manual control of route loading
     };
 

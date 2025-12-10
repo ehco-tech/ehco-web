@@ -13,7 +13,11 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
+  deleteUser
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -26,6 +30,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName: string) => Promise<UserCredential>;
   signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
   signOut: () => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: (password?: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -159,13 +165,107 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await firebaseSignOut(auth);
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    if (!user || !user.email) {
+      throw new Error('No user is currently signed in.');
+    }
+
+    try {
+      // Re-authenticate the user with their current password
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+
+      // Update to new password
+      await updatePassword(user, newPassword);
+    } catch (error: unknown) {
+      const errorCode = (error as { code?: string; message?: string }).code;
+      let errorMessage = 'Failed to change password. Please try again.';
+
+      switch (errorCode) {
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = 'Current password is incorrect.';
+          break;
+        case 'auth/weak-password':
+          errorMessage = 'New password is too weak. Please choose a stronger password.';
+          break;
+        case 'auth/requires-recent-login':
+          errorMessage = 'For security reasons, please sign out and sign in again before changing your password.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many attempts. Please try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        default:
+          if (!errorCode || !errorCode.startsWith('auth/')) {
+            errorMessage = (error as { message?: string }).message || errorMessage;
+          }
+      }
+
+      throw new Error(errorMessage);
+    }
+  };
+
+  const deleteAccount = async (password?: string) => {
+    if (!user || !user.email) {
+      throw new Error('No user is currently signed in.');
+    }
+
+    try {
+      // Check if user has password provider
+      const hasPasswordProvider = user.providerData.some(
+        (provider) => provider.providerId === 'password'
+      );
+
+      // Re-authenticate before deletion (only for password users)
+      if (hasPasswordProvider && password) {
+        const credential = EmailAuthProvider.credential(user.email, password);
+        await reauthenticateWithCredential(user, credential);
+      }
+
+      // Delete the user account
+      // For Google users, this will work if they recently signed in
+      // If not, Firebase will throw 'auth/requires-recent-login'
+      await deleteUser(user);
+    } catch (error: unknown) {
+      const errorCode = (error as { code?: string; message?: string }).code;
+      let errorMessage = 'Failed to delete account. Please try again.';
+
+      switch (errorCode) {
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          errorMessage = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/requires-recent-login':
+          errorMessage = 'For security reasons, please sign out and sign in again before deleting your account.';
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = 'Too many attempts. Please try again later.';
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = 'Network error. Please check your connection and try again.';
+          break;
+        default:
+          if (!errorCode || !errorCode.startsWith('auth/')) {
+            errorMessage = (error as { message?: string }).message || errorMessage;
+          }
+      }
+
+      throw new Error(errorMessage);
+    }
+  };
+
   const value = {
     user,
     loading,
     signIn,
     signUp,
     signInWithGoogle,
-    signOut
+    signOut,
+    changePassword,
+    deleteAccount
   };
 
   return (

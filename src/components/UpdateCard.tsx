@@ -21,6 +21,7 @@ interface Article {
 
 interface Update {
     id: string;
+    figureId: string;
     figureName: string;
     figureInitials: string;
     figureProfilePic?: string;
@@ -41,6 +42,13 @@ interface UpdateCardProps {
     update: Update;
     formatTimeAgo: (timestamp: Timestamp | Date | string | number) => string;
 }
+
+// Slugify function for creating URL-friendly hash anchors
+const slugify = (text: string) =>
+    text
+        .toLowerCase()
+        .replace(/\s+/g, '-') // Replace spaces with -
+        .replace(/[^\w-]+/g, ''); // Remove all non-word chars
 
 export default function UpdateCardBatch({ update, formatTimeAgo }: UpdateCardProps) {
     const [showSources, setShowSources] = useState(false);
@@ -226,15 +234,21 @@ export default function UpdateCardBatch({ update, formatTimeAgo }: UpdateCardPro
                     </div>
                 </div>
 
-                {/* Update Title */}
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mt-4 mb-2">
-                    {update.eventTitle}
-                </h4>
+                {/* Update Content - Clickable */}
+                <Link
+                    href={`/${update.figureId}?event=${slugify(update.eventTitle)}&modal=true#${slugify(update.eventTitle)}`}
+                    className="block hover:bg-gray-50 dark:hover:bg-gray-800/50 -mx-2 px-2 py-2 rounded transition-colors cursor-pointer mt-2"
+                >
+                    {/* Update Title */}
+                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                        {update.eventTitle}
+                    </h4>
 
-                {/* Update Description */}
-                <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
-                    {update.eventPointDescription}
-                </p>
+                    {/* Update Description */}
+                    <p className="text-lg text-gray-800 dark:text-gray-200 leading-relaxed">
+                        {update.eventPointDescription}
+                    </p>
+                </Link>
             </div>
 
             {/* Footer with Source Button */}

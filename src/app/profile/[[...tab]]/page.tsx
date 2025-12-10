@@ -1,7 +1,6 @@
 // src/app/profile/[[...tab]]/page.tsx
 import { Metadata } from 'next';
 import ProfileContent from '../profile-content';
-import { ProfileDataProvider } from '@/context/ProfileDataContext';
 
 export const metadata: Metadata = {
   title: 'Profile - EHCO',
@@ -22,10 +21,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   const activeTab = resolvedParams.tab?.[0] || 'account';
 
   // Ensure the tab is one of the valid types.
-  const validTabs = ['account', 'favorites', 'scrapped'];
+  const validTabs = ['account', 'favorites', 'scrapped', 'notifications'];
   const initialTab = validTabs.includes(activeTab) ? activeTab : 'account';
 
   return (
-    <ProfileContent initialTab={initialTab as 'account' | 'favorites' | 'scrapped'} />
+    <ProfileContent initialTab={initialTab as 'account' | 'favorites' | 'scrapped' | 'notifications'} />
   );
 }

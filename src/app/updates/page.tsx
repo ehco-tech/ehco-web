@@ -37,6 +37,7 @@ interface UpdateDocument {
 
 interface Update {
     id: string;
+    figureId: string;
     figureName: string;
     figureInitials: string;
     figureProfilePic?: string;
@@ -76,6 +77,7 @@ export default function UpdatesPage() {
     // Helper function to transform updates
     const transformUpdate = (update: UpdateDocument): Update => ({
         id: update.id,
+        figureId: update.figureId,
         figureName: update.figureName || 'Unknown',
         figureInitials: getInitials(update.figureName),
         figureProfilePic: update.figureProfilePic,

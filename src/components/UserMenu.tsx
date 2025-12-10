@@ -22,9 +22,6 @@ export default function UserMenu() {
   const router = useRouter();
 
   const isAuthPage = pathname === '/login' || pathname === '/signup';
-  const isHomePage = pathname === '/';
-  const isAllFiguresPage = pathname === '/all-figures';
-  const showDivider = !isHomePage && !isAllFiguresPage;
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -73,7 +70,6 @@ export default function UserMenu() {
     return (
       <div className='flex items-center'>
         <div className="hidden sm:flex items-center gap-2">
-          {showDivider && <span className="text-gray-300">|</span>}
           <button
             onClick={() => {
               sessionStorage.setItem('redirectPath', pathname);
@@ -94,7 +90,6 @@ export default function UserMenu() {
             Sign Up
           </button>
         </div>
-        {showDivider && <div className="sm:hidden h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>}
         <button
           onClick={() => {
             sessionStorage.setItem('redirectPath', pathname);
@@ -117,7 +112,6 @@ export default function UserMenu() {
 
   return (
     <div className='flex items-center'>
-      {showDivider && <div className="h-6 w-px bg-gray-300 mr-2"></div>}
       <div className="relative" ref={menuRef}>
         <button
           onClick={() => setIsOpen(!isOpen)}

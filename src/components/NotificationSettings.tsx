@@ -3,8 +3,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useNotificationPreferences } from '@/hooks/useNotifications';
-import { requestNotificationPermission } from '@/lib/notification-service';
+import { useProfileData } from '@/context/ProfileDataContext';
+import { updateNotificationPreferences, requestNotificationPermission, NotificationPreferences } from '@/lib/notification-service';
 import { Bell, BellOff, Mail, Clock, AlertTriangle, Loader2 } from 'lucide-react';
 
 interface NotificationSettingsProps {
@@ -13,15 +13,10 @@ interface NotificationSettingsProps {
 
 export default function NotificationSettings({ className = '' }: NotificationSettingsProps) {
     const { user } = useAuth();
-    const {
-        preferences,
-        loading,
-        saving,
-        error,
-        togglePreference,
-        updatePreferences
-    } = useNotificationPreferences();
+    const { notificationPreferences: preferences, setNotificationPreferences } = useProfileData();
 
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [browserPermission, setBrowserPermission] = useState<NotificationPermission>('default');
     const [requestingPermission, setRequestingPermission] = useState(false);
 
@@ -44,23 +39,32 @@ export default function NotificationSettings({ className = '' }: NotificationSet
         }
     };
 
+    const updatePrefs = async (updates: Partial<NotificationPreferences>) => {
+        if (!user?.uid || !preferences) return;
+
+        try {
+            setSaving(true);
+            setError(null);
+
+            await updateNotificationPreferences(user.uid, updates);
+            setNotificationPreferences(prev => prev ? { ...prev, ...updates } : null);
+        } catch (err) {
+            console.error('Error updating preferences:', err);
+            setError('Failed to save preferences');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const togglePreference = async (key: keyof NotificationPreferences) => {
+        if (!preferences) return;
+
+        const currentValue = preferences[key];
+        await updatePrefs({ [key]: !currentValue } as Partial<NotificationPreferences>);
+    };
+
     if (!user) {
         return null;
-    }
-
-    if (loading) {
-        return (
-            <div className={`space-y-4 ${className}`}>
-                <div className="flex items-center gap-2">
-                    <Bell size={18} className="text-key-color dark:text-pink-400" />
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white">Notification Settings</h3>
-                </div>
-                <div className="flex items-center justify-center py-8">
-                    <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={24} />
-                    <span className="ml-2 text-gray-600 dark:text-gray-400">Loading preferences...</span>
-                </div>
-            </div>
-        );
     }
 
     return (
@@ -241,7 +245,7 @@ export default function NotificationSettings({ className = '' }: NotificationSet
                                 </div>
                                 <select
                                     value={preferences?.newsletter_frequency || 'weekly'}
-                                    onChange={(e) => updatePreferences({
+                                    onChange={(e) => updatePrefs({
                                         newsletter_frequency: e.target.value as 'daily' | 'weekly' | 'instant'
                                     })}
                                     disabled={saving}

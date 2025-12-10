@@ -81,15 +81,21 @@ export default function Header() {
                         onClick={() => setIsSearchOpen(true)}
                       />
                     </div>
+                    {/* Divider after search icon */}
+                    {user && <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>}
                   </>
                 )}
 
                 {!loading && (
                   <>
                     {user && (
-                      <div className="hidden sm:block mr-2">
-                        <NotificationCenter />
-                      </div>
+                      <>
+                        <div className="hidden sm:block mr-2">
+                          <NotificationCenter />
+                        </div>
+                        {/* Divider after notifications */}
+                        <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>
+                      </>
                     )}
                     <UserMenu />
                   </>

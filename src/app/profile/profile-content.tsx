@@ -9,6 +9,7 @@ import { useAuth } from '@/context/AuthContext';
 import { removeFromFavorites } from '@/lib/favorites-service';
 import ProfileScrappedSectionEnhanced from '@/components/ProfileScrappedSection';
 import NotificationSettings from '@/components/NotificationSettings';
+import DeleteAccountDialog from '@/components/DeleteAccountDialog';
 import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell } from 'lucide-react';
 
 // --- Firebase imports for storage and profile updates ---
@@ -55,6 +56,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
   const [updateMessage, setUpdateMessage] = useState('');
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   // --- Profile picture management state ---
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
@@ -212,8 +214,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
   };
 
   const handleTabClick = (tabId: TabType) => {
-    setRouteLoading(true);
-    setActiveTab(tabId);
+    // Don't manually update activeTab - let the URL change handle it
     const newPath = tabId === 'account' ? '/profile' : `/profile/${tabId}`;
     router.push(newPath, { scroll: false });
 
@@ -224,10 +225,6 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
         return [...prevOpenTabs, tabId];
       }
     });
-
-    setTimeout(() => {
-      setRouteLoading(false);
-    }, 400);
   };
 
   const handleAccordionClick = (tabId: TabType) => {
@@ -387,23 +384,75 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
 
       {/* Account Actions */}
       <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Need to change your password or delete your account?</p>
-        <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-center">
-          <button className="text-key-color hover:underline text-sm font-medium">Change Password</button>
-          <span className="hidden sm:block text-gray-300 dark:text-gray-600">|</span>
-          <button className="text-red-600 hover:underline text-sm font-medium">Delete Account</button>
-        </div>
+        {(() => {
+          const hasPasswordProvider = user.providerData.some(
+            (provider) => provider.providerId === 'password'
+          );
+
+          if (hasPasswordProvider) {
+            return (
+              <>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Need to change your password or delete your account?</p>
+                <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4 sm:items-center">
+                  <Link
+                    href="/change-password"
+                    onClick={() => setRouteLoading(true)}
+                    className="text-key-color hover:underline text-sm font-medium"
+                  >
+                    Change Password
+                  </Link>
+                  <span className="hidden sm:block text-gray-300 dark:text-gray-600">|</span>
+                  <button
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="text-key-color hover:underline text-sm font-medium text-left"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </>
+            );
+          } else {
+            return (
+              <>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Account Management</p>
+                <div className="flex flex-col space-y-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                    You signed in with Google. Password management is handled through your Google account.
+                  </p>
+                  <button
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="text-red-600 hover:underline text-sm font-medium text-left"
+                  >
+                    Delete Account
+                  </button>
+                </div>
+              </>
+            );
+          }
+        })()}
       </div>
     </div>
   );
 
   // NEW: Dedicated notifications section
-  const renderNotificationsSection = () => (
-    <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
-      <h2 className="hidden md:block text-2xl font-bold text-gray-900 dark:text-white mb-6">Notification Settings</h2>
-      <NotificationSettings />
-    </div>
-  );
+  const renderNotificationsSection = () => {
+    if (isLoading) {
+      return (
+        <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={32} />
+            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading notification settings...</span>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
+        <h2 className="hidden md:block text-2xl font-bold text-gray-900 dark:text-white mb-6">Notification Settings</h2>
+        <NotificationSettings />
+      </div>
+    );
+  };
 
   const renderFavoritesSection = () => (
     <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
@@ -471,6 +520,10 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
   return (
     <>
       <LoadingOverlay isVisible={isRouteLoading} message="Loading..." />
+      <DeleteAccountDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+      />
       <div className="min-h-screen bg-white dark:bg-black">
         <main className="w-[95%] md:w-[80%] mx-auto px-3 md:px-4 py-6 md:py-8 lg:py-16">
           <div className="text-center mb-6 md:mb-8">
@@ -565,10 +618,18 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
               </nav>
             </div>
             <div className="hidden lg:block flex-1">
-              {activeTab === 'account' && renderAccountSection()}
-              {activeTab === 'favorites' && renderFavoritesSection()}
-              {activeTab === 'notifications' && renderNotificationsSection()}
-              {activeTab === 'scrapped' && renderScrappedSection()}
+              <div className={activeTab === 'account' ? 'block' : 'hidden'}>
+                {renderAccountSection()}
+              </div>
+              <div className={activeTab === 'favorites' ? 'block' : 'hidden'}>
+                {renderFavoritesSection()}
+              </div>
+              <div className={activeTab === 'notifications' ? 'block' : 'hidden'}>
+                {renderNotificationsSection()}
+              </div>
+              <div className={activeTab === 'scrapped' ? 'block' : 'hidden'}>
+                {renderScrappedSection()}
+              </div>
             </div>
           </div>
         </main>
