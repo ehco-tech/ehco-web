@@ -7,6 +7,10 @@ let cachedFigures: PublicFigure[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 
+// Additional cache for filtered results to avoid reprocessing
+const filteredCache = new Map<string, { data: PublicFigure[], timestamp: number }>();
+const FILTERED_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes for filtered results
+
 // Optimized interface with only necessary fields
 interface PublicFigureBase {
     id: string;
@@ -179,8 +183,49 @@ export async function GET(request: Request) {
 
         const collectionRef = collection(db, 'selected-figures');
 
-        // Check if cache is valid
+        // Generate cache key for filtered results
+        const filterKey = JSON.stringify(categoryFilters);
         const now = Date.now();
+
+        // Check if we have cached filtered results
+        const cachedFiltered = filteredCache.get(filterKey);
+        if (cachedFiltered && (now - cachedFiltered.timestamp) < FILTERED_CACHE_DURATION) {
+            // Use cached filtered results
+            const sortedFigures = [...cachedFiltered.data].sort((a, b) => {
+                switch (sortParam) {
+                    case 'za':
+                        return b.name.localeCompare(a.name);
+                    case 'recent':
+                        return (b.lastUpdated || '').localeCompare(a.lastUpdated || '');
+                    case 'popular':
+                        return 0;
+                    default: // 'az'
+                        return a.name.localeCompare(b.name);
+                }
+            });
+
+            // Apply pagination
+            const totalCount = sortedFigures.length;
+            const totalPages = Math.ceil(totalCount / pageSize);
+            const startIndex = (page - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const paginatedFigures = sortedFigures.slice(startIndex, endIndex);
+
+            return NextResponse.json({
+                publicFigures: paginatedFigures,
+                totalCount,
+                totalPages,
+                currentPage: page,
+                pageSize,
+                appliedFilters: categoryFilters
+            }, {
+                headers: {
+                    'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240',
+                }
+            });
+        }
+
+        // Check if base cache is valid
         const isCacheValid = cachedFigures !== null && (now - cacheTimestamp) < CACHE_DURATION;
 
         let allFigures: PublicFigure[];
@@ -266,6 +311,12 @@ export async function GET(request: Request) {
         const filteredFigures = allFigures.filter(figure =>
             matchesCategoryFilters(figure, categoryFilters)
         );
+
+        // Cache the filtered results
+        filteredCache.set(filterKey, {
+            data: filteredFigures,
+            timestamp: now
+        });
 
         // console.log(`Filtered ${allFigures.length} figures down to ${filteredFigures.length} after applying AND logic`);
         if (filteredFigures.length > 0 && filteredFigures.length < 6) {

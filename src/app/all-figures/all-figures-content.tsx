@@ -7,7 +7,7 @@ import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { Search, X, Loader2, CheckSquare, Square } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import algoliasearch from 'algoliasearch';
-import { useQuery, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { createUrlSlug } from '@/lib/slugify';
 
@@ -33,6 +33,11 @@ interface FiguresQueryResult {
     totalCount: number;
 }
 
+// Props interface for the component
+interface AllFiguresContentInnerProps {
+    initialData: FiguresQueryResult;
+}
+
 type AlgoliaPublicFigure = {
     objectID: string;
     name?: string;
@@ -56,9 +61,10 @@ const LoadingOverlay = () => (
     </div>
 );
 
-function AllFiguresContentInner() {
+function AllFiguresContentInner({ initialData }: AllFiguresContentInnerProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const queryClient = useQueryClient();
 
     // --- State Management ---
     const [currentPage, setCurrentPage] = useState(1);
@@ -148,6 +154,7 @@ function AllFiguresContentInner() {
         placeholderData: keepPreviousData,
         staleTime: 1000 * 60 * 5, // 5 minutes
         gcTime: 1000 * 60 * 10, // Keep cached data for 10 minutes
+        initialData: currentPage === 1 && selectedCategories.includes('All') && !searchQuery ? initialData : undefined,
     });
 
     // Derived state from useQuery for cleaner rendering
@@ -161,6 +168,38 @@ function AllFiguresContentInner() {
     useEffect(() => {
         window.scrollTo(0, 0);
     }, []);
+
+    // Prefetch all figures data in the background after initial render
+    useEffect(() => {
+        // Only prefetch if we're on page 1 with no filters/search
+        // This ensures the data is ready when user navigates to page 2
+        if (currentPage === 1 && selectedCategories.includes('All') && !searchQuery) {
+            // Wait a bit to let the initial page render complete
+            const timer = setTimeout(() => {
+                // Prefetch page 2 using React Query to populate the cache
+                queryClient.prefetchQuery({
+                    queryKey: ['allFigures', { selectedCategories: ['All'], currentPage: 2, searchQuery: '' }],
+                    queryFn: async () => {
+                        const params = new URLSearchParams({
+                            page: '2',
+                            pageSize: '18',
+                        });
+                        const response = await fetch(`/api/public-figures?${params}`);
+                        if (!response.ok) throw new Error(await response.text());
+                        const jsonData = await response.json();
+                        return {
+                            figures: jsonData.publicFigures || [],
+                            totalPages: jsonData.totalPages || 1,
+                            totalCount: jsonData.totalCount || 0,
+                        };
+                    },
+                    staleTime: 1000 * 60 * 5,
+                });
+            }, 1000); // 1 second delay to not interfere with initial load
+
+            return () => clearTimeout(timer);
+        }
+    }, [currentPage, selectedCategories, searchQuery, queryClient]);
 
     // Handle click outside to close the category dropdown
     useEffect(() => {
@@ -349,7 +388,7 @@ function AllFiguresContentInner() {
                 {!isLoading && !isError && figures.length > 0 && (
                     <>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
-                            {figures.map((figure) => (
+                            {figures.map((figure, index) => (
                                 <div
                                     key={figure.id}
                                     onClick={(e) => handleFigureClick(e, figure.id)}
@@ -362,7 +401,9 @@ function AllFiguresContentInner() {
                                             fill
                                             sizes="(max-width: 640px) 96px, (max-width: 1024px) 112px, 160px"
                                             className="object-cover object-center"
-                                            quality={100}
+                                            quality={75}
+                                            priority={currentPage === 1 && index < 6}
+                                            loading={currentPage === 1 && index < 12 ? 'eager' : 'lazy'}
                                             unoptimized={figure.profilePic?.includes('googleusercontent.com')}
                                         />
                                     </div>
@@ -399,10 +440,10 @@ function AllFiguresContentInner() {
     );
 }
 
-export default function AllFiguresContent() {
+export default function AllFiguresContent({ initialData }: AllFiguresContentInnerProps) {
     return (
         <Suspense fallback={<LoadingOverlay />}>
-            <AllFiguresContentInner />
+            <AllFiguresContentInner initialData={initialData} />
         </Suspense>
     );
 }
