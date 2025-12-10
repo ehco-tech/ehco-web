@@ -34,6 +34,13 @@ export default function DeleteAccountDialog({ isOpen, onClose }: DeleteAccountDi
 
     setIsDeleting(true);
 
+    function isErrorMessage(error: unknown): error is { message: string } {
+      if (typeof error !== 'object' || error === null) {
+        return false;
+      }
+      return 'message' in error && typeof (error as { message: unknown }).message === 'string';
+    }
+
     try {
       // Delete user data from Firestore first
       await deleteUserData(user.uid, user.email!);
@@ -43,9 +50,21 @@ export default function DeleteAccountDialog({ isOpen, onClose }: DeleteAccountDi
 
       // Redirect to homepage
       router.push('/');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error deleting account:', err);
-      setError(err.message || 'Failed to delete account. Please try again.');
+
+      let errorMessage = 'Failed to delete account. Please try again.';
+
+      if (err instanceof Error) {
+        // 1. Standard JavaScript Error object
+        errorMessage = err.message;
+      } else if (isErrorMessage(err)) {
+        // 2. Custom object with a message property
+        errorMessage = err.message;
+      }
+
+      // Set the error state with the safely extracted message
+      setError(errorMessage);
       setIsDeleting(false);
     }
   };

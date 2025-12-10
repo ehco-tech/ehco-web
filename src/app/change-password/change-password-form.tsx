@@ -103,6 +103,17 @@ export default function ChangePasswordForm() {
 
     setIsLoading(true);
 
+    // Helper function to check if an object has a 'message' property
+    function isErrorMessage(error: unknown): error is { message: string } {
+      // 1. Check if it's an object and not null
+      if (typeof error !== 'object' || error === null) {
+        return false;
+      }
+
+      // 2. Check if the 'message' property exists and is a string
+      return 'message' in error && typeof (error as { message: unknown }).message === 'string';
+    }
+
     try {
       await changePassword(formData.currentPassword, formData.newPassword);
       setSuccess(true);
@@ -116,8 +127,16 @@ export default function ChangePasswordForm() {
       setTimeout(() => {
         router.push('/profile');
       }, 2000);
-    } catch (err: any) {
-      setError(err.message || 'Failed to change password. Please try again.');
+    } catch (err: unknown) {
+      let errorMessage = 'Failed to change password. Please try again.';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (isErrorMessage(err)) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
