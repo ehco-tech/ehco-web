@@ -8,7 +8,6 @@ import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { removeFromFavorites } from '@/lib/favorites-service';
 import ProfileScrappedSectionEnhanced from '@/components/ProfileScrappedSection';
-import NotificationSettings from '@/components/NotificationSettings';
 import DeleteAccountDialog from '@/components/DeleteAccountDialog';
 import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell } from 'lucide-react';
 
@@ -21,9 +20,9 @@ import { updateUserProfile } from '@/lib/user-service';
 import { useProfileData } from '@/context/ProfileDataContext';
 import { removeFromScrappedEvents } from '@/lib/scrapping-service';
 import LoadingOverlay from '@/components/LoadingOverlay';
+import { updateNotificationPreferences } from '@/lib/notification-service';
 
-// UPDATED: Add notifications to tab type
-type TabType = 'account' | 'favorites' | 'scrapped' | 'notifications';
+type TabType = 'account' | 'favorites' | 'scrapped';
 
 type ProfileContentProps = {
   initialTab: TabType;
@@ -44,7 +43,9 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     isRouteLoading,
     setFavorites,
     setScrappedEvents,
-    setRouteLoading
+    setRouteLoading,
+    notificationPreferences,
+    setNotificationPreferences
   } = useProfileData();
 
   // UI State
@@ -57,6 +58,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
 
   // --- Profile picture management state ---
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
@@ -77,8 +79,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
 
   useEffect(() => {
     const tabFromPath = pathname.split('/').pop();
-    // UPDATED: Add notifications to valid tabs
-    const validTabs: TabType[] = ['account', 'favorites', 'scrapped', 'notifications'];
+    const validTabs: TabType[] = ['account', 'favorites', 'scrapped'];
 
     if (validTabs.includes(tabFromPath as TabType)) {
       if (activeTab !== tabFromPath) {
@@ -213,6 +214,23 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     }
   };
 
+  const handleToggleNotifications = async () => {
+    if (!user) return;
+    setIsTogglingNotifications(true);
+    setUpdateMessage('');
+    try {
+      const newEnabled = !notificationPreferences?.enabled;
+      await updateNotificationPreferences(user.uid, { enabled: newEnabled });
+      setNotificationPreferences(prev => prev ? { ...prev, enabled: newEnabled } : null);
+      setUpdateMessage(newEnabled ? 'Notifications enabled successfully!' : 'Notifications disabled successfully!');
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      setUpdateMessage('Failed to update notification settings. Please try again.');
+    } finally {
+      setIsTogglingNotifications(false);
+    }
+  };
+
   const handleTabClick = (tabId: TabType) => {
     // Don't manually update activeTab - let the URL change handle it
     const newPath = tabId === 'account' ? '/profile' : `/profile/${tabId}`;
@@ -254,11 +272,9 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
 
   const joinDate = user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString() : 'Unknown';
 
-  // UPDATED: Add notifications tab to navigation items
   const navigationItems = [
     { id: 'account' as TabType, label: 'Account Information', icon: Settings },
     { id: 'favorites' as TabType, label: 'Favorites', icon: Star },
-    { id: 'notifications' as TabType, label: 'Notifications', icon: Bell },
     { id: 'scrapped' as TabType, label: 'Scrapped Events', icon: FileText },
   ];
 
@@ -380,6 +396,30 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
             </div>
           </div>
         )}
+
+        {/* Notifications Toggle */}
+        <div>
+          <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-3">
+            <Bell size={18} /> Notifications
+          </label>
+          <div className="flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-gray-700 dark:text-gray-300 text-sm">
+                Get notified when your favorite figures have new updates
+              </span>
+              <span className={`text-sm px-2 py-1 rounded-full w-fit mt-1 ${notificationPreferences?.enabled ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'}`}>
+                {notificationPreferences?.enabled ? '✓ Enabled' : 'Disabled'}
+              </span>
+            </div>
+            <button
+              onClick={handleToggleNotifications}
+              disabled={isTogglingNotifications}
+              className="text-key-color hover:underline text-sm font-medium disabled:opacity-50 disabled:cursor-wait"
+            >
+              {isTogglingNotifications ? 'Updating...' : notificationPreferences?.enabled ? 'Disable' : 'Enable'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Account Actions */}
@@ -434,25 +474,6 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     </div>
   );
 
-  // NEW: Dedicated notifications section
-  const renderNotificationsSection = () => {
-    if (isLoading) {
-      return (
-        <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={32} />
-            <span className="ml-3 text-gray-600 dark:text-gray-400">Loading notification settings...</span>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
-        <h2 className="hidden md:block text-2xl font-bold text-gray-900 dark:text-white mb-6">Notification Settings</h2>
-        <NotificationSettings />
-      </div>
-    );
-  };
 
   const renderFavoritesSection = () => (
     <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
@@ -568,7 +589,6 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
                       <div className={`${isActive ? 'max-h-[80vh] overflow-y-auto' : ''} p-3 md:p-4`}>
                         {item.id === 'account' && renderAccountSection()}
                         {item.id === 'favorites' && renderFavoritesSection()}
-                        {item.id === 'notifications' && renderNotificationsSection()}
                         {item.id === 'scrapped' && renderScrappedSection()}
                       </div>
                     </div>
@@ -623,9 +643,6 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
               </div>
               <div className={activeTab === 'favorites' ? 'block' : 'hidden'}>
                 {renderFavoritesSection()}
-              </div>
-              <div className={activeTab === 'notifications' ? 'block' : 'hidden'}>
-                {renderNotificationsSection()}
               </div>
               <div className={activeTab === 'scrapped' ? 'block' : 'hidden'}>
                 {renderScrappedSection()}

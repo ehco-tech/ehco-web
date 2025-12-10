@@ -7,8 +7,11 @@ from setup_firebase_deepseek import NewsManager
 import os
 from dotenv import load_dotenv
 import argparse
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-# SendGrid imports
+# SendGrid imports (kept for future use if needed)
 import sendgrid
 from sendgrid.helpers.mail import Mail, Email, To, Content
 
@@ -20,18 +23,33 @@ class ManualNewsletterService:
         self.db = self.news_manager.db
         load_dotenv()
 
-        # SendGrid configuration
-        self.sendgrid_client = sendgrid.SendGridAPIClient(api_key=os.getenv('SENDGRID_API_KEY'))
+        # Email provider configuration
+        # Set EMAIL_PROVIDER to 'gmail' or 'sendgrid' (defaults to 'gmail')
+        self.email_provider = os.getenv('EMAIL_PROVIDER', 'gmail').lower()
         self.from_email = os.getenv('EMAIL_ADDRESS')
         self.base_url = os.getenv('BASE_URL', 'https://yoursite.com')
 
-        # Validate configuration
-        if not os.getenv('SENDGRID_API_KEY'):
-            raise ValueError("SENDGRID_API_KEY not found in environment variables")
+        # Validate email address
         if not self.from_email:
             raise ValueError("EMAIL_ADDRESS not found in environment variables")
 
-        print("✓ Manual newsletter service initialized successfully")
+        # Initialize the selected email provider
+        if self.email_provider == 'sendgrid':
+            # SendGrid configuration (kept for future use)
+            if not os.getenv('SENDGRID_API_KEY'):
+                raise ValueError("SENDGRID_API_KEY not found in environment variables")
+            self.sendgrid_client = sendgrid.SendGridAPIClient(api_key=os.getenv('SENDGRID_API_KEY'))
+            print("✓ Manual newsletter service initialized successfully (using SendGrid)")
+        elif self.email_provider == 'gmail':
+            # Gmail SMTP configuration
+            if not os.getenv('GMAIL_APP_PASSWORD'):
+                raise ValueError("GMAIL_APP_PASSWORD not found in environment variables")
+            self.gmail_password = os.getenv('GMAIL_APP_PASSWORD')
+            self.smtp_server = 'smtp.gmail.com'
+            self.smtp_port = 587
+            print("✓ Manual newsletter service initialized successfully (using Gmail SMTP)")
+        else:
+            raise ValueError(f"Unsupported EMAIL_PROVIDER: {self.email_provider}. Use 'gmail' or 'sendgrid'")
 
     async def get_recipient_list(self, recipient_type: str = 'newsletter-enabled') -> List[Dict[str, Any]]:
         """
@@ -357,7 +375,6 @@ class ManualNewsletterService:
                         user_id=recipient['user_id']
                     )
                     results['successful'] += 1
-                    print(f"  ✓ Sent to {recipient['email']}")
 
                 except Exception as e:
                     results['failed'] += 1
@@ -389,9 +406,48 @@ class ManualNewsletterService:
         return results
 
     async def _send_email(self, to_email: str, subject: str, html_content: str, user_id: str):
-        """Send individual email using SendGrid"""
+        """Send email using the configured email provider (Gmail SMTP or SendGrid)"""
+        if self.email_provider == 'gmail':
+            await self._send_email_gmail(to_email, subject, html_content, user_id)
+        elif self.email_provider == 'sendgrid':
+            await self._send_email_sendgrid(to_email, subject, html_content, user_id)
+
+    async def _send_email_gmail(self, to_email: str, subject: str, html_content: str, user_id: str):
+        """Send email using Gmail SMTP"""
         try:
-            from_email = Email(self.from_email)
+            # Create message
+            message = MIMEMultipart('alternative')
+            message['Subject'] = subject
+            # Format: "Display Name <email@address.com>"
+            from_name = os.getenv('EMAIL_FROM_NAME', 'EHCO')
+            message['From'] = f"{from_name} <{self.from_email}>"
+            message['To'] = to_email
+
+            # Attach HTML content
+            html_part = MIMEText(html_content, 'html')
+            message.attach(html_part)
+
+            # Send email using Gmail SMTP
+            def send_smtp():
+                with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                    server.starttls()  # Enable TLS encryption
+                    server.login(self.from_email, self.gmail_password)
+                    server.send_message(message)
+
+            # Run SMTP in thread to avoid blocking
+            await asyncio.to_thread(send_smtp)
+
+            print(f"  ✓ Sent to {to_email} (via Gmail SMTP)")
+
+        except Exception as e:
+            raise Exception(f"Error sending via Gmail SMTP to {to_email}: {e}")
+
+    async def _send_email_sendgrid(self, to_email: str, subject: str, html_content: str, user_id: str):
+        """Send email using SendGrid API (kept for future use)"""
+        try:
+            # Set sender display name
+            from_name = os.getenv('EMAIL_FROM_NAME', 'EHCO')
+            from_email = Email(self.from_email, from_name)
             to_email_obj = To(to_email)
 
             mail = Mail(
@@ -407,8 +463,10 @@ class ManualNewsletterService:
             if response.status_code != 202:
                 raise Exception(f"SendGrid API error: {response.status_code}")
 
+            print(f"  ✓ Sent to {to_email} (via SendGrid)")
+
         except Exception as e:
-            raise Exception(f"Error sending to {to_email}: {e}")
+            raise Exception(f"Error sending via SendGrid to {to_email}: {e}")
 
     async def _log_newsletter_send(self, subject: str, template: str, results: Dict[str, Any]):
         """Log newsletter send to Firestore for tracking"""
