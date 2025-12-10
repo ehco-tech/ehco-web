@@ -60,18 +60,24 @@ class NewsletterService:
                 if batch_doc.exists:
                     await self._process_single_batch(batch_id, batch_doc.to_dict())
             else:
-                # Process all pending batches
+                # Process all pending and partial batches
                 queue_collection = self.db.collection('newsletter-queue')
+
+                # Query for both 'pending' and 'partial' status batches
                 pending_batches = queue_collection.where('status', '==', 'pending').stream()
-                
-                for batch_doc in pending_batches:
+                partial_batches = queue_collection.where('status', '==', 'partial').stream()
+
+                # Combine both iterators
+                all_batches = list(pending_batches) + list(partial_batches)
+
+                for batch_doc in all_batches:
                     batch_data = batch_doc.to_dict()
                     scheduled_time = batch_data.get('scheduledFor')
-                    
+
                     # Check if it's time to send - use UTC timezone-aware datetime
                     if scheduled_time and datetime.now(timezone.utc) >= scheduled_time:
                         await self._process_single_batch(batch_doc.id, batch_data)
-        
+
         except Exception as e:
             print(f"Error processing newsletter queue: {e}")
     
