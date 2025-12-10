@@ -38,9 +38,13 @@ jobs:
         echo "DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }}" >> $GITHUB_ENV
         echo "FIREBASE_CONFIG_PATH=firebase-config.json" >> $GITHUB_ENV
         echo "FIREBASE_DEFAULT_DATABASE_URL=${{ secrets.FIREBASE_DEFAULT_DATABASE_URL }}" >> $GITHUB_ENV
-        echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> $GITHUB_ENV
+        echo "EMAIL_PROVIDER=gmail" >> $GITHUB_ENV
         echo "EMAIL_ADDRESS=${{ secrets.EMAIL_ADDRESS }}" >> $GITHUB_ENV
+        echo "EMAIL_FROM_NAME=EHCO" >> $GITHUB_ENV
+        echo "GMAIL_APP_PASSWORD=${{ secrets.GMAIL_APP_PASSWORD }}" >> $GITHUB_ENV
         echo "BASE_URL=${{ secrets.BASE_URL }}" >> $GITHUB_ENV
+        # SendGrid kept for future use (if EMAIL_PROVIDER is set to 'sendgrid')
+        # echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> $GITHUB_ENV
         
     - name: Run master updater script
       run: python python/deepseek/run_full_update.py
