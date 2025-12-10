@@ -395,6 +395,9 @@ export default function Home() {
 
   // Intersection Observer for scroll animations
   useEffect(() => {
+    // Don't set up observer until content is loaded
+    if (!allContentLoaded) return;
+
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -50px 0px'
@@ -430,7 +433,7 @@ export default function Home() {
         }
       });
     };
-  }, []);
+  }, [allContentLoaded]);
 
   // Handle clicks outside search
   useEffect(() => {
