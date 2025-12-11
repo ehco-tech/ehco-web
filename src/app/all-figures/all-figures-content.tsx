@@ -25,6 +25,7 @@ interface Figure {
     occupation?: string[];
     gender?: string;
     categories?: string[];
+    group?: string;
 }
 
 interface FiguresQueryResult {
@@ -45,11 +46,12 @@ type AlgoliaPublicFigure = {
     occupation?: string[];
     gender?: string;
     categories?: string[];
+    group?: string;
 };
 
 const CATEGORY_ORDER = [
-    'Male', 'Female', 'Group', 'South Korean', 'Singer', 'Singer-Songwriter',
-    'Film Director', 'Rapper', 'Actor', 'Actress'
+    'Male', 'Female', 'K-Pop Group', 'K-Pop Idol',
+    'Film Director', 'Actor/Actress'
 ];
 
 const LoadingOverlay = () => (
@@ -60,6 +62,36 @@ const LoadingOverlay = () => (
         </div>
     </div>
 );
+
+// Helper function to get the display text for occupation/group
+const getOccupationDisplay = (figure: Figure): string | null => {
+    const occupation = figure.occupation?.[0];
+
+    if (!occupation) return null;
+
+    // For groups (boy group, girl group, sibling duo), keep as is
+    if (figure.gender === 'Group') {
+        return occupation;
+    }
+
+    // For individuals, show group name if available, otherwise show occupation
+    if (figure.group && figure.group.trim() !== '') {
+        return figure.group;
+    }
+
+    // For actors, show Actor/Actress
+    if (occupation === 'Actor' || occupation === 'Actress') {
+        return occupation;
+    }
+
+    // For film directors, show Film Director
+    if (occupation === 'Film Director') {
+        return 'Film Director';
+    }
+
+    // Default: return the occupation
+    return occupation;
+};
 
 function AllFiguresContentInner({ initialData }: AllFiguresContentInnerProps) {
     const router = useRouter();
@@ -76,20 +108,20 @@ function AllFiguresContentInner({ initialData }: AllFiguresContentInnerProps) {
     const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
     const categories = [
-        'All', 'Male', 'Female', 'Group', 'Singer',
-        'Film Director', 'Rapper', 'Actor', 'Actress', 'South Korean'
+        'All', 'Male', 'Female', 'K-Pop Group', 'K-Pop Idol',
+        'Film Director', 'Actor/Actress'
     ];
 
     const categoryToFieldMap: Record<string, { field: string, value: string }[]> = {
         'Male': [{ field: 'gender', value: 'Male' }],
         'Female': [{ field: 'gender', value: 'Female' }],
-        'Group': [{ field: 'gender', value: 'Group' }],
-        'Singer': [{ field: 'occupation', value: 'Singer' }],
+        'K-Pop Group': [{ field: 'gender', value: 'Group' }],
+        'K-Pop Idol': [{ field: 'occupation', value: 'Singer' }],
         'Film Director': [{ field: 'occupation', value: 'Film Director' }],
-        'Rapper': [{ field: 'occupation', value: 'Rapper' }],
-        'Actor': [{ field: 'occupation', value: 'Actor' }],
-        'Actress': [{ field: 'occupation', value: 'Actress' }],
-        'South Korean': [{ field: 'nationality', value: 'South Korean' }]
+        'Actor/Actress': [
+            { field: 'occupation', value: 'Actor' },
+            { field: 'occupation', value: 'Actress' }
+        ]
     };
 
     // --- Data Fetching with React Query ---
@@ -110,7 +142,7 @@ function AllFiguresContentInner({ initialData }: AllFiguresContentInnerProps) {
                     page: currentPage - 1,
                 });
                 const transformedResults: Figure[] = hits.map(hit => ({
-                    id: hit.objectID, name: hit.name || '', profilePic: hit.profilePic, occupation: hit.occupation || [], gender: hit.gender, categories: hit.categories
+                    id: hit.objectID, name: hit.name || '', profilePic: hit.profilePic, occupation: hit.occupation || [], gender: hit.gender, categories: hit.categories, group: hit.group
                 }));
                 return { figures: transformedResults, totalPages: nbPages, totalCount: nbHits };
             } else {
@@ -408,7 +440,7 @@ function AllFiguresContentInner({ initialData }: AllFiguresContentInnerProps) {
                                         />
                                     </div>
                                     <span className="text-center text-gray-900 dark:text-white font-medium text-sm sm:text-base truncate w-full">{figure.name}</span>
-                                    {figure.occupation?.[0] && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate w-full text-center">{figure.occupation[0]}</span>}
+                                    {getOccupationDisplay(figure) && <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate w-full text-center">{getOccupationDisplay(figure)}</span>}
                                 </div>
                             ))}
                         </div>
