@@ -13,16 +13,16 @@ const tabs = [
 export default function TabNavigation() {
     const [activeTab, setActiveTab] = useState('overview');
 
-    // Smooth scroll to section
+    // Smooth scroll to section with consistent offset
     const scrollToSection = (sectionId: string) => {
         const element = document.getElementById(sectionId);
         if (element) {
-            const offset = 80; // Offset for sticky header
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            // Use same offset calculation as event scroll in CareerJourney
+            const yOffset = -110; // Negative = element appears 80px below top of viewport
+            const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
 
             window.scrollTo({
-                top: offsetPosition,
+                top: y,
                 behavior: 'smooth'
             });
         }

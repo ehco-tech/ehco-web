@@ -9,6 +9,7 @@ export interface Figure {
     occupation?: string[];
     gender?: string;
     categories?: string[];
+    group?: string;
 }
 
 interface FiguresResult {
@@ -49,7 +50,8 @@ export async function fetchInitialFigures(pageSize: number = 18): Promise<Figure
                 profilePic: data.profilePic || '',
                 occupation: occupations,
                 gender: data.gender || '',
-                categories: data.categories || []
+                categories: data.categories || [],
+                group: data.group || ''
             };
         });
 

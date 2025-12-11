@@ -86,41 +86,86 @@ const EventModal: React.FC<EventModalProps> = ({
     subCategory
 }) => {
     const [isVisible, setIsVisible] = useState(false);
-
-    // Create articles map for quick lookup
-    const articlesMap = new Map(articles.map(article => [article.id, article]));
-
-    // Get all unique article IDs from the event
-    const eventArticleIds = new Set<string>();
-
-    // Add from event sources
-    event.sources?.forEach(source => {
-        if (source.id) eventArticleIds.add(source.id);
-    });
-
-    // Add from timeline points
-    event.timeline_points?.forEach(point => {
-        point.sourceIds?.forEach(id => {
-            if (id) eventArticleIds.add(id);
-        });
-        point.sources?.forEach(source => {
-            if (source.id) eventArticleIds.add(source.id);
-        });
-    });
-
-    const eventArticles = Array.from(eventArticleIds)
-        .map(id => articlesMap.get(id))
-        .filter(Boolean) as Article[];
-
-    // Sort articles by date (most recent first)
-    eventArticles.sort((a, b) => {
-        if (!a.sendDate) return 1;
-        if (!b.sendDate) return -1;
-        return b.sendDate.localeCompare(a.sendDate);
-    });
+    const [eventArticles, setEventArticles] = useState<Article[]>([]);
+    const [isLoadingSources, setIsLoadingSources] = useState(false);
 
     // Sort timeline points
     const sortedTimelinePoints = sortTimelinePoints(event.timeline_points || []);
+
+    // Fetch event articles when modal opens
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const fetchEventArticles = async () => {
+            // Get all unique article IDs from the event
+            const eventArticleIds = new Set<string>();
+
+            // Add from event sources
+            event.sources?.forEach(source => {
+                if (source.id) eventArticleIds.add(source.id);
+            });
+
+            // Add from timeline points
+            event.timeline_points?.forEach(point => {
+                point.sourceIds?.forEach(id => {
+                    if (id) eventArticleIds.add(id);
+                });
+                point.sources?.forEach(source => {
+                    if (source.id) eventArticleIds.add(source.id);
+                });
+            });
+
+            const articleIdsArray = Array.from(eventArticleIds);
+
+            // First, try to use articles from props
+            const articlesMap = new Map(articles.map(article => [article.id, article]));
+            const availableArticles = articleIdsArray
+                .map(id => articlesMap.get(id))
+                .filter(Boolean) as Article[];
+
+            // If we have all articles, use them
+            if (availableArticles.length === articleIdsArray.length) {
+                const sorted = availableArticles.sort((a, b) => {
+                    if (!a.sendDate) return 1;
+                    if (!b.sendDate) return -1;
+                    return b.sendDate.localeCompare(a.sendDate);
+                });
+                setEventArticles(sorted);
+                return;
+            }
+
+            // Otherwise, fetch missing articles
+            setIsLoadingSources(true);
+            try {
+                const response = await fetch('/api/articles/batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ articleIds: articleIdsArray })
+                });
+
+                if (response.ok) {
+                    const fetchedArticles = await response.json();
+                    const sorted = fetchedArticles.sort((a: Article, b: Article) => {
+                        if (!a.sendDate) return 1;
+                        if (!b.sendDate) return -1;
+                        return b.sendDate.localeCompare(a.sendDate);
+                    });
+                    setEventArticles(sorted);
+                } else {
+                    // Fallback to available articles
+                    setEventArticles(availableArticles);
+                }
+            } catch (error) {
+                console.error('Error fetching event articles:', error);
+                // Fallback to available articles
+                setEventArticles(availableArticles);
+            } finally {
+                setIsLoadingSources(false);
+            }
+        };
+
+        fetchEventArticles();
+    }, [isOpen, event, articles]);
 
     // Handle modal animations
     useEffect(() => {
@@ -129,7 +174,7 @@ const EventModal: React.FC<EventModalProps> = ({
         }
     }, [isOpen]);
 
-    // Close on escape key
+    // Close on escape key and handle scroll locking
     useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
             if (e.key === 'Escape' && isOpen) {
@@ -139,12 +184,24 @@ const EventModal: React.FC<EventModalProps> = ({
 
         if (isOpen) {
             document.addEventListener('keydown', handleEscape);
-            document.body.style.overflow = 'hidden';
+
+            // Wait for auto-scroll to complete, then lock scroll
+            setTimeout(() => {
+                // Get scrollbar width to prevent layout shift
+                const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+
+                // Lock scroll and compensate for scrollbar
+                document.body.style.overflow = 'hidden';
+                document.body.style.paddingRight = `${scrollbarWidth}px`;
+            }, 400); // Wait for auto-scroll (300ms) + a bit extra
         }
 
         return () => {
             document.removeEventListener('keydown', handleEscape);
+
+            // Restore scroll
             document.body.style.overflow = 'unset';
+            document.body.style.paddingRight = '0px';
         };
     }, [isOpen]);
 
@@ -236,11 +293,18 @@ const EventModal: React.FC<EventModalProps> = ({
                     )}
 
                     {/* Sources */}
-                    {eventArticles.length > 0 && (
-                        <div>
-                            <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
-                                Sources ({eventArticles.length})
-                            </h3>
+                    <div>
+                        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                            Sources {!isLoadingSources && eventArticles.length > 0 && `(${eventArticles.length})`}
+                        </h3>
+                        {isLoadingSources ? (
+                            <div className="flex items-center justify-center py-8">
+                                <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                                    <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 border-t-key-color rounded-full animate-spin"></div>
+                                    <span className="text-sm">Loading sources...</span>
+                                </div>
+                            </div>
+                        ) : eventArticles.length > 0 ? (
                             <div className="space-y-3">
                                 {eventArticles.map((article) => (
                                     <a
@@ -274,8 +338,12 @@ const EventModal: React.FC<EventModalProps> = ({
                                     </a>
                                 ))}
                             </div>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-sm">
+                                No sources available for this event
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Footer */}

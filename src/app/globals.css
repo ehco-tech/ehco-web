@@ -48,3 +48,21 @@ body {
     opacity: 0.5;
   }
 }
+
+/* Event highlight animation - shown after modal closes */
+.event-highlight {
+  animation: highlight-pulse 3s ease-in-out;
+  border-color: #d10041 !important;
+  border-width: 2px !important;
+}
+
+@keyframes highlight-pulse {
+  0%, 100% {
+    border-color: #d10041;
+    box-shadow: 0 0 0 0 rgba(209, 0, 65, 0.7);
+  }
+  50% {
+    border-color: #d10041;
+    box-shadow: 0 0 0 8px rgba(209, 0, 65, 0);
+  }
+}

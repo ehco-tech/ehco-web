@@ -62,8 +62,29 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
         enabled: allArticleIds.length > initialArticles.length
     });
 
-    const [activeMainCategory, setActiveMainCategory] = useState<string>('Creative Works');
-    const [activeSubCategory, setActiveSubCategory] = useState<string>('All Events');
+    // Initialize filters - check localStorage first for persisted filters
+    const getInitialFilters = () => {
+        try {
+            const savedFilters = localStorage.getItem('timelineFilters');
+            if (savedFilters) {
+                const parsed = JSON.parse(savedFilters);
+                // Only use saved filters if they're recent (within last 5 minutes)
+                if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+                    return {
+                        mainCategory: parsed.mainCategory || 'Creative Works',
+                        subCategory: parsed.subCategory || 'All Events'
+                    };
+                }
+            }
+        } catch (error) {
+            console.error('Error reading timeline filters from localStorage:', error);
+        }
+        return { mainCategory: 'Creative Works', subCategory: 'All Events' };
+    };
+
+    const initialFilters = getInitialFilters();
+    const [activeMainCategory, setActiveMainCategory] = useState<string>(initialFilters.mainCategory);
+    const [activeSubCategory, setActiveSubCategory] = useState<string>(initialFilters.subCategory);
     const [activeYear, setActiveYear] = useState<string | null>(null);
     const [isFilterOpen, setIsFilterOpen] = useState<boolean>(true);
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -72,11 +93,20 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
     // Store scroll position that should be maintained
     const scrollPositionRef = useRef<number | null>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const hasScrolledToHash = useRef<boolean>(false); // Track if we've already scrolled
 
-    // Handle hash anchor scrolling on mount
+    // Handle hash anchor scrolling on mount - ONLY ONCE
     useLayoutEffect(() => {
+        // Skip if we've already scrolled to the hash
+        if (hasScrolledToHash.current) {
+            return;
+        }
+
         const hash = window.location.hash;
         if (hash) {
+            // Mark that we're handling the hash scroll
+            hasScrolledToHash.current = true;
+
             // Remove the # from the hash
             const targetEventSlug = hash.substring(1);
 
@@ -110,10 +140,23 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
             }
 
             // Scroll to the element after filters are set and content is rendered
+            // Add offset so element isn't right at the top of viewport
             setTimeout(() => {
                 const element = document.getElementById(targetEventSlug);
                 if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    // Calculate position with offset (80px below top of viewport)
+                    const yOffset = -140; // Negative = element appears lower on screen
+                    const y = element.getBoundingClientRect().top + window.scrollY + yOffset;
+
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+
+                    // Add highlight animation for 3 seconds after scroll
+                    setTimeout(() => {
+                        element.classList.add('event-highlight');
+                        setTimeout(() => {
+                            element.classList.remove('event-highlight');
+                        }, 3000);
+                    }, 500); // Wait for scroll to complete
                 }
             }, 300);
         }
@@ -275,6 +318,13 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
         scrollPositionRef.current = window.scrollY;
         setActiveMainCategory(category);
         setActiveSubCategory('All Events');
+
+        // Persist to localStorage
+        localStorage.setItem('timelineFilters', JSON.stringify({
+            mainCategory: category,
+            subCategory: 'All Events',
+            timestamp: Date.now()
+        }));
     };
 
     // Handle year filter click
@@ -298,6 +348,13 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
 
         scrollPositionRef.current = window.scrollY;
         setActiveSubCategory(subCat);
+
+        // Persist to localStorage
+        localStorage.setItem('timelineFilters', JSON.stringify({
+            mainCategory: activeMainCategory,
+            subCategory: subCat,
+            timestamp: Date.now()
+        }));
     };
 
     // Handle search input change

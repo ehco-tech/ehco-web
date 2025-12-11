@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import EventModal from './EventModal';
 import { CuratedEvent, CuratedTimelineData, Article } from '@/types/definitions';
 
@@ -28,7 +28,6 @@ const PublicFigurePageWrapper: React.FC<PublicFigurePageWrapperProps> = ({
     figureId
 }) => {
     const searchParams = useSearchParams();
-    const router = useRouter();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalEvent, setModalEvent] = useState<{
         event: CuratedEvent;
@@ -64,30 +63,73 @@ const PublicFigurePageWrapper: React.FC<PublicFigurePageWrapperProps> = ({
                     subCategory: foundSubCategory
                 });
                 setIsModalOpen(true);
+
+                // Store the category/subcategory in localStorage so CareerJourney can maintain filters
+                localStorage.setItem('timelineFilters', JSON.stringify({
+                    mainCategory: foundMainCategory,
+                    subCategory: foundSubCategory,
+                    timestamp: Date.now()
+                }));
             }
         }
     }, [searchParams, timelineData]);
 
     const handleCloseModal = () => {
-        setIsModalOpen(false);
-        setModalEvent(null);
+        // Get the event element before clearing the URL
+        const hash = window.location.hash;
+        const eventElement = hash ? document.getElementById(hash.substring(1)) : null;
 
-        // Remove modal and event params from URL but keep hash
+        // Save the current scroll position to maintain it
+        const currentScrollY = window.scrollY;
+
+        // Remove modal, event params, AND hash from URL FIRST using native History API
+        // This prevents browser from jumping to hash when overflow is restored
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('modal');
         newUrl.searchParams.delete('event');
-        router.replace(newUrl.pathname + newUrl.hash, { scroll: false });
+        newUrl.hash = ''; // Clear the hash
+
+        window.history.replaceState(
+            {},
+            '',
+            newUrl.pathname + newUrl.search
+        );
+
+        // Then close modal (this will trigger EventModal's cleanup which restores overflow)
+        setIsModalOpen(false);
+        setModalEvent(null);
+
+        // Force scroll position to stay exactly where it was
+        // Use requestAnimationFrame to ensure this runs after EventModal cleanup
+        requestAnimationFrame(() => {
+            window.scrollTo(0, currentScrollY);
+        });
+
+        // Add highlight animation to the event after modal closes
+        if (eventElement) {
+            setTimeout(() => {
+                eventElement.classList.add('event-highlight');
+                setTimeout(() => {
+                    eventElement.classList.remove('event-highlight');
+                }, 3000); // Remove after 3 seconds
+            }, 300); // Wait for modal close animation
+        }
     };
 
     const handleViewInTimeline = () => {
         setIsModalOpen(false);
         setModalEvent(null);
 
-        // Remove modal and event params but keep hash for scrolling
+        // Remove modal and event params but keep hash for scrolling using native History API
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.delete('modal');
         newUrl.searchParams.delete('event');
-        router.replace(newUrl.pathname + newUrl.hash, { scroll: false });
+
+        window.history.replaceState(
+            {},
+            '',
+            newUrl.pathname + newUrl.search + newUrl.hash
+        );
 
         // Scroll to the element after a short delay to ensure DOM is ready
         setTimeout(() => {
