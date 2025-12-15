@@ -2,6 +2,36 @@
 
 // --- SHARED INTERFACES ---
 
+// For Curation Data
+export interface QuickFact {
+    text: string;
+    badge: 'verified' | 'community' | 'self-reported' | null;
+}
+
+export interface CurationParagraph {
+    text: string; // Text with inline markers like "Some text[FN:1] more text[FN:2]"
+}
+
+export interface CurationArticle {
+    title: string;
+    paragraphs: CurationParagraph[];
+}
+
+export interface CurationFootnote {
+    number: number;
+    text: string;
+    url: string;
+}
+
+export interface CurationData {
+    title: string;
+    subtitle: string;
+    lastEdited: string;
+    quickFacts: QuickFact[];
+    articles: CurationArticle[];
+    footnotes: CurationFootnote[];
+}
+
 // For Curated Timeline Data
 export interface TimelinePoint {
     date: string;

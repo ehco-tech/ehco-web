@@ -11,6 +11,7 @@ import PublicFigureContent from '@/components/PublicFigureContent';
 import CareerJourney from '@/components/CareerJourney';
 import DiscographySection from '@/components/DiscographySection';
 import FilmographySection from '@/components/FilmographySection';
+import CurationContent from '@/components/curation/CurationContent';
 import type { JsonLdObject } from '@/components/JsonLd';
 import JsonLd from '@/components/JsonLd';
 import { getArticlesByIds } from '@/lib/article-service';
@@ -25,7 +26,8 @@ import {
     ArticleSummary,
     CuratedEvent,
     CuratedTimelineData,
-    TimelineContent
+    TimelineContent,
+    CurationData
 } from '@/types/definitions';
 
 
@@ -289,6 +291,25 @@ async function getPublicFigureContent(publicFigureId: string): Promise<ApiConten
                 data: {}
             }
         };
+    }
+}
+
+async function getCurationData(publicFigureId: string): Promise<CurationData | null> {
+    try {
+        const figureRef = doc(db, 'selected-figures', publicFigureId);
+        const figureDoc = await getDoc(figureRef);
+
+        if (!figureDoc.exists()) {
+            return null;
+        }
+
+        const data = figureDoc.data();
+        const curationData = data.curation_data as CurationData | undefined;
+
+        return curationData || null;
+    } catch (error) {
+        console.error('Error fetching curation data:', error);
+        return null;
     }
 }
 
@@ -592,15 +613,24 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                 ...(publicFigureData.company ? { "affiliation": { "@type": "Organization", "name": publicFigureData.company } } : {})
             } as JsonLdObject;
 
+        // Fetch curation data
+        const curationData = await getCurationData(publicFigureData.id);
+
         // Serialize all data before passing to client components
         const serializedPublicFigure = JSON.parse(JSON.stringify(publicFigureData));
         const serializedApiResponse = JSON.parse(JSON.stringify(apiResponse));
+        const serializedCurationData = curationData ? JSON.parse(JSON.stringify(curationData)) : null;
 
         // Build tabs array conditionally based on available data
-        const tabs = [
-            // { id: 'curation', label: 'Curation' }, // TODO: Uncomment when Curation content is ready
-            { id: 'timeline', label: 'Timeline' },
-        ];
+        const tabs = [];
+
+        // Only add Curation tab if curation data is available
+        if (serializedCurationData) {
+            tabs.push({ id: 'curation', label: 'Curation' });
+        }
+
+        // Timeline is always available
+        tabs.push({ id: 'timeline', label: 'Timeline' });
 
         // Only add Discography tab if figure has Spotify URL
         if (serializedPublicFigure.spotifyUrl && serializedPublicFigure.spotifyUrl.length > 0) {
@@ -634,7 +664,9 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                     {/* Tab Navigation and Content */}
                     <PublicFigureContent tabs={tabs}>
                         {{
-                            curation: (
+                            curation: serializedCurationData ? (
+                                <CurationContent curationData={serializedCurationData} />
+                            ) : (
                                 <div className="max-w-7xl mx-auto px-4 py-8">
                                     <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-12 border border-gray-200 dark:border-gray-700">
                                         <div className="text-center text-gray-500 dark:text-gray-400">
