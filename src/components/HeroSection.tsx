@@ -321,7 +321,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
                 )}
 
                 {/* Category Tag */}
-                <div className="flex justify-center mb-8">
+                {/* <div className="flex justify-center mb-8">
                     <span className="px-4 py-2 bg-gray-100 rounded-full text-sm font-medium"
                         style={{
                             backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -330,7 +330,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
                         }}>
                         {publicFigure.occupation?.[0] || 'Public Figure'}
                     </span>
-                </div>
+                </div> */}
 
                 {/* Stats Grid */}
                 <div className="flex flex-wrap justify-center gap-16 max-w-4xl mx-auto">

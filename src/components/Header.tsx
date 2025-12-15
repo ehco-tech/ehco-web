@@ -81,8 +81,8 @@ export default function Header() {
                         onClick={() => setIsSearchOpen(true)}
                       />
                     </div>
-                    {/* Divider after search icon */}
-                    {user && <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>}
+                    {/* Divider after search icon - show on all screens */}
+                    <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>
                   </>
                 )}
 
@@ -93,7 +93,7 @@ export default function Header() {
                         <div className="hidden sm:block mr-2">
                           <NotificationCenter />
                         </div>
-                        {/* Divider after notifications */}
+                        {/* Divider after notifications - only show on desktop since notifications are desktop-only */}
                         <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>
                       </>
                     )}
