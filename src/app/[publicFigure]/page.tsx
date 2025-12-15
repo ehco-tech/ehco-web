@@ -6,8 +6,8 @@ import { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { Loader2 } from 'lucide-react';
 import HeroSection from '@/components/HeroSection';
-import TabNavigation from '@/components/TabNavigation';
-import OverviewSection from '@/components/OverviewSection';
+import BasicAndLinksSection from '@/components/BasicAndLinksSection';
+import PublicFigureContent from '@/components/PublicFigureContent';
 import CareerJourney from '@/components/CareerJourney';
 import DiscographySection from '@/components/DiscographySection';
 import FilmographySection from '@/components/FilmographySection';
@@ -15,10 +15,8 @@ import type { JsonLdObject } from '@/components/JsonLd';
 import JsonLd from '@/components/JsonLd';
 import { getArticlesByIds } from '@/lib/article-service';
 import { notFound } from 'next/navigation';
-import { readSpotifyCache } from '@/lib/spotify-cache-reader';
-import { readTMDbCache } from '@/lib/tmdb-cache-reader';
-import { getArtistDiscography, getSpotifyArtist, extractSpotifyArtistId, getAlbumDetails, type SpotifyAlbum } from '@/lib/spotify';
-import { getPersonFilmography } from '@/lib/tmdb';
+import { getSpotifyData } from '@/lib/spotify-data-reader';
+import { getTMDbData } from '@/lib/tmdb-data-reader';
 import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
 
 // --- IMPORTED TYPES ---
@@ -361,104 +359,37 @@ async function TimelineSection({
 }
 
 async function DiscographySectionWrapper({
-    spotifyUrl,
     artistName,
     figureId
 }: {
-    spotifyUrl?: string[];
     artistName: string;
     figureId: string
 }) {
-    if (!spotifyUrl || spotifyUrl.length === 0) {
+    try {
+        // Simply read spotify_data from database - no API calls, no cache checking
+        const spotifyData = await getSpotifyData(figureId);
+
+        if (spotifyData) {
+            return (
+                <DiscographySection
+                    albums={spotifyData.allAlbums}
+                    artistAlbums={spotifyData.byArtist}
+                    artistName={artistName}
+                />
+            );
+        }
+
+        // No data found in database
         return (
             <div className="max-w-7xl mx-auto px-4 py-8">
                 <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                     <h2 className="text-3xl font-bold text-key-color dark:text-key-color-dark mb-2">Discography</h2>
                     <p className="text-gray-600 dark:text-gray-300 mb-8">Chart-topping albums and singles that defined a generation</p>
                     <div className="text-gray-500 dark:text-gray-400 text-center py-12">
-                        No Spotify profile linked for {artistName}.
+                        No discography data available for {artistName}.
                     </div>
                 </div>
             </div>
-        );
-    }
-
-    try {
-        // Step 1: Try to read cache using CLIENT SDK (no Admin SDK initialization)
-        const cachedData = await readSpotifyCache(figureId);
-
-        if (cachedData) {
-            // Cache hit - return immediately (no Admin SDK used!)
-            return (
-                <DiscographySection
-                    albums={cachedData.allAlbums}
-                    artistAlbums={cachedData.byArtist}
-                    artistName={artistName}
-                />
-            );
-        }
-
-        // Step 2: Cache miss - fetch fresh data from Spotify API directly
-        console.log(`📀 No fresh cache for ${figureId}, fetching from Spotify API...`);
-
-        const artistIds = spotifyUrl
-            .map(url => extractSpotifyArtistId(url))
-            .filter((id): id is string => id !== null);
-
-        if (artistIds.length === 0) {
-            throw new Error('No valid Spotify URLs');
-        }
-
-        const allAlbums: SpotifyAlbum[] = [];
-        const byArtist: { artistId: string; artistName: string; albums: SpotifyAlbum[] }[] = [];
-
-        for (const artistId of artistIds) {
-            const [discography, artistInfo] = await Promise.all([
-                getArtistDiscography(artistId),
-                getSpotifyArtist(artistId)
-            ]);
-
-            if (discography.allAlbums && discography.allAlbums.length > 0) {
-                const albumDetailsPromises = discography.allAlbums.map(album => getAlbumDetails(album.id));
-                const albumsWithDetails = await Promise.all(albumDetailsPromises);
-
-                const cleanedAlbums = albumsWithDetails
-                    .filter((album): album is NonNullable<typeof album> => album !== null)
-                    .map(album => {
-                        const { available_markets, ...albumWithoutMarkets } = album as SpotifyAlbum & { available_markets?: string[] };
-                        if (albumWithoutMarkets.tracks?.items) {
-                            albumWithoutMarkets.tracks.items = albumWithoutMarkets.tracks.items.map(track => {
-                                const { available_markets, ...trackWithoutMarkets } = track as typeof track & { available_markets?: string[] };
-                                return trackWithoutMarkets;
-                            });
-                        }
-                        return albumWithoutMarkets as SpotifyAlbum;
-                    });
-
-                allAlbums.push(...cleanedAlbums);
-                byArtist.push({
-                    artistId,
-                    artistName: artistInfo?.name || 'Unknown Artist',
-                    albums: cleanedAlbums
-                });
-            }
-        }
-
-        // Step 3: Trigger background cache update (fire and forget - no await)
-        // This will use Admin SDK but won't block the page render
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        fetch(`${baseUrl}/api/cache/spotify`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ figureId, spotifyUrl })
-        }).catch(err => console.error('Background cache update failed:', err));
-
-        return (
-            <DiscographySection
-                albums={allAlbums}
-                artistAlbums={byArtist}
-                artistName={artistName}
-            />
         );
     } catch (error) {
         console.error('Error loading Spotify discography:', error);
@@ -479,106 +410,44 @@ async function DiscographySectionWrapper({
 interface FilmographySectionWrapperProps {
     figureId: string;
     personName: string;
-    tmdbId?: number | null;
-    tmdbVerified?: boolean;
 }
 
 async function FilmographySectionWrapper({
     figureId,
-    personName,
-    tmdbId,
-    tmdbVerified
+    personName
 }: FilmographySectionWrapperProps) {
     try {
-        // Check if TMDb ID exists
-        if (!tmdbId) {
-            return (
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Filmography</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-8">Film, television, and entertainment projects</p>
-                        <div className="text-gray-500 dark:text-gray-400 text-center py-12">
-                            No TMDb profile configured for this figure.
-                            <br />
-                            <br />
-                            For groups, please check individuals&apos; profile. <br />
-                            For individuals, please check his or her groups&apos; profile.
-                        </div>
-                    </div>
-                </div>
-            );
-        }
+        // Simply read tmdb_data from database - no API calls, no cache checking
+        const tmdbData = await getTMDbData(figureId);
 
-        // Step 1: Try to read cache using CLIENT SDK (no Admin SDK initialization)
-        const cachedFilmography = await readTMDbCache(figureId, tmdbId);
-
-        if (cachedFilmography) {
-            // Cache hit - return immediately (no Admin SDK used!)
+        if (tmdbData) {
             return (
                 <FilmographySection
-                    cast={cachedFilmography.cast}
-                    crew={cachedFilmography.crew}
+                    cast={tmdbData.cast}
+                    crew={tmdbData.crew}
                     personName={personName}
                 />
             );
         }
 
-        // Step 2: Cache miss - fetch fresh data from TMDb API directly
-        console.log(`🎬 No fresh cache for ${figureId}, fetching from TMDb API...`);
-        const filmography = await getPersonFilmography(tmdbId);
-
-        // Step 3: Trigger background cache update (fire and forget - no await)
-        // This will use Admin SDK but won't block the page render
-        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-        fetch(`${baseUrl}/api/cache/tmdb`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ figureId, tmdbId })
-        }).catch(err => console.error('Background cache update failed:', err));
-
-        if (!filmography) {
-            return (
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Filmography</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-8">Film, television, and entertainment projects</p>
-                        <div className="text-gray-500 dark:text-gray-400 text-center py-12">
-                            Unable to load filmography at this time.
-                        </div>
+        // No data found in database
+        return (
+            <div className="max-w-7xl mx-auto px-4 py-8">
+                <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                    <h2 className="text-3xl font-bold text-key-color dark:text-key-color-dark mb-2">Filmography</h2>
+                    <p className="text-gray-600 dark:text-gray-300 mb-8">Film, television, and entertainment projects</p>
+                    <div className="text-gray-500 dark:text-gray-400 text-center py-12">
+                        No filmography data available for {personName}.
                     </div>
                 </div>
-            );
-        }
-
-        return (
-            <FilmographySection
-                cast={filmography.cast}
-                crew={filmography.crew}
-                personName={personName}
-            />
+            </div>
         );
     } catch (error) {
         console.error('Error loading TMDb filmography:', error);
-
-        if (error instanceof Error && error.message.includes('TMDb ID required')) {
-            return (
-                <div className="max-w-7xl mx-auto px-4 py-8">
-                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Filmography</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mb-8">Film, television, and entertainment projects</p>
-                        <div className="text-center py-12">
-                            <p className="text-yellow-600 dark:text-yellow-500 mb-2">⚠️ TMDb ID verification needed</p>
-                            <p className="text-gray-500 dark:text-gray-400 text-sm">Please contact admin to verify TMDb profile.</p>
-                        </div>
-                    </div>
-                </div>
-            );
-        }
-
         return (
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
-                    <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Filmography</h2>
+                <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
+                    <h2 className="text-3xl font-bold text-key-color dark:text-key-color-dark mb-2">Filmography</h2>
                     <p className="text-gray-600 dark:text-gray-300 mb-8">Film, television, and entertainment projects</p>
                     <div className="text-gray-500 dark:text-gray-400 text-center py-12">
                         Unable to load filmography at this time.
@@ -677,14 +546,13 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         const initialArticles = await getArticlesByIds(initialArticleIds);
         const serializedInitialArticles = JSON.parse(JSON.stringify(initialArticles));
 
-        // Fetch Spotify artist names if spotifyUrl exists
+        // Fetch Spotify artist names from database
         let spotifyArtistNames: string[] = [];
         if (publicFigureData.spotifyUrl && publicFigureData.spotifyUrl.length > 0) {
             try {
-                // Use client SDK to read cache (no Admin SDK)
-                const cachedData = await readSpotifyCache(publicFigureData.id);
-                if (cachedData) {
-                    spotifyArtistNames = cachedData.byArtist.map((artist: { artistName: string }) => artist.artistName);
+                const spotifyData = await getSpotifyData(publicFigureData.id);
+                if (spotifyData) {
+                    spotifyArtistNames = spotifyData.byArtist.map((artist: { artistName: string }) => artist.artistName);
                 }
             } catch (error) {
                 console.error('Error fetching Spotify artist names:', error);
@@ -728,6 +596,22 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         const serializedPublicFigure = JSON.parse(JSON.stringify(publicFigureData));
         const serializedApiResponse = JSON.parse(JSON.stringify(apiResponse));
 
+        // Build tabs array conditionally based on available data
+        const tabs = [
+            { id: 'curation', label: 'Curation' },
+            { id: 'timeline', label: 'Timeline' },
+        ];
+
+        // Only add Discography tab if figure has Spotify URL
+        if (serializedPublicFigure.spotifyUrl && serializedPublicFigure.spotifyUrl.length > 0) {
+            tabs.push({ id: 'discography', label: 'Discography' });
+        }
+
+        // Only add Filmography tab if figure has TMDb ID
+        if (serializedPublicFigure.tmdb_id) {
+            tabs.push({ id: 'filmography', label: 'Filmography' });
+        }
+
         return (
             <PublicFigurePageWrapper
                 timelineData={serializedApiResponse.timeline_content.data}
@@ -741,57 +625,60 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                     {/* Hero Section */}
                     <HeroSection publicFigure={serializedPublicFigure} />
 
-                    {/* Sticky Tab Navigation */}
-                    <TabNavigation />
+                    {/* Basic Information and Official Links - Always Visible */}
+                    <BasicAndLinksSection
+                        publicFigure={serializedPublicFigure}
+                        spotifyArtistNames={spotifyArtistNames}
+                    />
 
-                    {/* Content Sections */}
-                    <section id="overview">
-                        <OverviewSection
-                            publicFigure={serializedPublicFigure}
-                            mainOverview={serializedApiResponse.main_overview}
-                            spotifyArtistNames={spotifyArtistNames}
-                        />
-                    </section>
-
-                    <section id="discography">
-                        <DiscographySectionWrapper
-                            spotifyUrl={serializedPublicFigure.spotifyUrl}
-                            artistName={serializedPublicFigure.name}
-                            figureId={serializedPublicFigure.id}
-                        />
-                    </section>
-
-                    <section id="filmography">
-                        <FilmographySectionWrapper
-                            figureId={serializedPublicFigure.id}
-                            personName={serializedPublicFigure.name}
-                            tmdbId={serializedPublicFigure.tmdb_id}
-                            tmdbVerified={serializedPublicFigure.tmdb_verified}
-                        />
-                    </section>
-
-                    <section id="timeline">
-                        <Suspense fallback={
-                            <div className="max-w-7xl mx-auto px-4 py-8">
-                                <h2 className="text-2xl font-bold mb-6 text-key-color dark:text-key-color-dark">Career Timeline</h2>
-                                <p className="text-gray-600 dark:text-gray-300 mb-8">Comprehensive chronicle of {serializedPublicFigure.name}&apos;s journey to global stardom</p>
-                                <div className="flex items-center justify-center py-12">
-                                    <div className="flex items-center space-x-3">
-                                        <Loader2 className="animate-spin text-key-color dark:text-key-color-dark" size={24} />
-                                        <span className="text-gray-600 dark:text-gray-300">Loading timeline...</span>
+                    {/* Tab Navigation and Content */}
+                    <PublicFigureContent tabs={tabs}>
+                        {{
+                            curation: (
+                                <div className="max-w-7xl mx-auto px-4 py-8">
+                                    <div className="bg-white dark:bg-[#1d1d1f] rounded-lg shadow-sm p-12 border border-gray-200 dark:border-gray-700">
+                                        <div className="text-center text-gray-500 dark:text-gray-400">
+                                            <p className="text-lg">Curation content coming soon...</p>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        }>
-                            <TimelineSection
-                                timelineContent={serializedApiResponse.timeline_content}
-                                uniqueArticleIds={uniqueArticleIds}
-                                figureId={serializedPublicFigure.id}
-                                figureName={serializedPublicFigure.name}
-                                figureNameKr={serializedPublicFigure.name_kr}
-                            />
-                        </Suspense>
-                    </section>
+                            ),
+                            timeline: (
+                                <Suspense fallback={
+                                    <div className="max-w-7xl mx-auto px-4 py-8">
+                                        <h2 className="text-2xl font-bold mb-6 text-key-color dark:text-key-color-dark">Career Timeline</h2>
+                                        <p className="text-gray-600 dark:text-gray-300 mb-8">Comprehensive chronicle of {serializedPublicFigure.name}&apos;s journey to global stardom</p>
+                                        <div className="flex items-center justify-center py-12">
+                                            <div className="flex items-center space-x-3">
+                                                <Loader2 className="animate-spin text-key-color dark:text-key-color-dark" size={24} />
+                                                <span className="text-gray-600 dark:text-gray-300">Loading timeline...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }>
+                                    <TimelineSection
+                                        timelineContent={serializedApiResponse.timeline_content}
+                                        uniqueArticleIds={uniqueArticleIds}
+                                        figureId={serializedPublicFigure.id}
+                                        figureName={serializedPublicFigure.name}
+                                        figureNameKr={serializedPublicFigure.name_kr}
+                                    />
+                                </Suspense>
+                            ),
+                            discography: (
+                                <DiscographySectionWrapper
+                                    artistName={serializedPublicFigure.name}
+                                    figureId={serializedPublicFigure.id}
+                                />
+                            ),
+                            filmography: serializedPublicFigure.tmdb_id ? (
+                                <FilmographySectionWrapper
+                                    figureId={serializedPublicFigure.id}
+                                    personName={serializedPublicFigure.name}
+                                />
+                            ) : undefined,
+                        }}
+                    </PublicFigureContent>
                 </div>
             </PublicFigurePageWrapper>
         );
