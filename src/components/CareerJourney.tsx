@@ -225,7 +225,14 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
     const getCategoryCount = (category: string): number => {
         if (!timelineData[category]) return 0;
         return Object.values(timelineData[category].subCategories).reduce(
-            (total, events) => total + events.length,
+            (total, events) => {
+                const filteredEvents = events.filter(event => {
+                    const matchesYear = !activeYear || event.event_years?.includes(parseInt(activeYear));
+                    const matchesSearch = eventMatchesSearch(event, debouncedSearchQuery);
+                    return matchesYear && matchesSearch;
+                });
+                return total + filteredEvents.length;
+            },
             0
         );
     };
@@ -237,7 +244,13 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
         if (!timelineData[mainCategory] || !timelineData[mainCategory].subCategories[subCategory]) {
             return 0;
         }
-        return timelineData[mainCategory].subCategories[subCategory].length;
+        const events = timelineData[mainCategory].subCategories[subCategory];
+        const filteredEvents = events.filter(event => {
+            const matchesYear = !activeYear || event.event_years?.includes(parseInt(activeYear));
+            const matchesSearch = eventMatchesSearch(event, debouncedSearchQuery);
+            return matchesYear && matchesSearch;
+        });
+        return filteredEvents.length;
     };
 
     const getFilteredEventCount = (): number => {

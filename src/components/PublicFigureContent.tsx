@@ -1,11 +1,12 @@
 // src/components/PublicFigureContent.tsx
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import TabNavigation, { Tab } from './TabNavigation';
 
 interface PublicFigureContentProps {
     tabs: Tab[];
+    activeTab: string;
     children: {
         curation: ReactNode;
         timeline: ReactNode;
@@ -14,20 +15,70 @@ interface PublicFigureContentProps {
     };
 }
 
-export default function PublicFigureContent({ tabs, children }: PublicFigureContentProps) {
-    const [activeTab, setActiveTab] = useState(tabs[0]?.id || 'curation');
+export default function PublicFigureContent({ tabs, activeTab: initialActiveTab, children }: PublicFigureContentProps) {
+    const [activeTab, setActiveTab] = useState(initialActiveTab);
+
+    // Listen for hash changes (browser back/forward)
+    useEffect(() => {
+        const handleHashChange = () => {
+            const hash = window.location.hash.slice(1); // Remove the '#'
+            if (hash && tabs.some(tab => tab.id === hash)) {
+                setActiveTab(hash);
+            }
+        };
+
+        // Check hash on mount
+        const hash = window.location.hash.slice(1);
+        if (hash && tabs.some(tab => tab.id === hash)) {
+            setActiveTab(hash);
+        }
+
+        window.addEventListener('hashchange', handleHashChange);
+        return () => window.removeEventListener('hashchange', handleHashChange);
+    }, [tabs]);
+
+    // Prevent scroll on hash change
+    useEffect(() => {
+        // This prevents the default scroll behavior when hash changes
+        if ('scrollRestoration' in window.history) {
+            window.history.scrollRestoration = 'manual';
+        }
+
+        return () => {
+            if ('scrollRestoration' in window.history) {
+                window.history.scrollRestoration = 'auto';
+            }
+        };
+    }, []);
+
+    const handleTabChange = (tabId: string) => {
+        // Capture current scroll position
+        const currentScrollY = window.scrollY;
+
+        // Update state
+        setActiveTab(tabId);
+
+        // Update hash using replaceState
+        window.history.replaceState(null, '', `#${tabId}`);
+
+        // Force scroll position to stay the same
+        // Use requestAnimationFrame to ensure this runs after any browser scroll
+        requestAnimationFrame(() => {
+            window.scrollTo(0, currentScrollY);
+        });
+    };
 
     return (
         <>
             {/* Sticky Tab Navigation */}
-            <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+            <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
             {/* Tab Content */}
             <div>
-                {activeTab === 'curation' && children.curation}
-                {activeTab === 'timeline' && children.timeline}
-                {activeTab === 'discography' && children.discography}
-                {activeTab === 'filmography' && children.filmography}
+                {activeTab === 'curation' && <div key="curation">{children.curation}</div>}
+                {activeTab === 'timeline' && <div key="timeline">{children.timeline}</div>}
+                {activeTab === 'discography' && <div key="discography">{children.discography}</div>}
+                {activeTab === 'filmography' && <div key="filmography">{children.filmography}</div>}
             </div>
         </>
     );
