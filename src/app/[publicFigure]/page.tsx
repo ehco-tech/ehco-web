@@ -598,7 +598,7 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
 
         // Build tabs array conditionally based on available data
         const tabs = [
-            { id: 'curation', label: 'Curation' },
+            // { id: 'curation', label: 'Curation' }, // TODO: Uncomment when Curation content is ready
             { id: 'timeline', label: 'Timeline' },
         ];
 
