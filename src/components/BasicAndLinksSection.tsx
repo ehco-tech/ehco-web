@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import type { PublicFigure } from '@/app/[publicFigure]/[tab]/page';
+import type { PublicFigure } from '@/app/[publicFigure]/page';
 import { createUrlSlug } from '@/lib/slugify';
 
 interface BasicAndLinksSectionProps {
