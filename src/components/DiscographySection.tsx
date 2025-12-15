@@ -200,7 +200,6 @@ function AlbumCard({ album, onClick }: AlbumCardProps) {
 export default function DiscographySection({ albums, artistAlbums, artistName }: DiscographySectionProps) {
     const [filter, setFilter] = useState<AlbumFilter>('all');
     const [selectedAlbum, setSelectedAlbum] = useState<SpotifyAlbumDetails | null>(null);
-    const [isLoadingAlbum, setIsLoadingAlbum] = useState(false);
 
     // Get filtered albums
     const getFilteredAlbums = () => {
@@ -234,45 +233,10 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
 
     const filteredAlbums = getFilteredAlbums();
 
-    const handleAlbumClick = async (album: SpotifyAlbum) => {
-        setIsLoadingAlbum(true);
-        try {
-            // Check if album already has track details (from cache)
-            if (album.tracks && album.tracks.items && album.tracks.items.length > 0) {
-                // Use cached data - cast SpotifyAlbum to SpotifyAlbumDetails
-                setSelectedAlbum(album as SpotifyAlbumDetails);
-                setIsLoadingAlbum(false);
-                return;
-            }
-
-            // Fallback: Fetch from API if tracks are not in cache
-            console.warn('Album tracks not in cache, fetching from API...');
-            const token = await getToken();
-            const response = await fetch(`https://api.spotify.com/v1/albums/${album.id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                },
-                cache: 'no-store'
-            });
-
-            if (response.ok) {
-                const fullAlbumData = await response.json();
-                setSelectedAlbum(fullAlbumData);
-            } else {
-                console.error('Failed to fetch album details');
-            }
-        } catch (error) {
-            console.error('Error fetching album details:', error);
-        } finally {
-            setIsLoadingAlbum(false);
-        }
-    };
-
-    // Helper to get token (fallback for albums without cached tracks)
-    const getToken = async () => {
-        const response = await fetch('/api/spotify/token');
-        const data = await response.json();
-        return data.access_token;
+    const handleAlbumClick = (album: SpotifyAlbum) => {
+        // All album data including tracks should already be loaded from database
+        // Simply cast and display
+        setSelectedAlbum(album as SpotifyAlbumDetails);
     };
 
     if (!albums.length) {
@@ -373,15 +337,6 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
                     album={selectedAlbum}
                     onClose={() => setSelectedAlbum(null)}
                 />
-            )}
-
-            {/* Loading Overlay */}
-            {isLoadingAlbum && (
-                <div className="fixed inset-0 bg-black bg-opacity-30 z-40 flex items-center justify-center">
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 dark:border-pink-400"></div>
-                    </div>
-                </div>
             )}
         </>
     );
