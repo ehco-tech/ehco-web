@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { Star } from 'lucide-react';
-import type { PublicFigure } from '@/app/[publicFigure]/page';
+import type { PublicFigure } from '@/app/[publicFigure]/[tab]/page';
 import { useAuth } from '@/context/AuthContext';
 import { addToFavorites, removeFromFavorites, isInFavorites } from '@/lib/favorites-service';
 import { useRouter } from 'next/navigation';

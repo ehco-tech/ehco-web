@@ -23,9 +23,7 @@ import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
 // --- IMPORTED TYPES ---
 import {
     ApiContentResponse,
-    ArticleSummary,
     CuratedEvent,
-    CuratedTimelineData,
     TimelineContent,
     CurationData
 } from '@/types/definitions';
@@ -173,27 +171,6 @@ export async function generateMetadata({ params }: { params: Promise<{ publicFig
 
 // --- DATA FETCHING FUNCTIONS ---
 
-async function getArticleSummaries(publicFigureId: string, articleIds: string[]): Promise<ArticleSummary[]> {
-    if (articleIds.length === 0) return [];
-
-    const headersList = await headers();
-    const protocol = process.env.NODE_ENV === 'development' ? 'http' : 'https';
-    const host = headersList.get('host') || 'localhost:3000';
-
-    try {
-        const response = await fetch(
-            `${protocol}://${host}/api/article-summaries?publicFigure=${encodeURIComponent(publicFigureId)}&articleIds=${encodeURIComponent(articleIds.join(','))}`,
-            { cache: 'force-cache', next: { revalidate: 3600 } }
-        );
-
-        if (!response.ok) return [];
-        return await response.json();
-    } catch (error) {
-        console.error('Error fetching article summaries:', error);
-        return [];
-    }
-}
-
 async function getPublicFigureData(publicFigureSlug: string): Promise<PublicFigure> {
     const figuresRef = collection(db, 'selected-figures');
 
@@ -310,37 +287,6 @@ async function getCurationData(publicFigureId: string): Promise<CurationData | n
     } catch (error) {
         console.error('Error fetching curation data:', error);
         return null;
-    }
-}
-
-async function getFiguresByIds(ids: string[]): Promise<Array<{ id: string; name: string; name_kr: string; profilePic?: string; }>> {
-    if (!ids || ids.length === 0) {
-        return [];
-    }
-
-    // NOTE: Firestore 'in' queries are limited to a maximum of 30 documents.
-    // This is perfect for a "You Might Also Like" section.
-    const collectionRef = collection(db, 'selected-figures');
-    const q = query(collectionRef, where('__name__', 'in', ids));
-
-    try {
-        const snapshot = await getDocs(q);
-        if (snapshot.empty) {
-            return [];
-        }
-
-        return snapshot.docs.map(doc => {
-            const data = doc.data();
-            return {
-                id: doc.id,
-                name: data.name || '',
-                name_kr: data.name_kr || '',
-                profilePic: data.profilePic || '',
-            };
-        });
-    } catch (error) {
-        console.error("Error fetching figures by IDs:", error);
-        return [];
     }
 }
 
@@ -553,13 +499,6 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         // Convert Set to Array without spread operator to avoid stack overflow
         const uniqueArticleIds = Array.from(allArticleIdsSet);
 
-        const relatedFiguresObject = publicFigureData.related_figures || {};
-
-        const similarFigureIds = Object.entries(relatedFiguresObject)
-            .sort(([, countA], [, countB]) => countB - countA)
-            .map(([figureId]) => figureId)
-            .slice(0, 2);
-
         // Load initial batch of articles for modal (first 50%)
         // This ensures the modal can show immediately with data
         const initialBatchSize = Math.ceil(uniqueArticleIds.length / 2);
@@ -622,15 +561,16 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         const serializedCurationData = curationData ? JSON.parse(JSON.stringify(curationData)) : null;
 
         // Build tabs array conditionally based on available data
+        // Order: Timeline (always first), Curation, Discography, Filmography
         const tabs = [];
+
+        // Timeline is always available and is the default tab
+        tabs.push({ id: 'timeline', label: 'Timeline' });
 
         // Only add Curation tab if curation data is available
         if (serializedCurationData) {
             tabs.push({ id: 'curation', label: 'Curation' });
         }
-
-        // Timeline is always available
-        tabs.push({ id: 'timeline', label: 'Timeline' });
 
         // Only add Discography tab if figure has Spotify URL
         if (serializedPublicFigure.spotifyUrl && serializedPublicFigure.spotifyUrl.length > 0) {
@@ -662,7 +602,10 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                     />
 
                     {/* Tab Navigation and Content */}
-                    <PublicFigureContent tabs={tabs}>
+                    <PublicFigureContent
+                        tabs={tabs}
+                        activeTab="timeline"
+                    >
                         {{
                             curation: serializedCurationData ? (
                                 <CurationContent curationData={serializedCurationData} />
@@ -725,7 +668,9 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
 // --- MAIN PAGE COMPONENT ---
 
 export default async function PublicFigurePage({ params }: { params: Promise<{ publicFigure: string }> }) {
-    const publicFigureId = (await params).publicFigure.toLowerCase();
+    const resolvedParams = await params;
+    const publicFigureId = resolvedParams.publicFigure.toLowerCase();
+
     return (
         <Suspense fallback={<LoadingOverlay />}>
             <PublicFigurePageContent publicFigureId={publicFigureId} />
