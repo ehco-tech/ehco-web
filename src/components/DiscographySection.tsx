@@ -88,6 +88,16 @@ function AlbumModal({ album, onClose }: AlbumModalProps) {
                     {/* Tracklist */}
                     <div>
                         <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Tracklist</h3>
+
+                        {/* Playback Info Notice */}
+                        <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                            <p className="text-sm text-blue-900 dark:text-blue-200 leading-relaxed">
+                                <span className="font-semibold">Playback Info:</span> Preview availability depends on your Spotify login status.
+                                Logged-in users can play full tracks, while logged-out users get 30-second previews.
+                                Some tracks may not have previews available due to Spotify&apos;s licensing restrictions.
+                            </p>
+                        </div>
+
                         <div className="space-y-3">
                             {album.tracks.items.map((track) => (
                                 <div
@@ -265,8 +275,8 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
                         <button
                             onClick={() => setFilter('all')}
                             className={`pb-3 font-semibold transition-colors relative whitespace-nowrap ${filter === 'all'
-                                    ? 'text-key-color dark:text-key-color-dark'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                ? 'text-key-color dark:text-key-color-dark'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                         >
                             All
@@ -281,8 +291,8 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
                                 key={artist.artistId}
                                 onClick={() => setFilter(artist.artistId)}
                                 className={`pb-3 font-semibold transition-colors relative whitespace-nowrap ${filter === artist.artistId
-                                        ? 'text-key-color dark:text-key-color-dark'
-                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                    ? 'text-key-color dark:text-key-color-dark'
+                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                     }`}
                             >
                                 {artist.artistName}
@@ -295,8 +305,8 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
                         <button
                             onClick={() => setFilter('album')}
                             className={`pb-3 font-semibold transition-colors relative whitespace-nowrap ${filter === 'album'
-                                    ? 'text-key-color dark:text-key-color-dark'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                ? 'text-key-color dark:text-key-color-dark'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                         >
                             Studio Albums
@@ -307,8 +317,8 @@ export default function DiscographySection({ albums, artistAlbums, artistName }:
                         <button
                             onClick={() => setFilter('single')}
                             className={`pb-3 font-semibold transition-colors relative whitespace-nowrap ${filter === 'single'
-                                    ? 'text-key-color dark:text-key-color-dark'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                ? 'text-key-color dark:text-key-color-dark'
+                                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 }`}
                         >
                             Singles
