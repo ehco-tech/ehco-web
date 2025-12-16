@@ -43,26 +43,31 @@ export default function QuickFactsSection({ facts }: QuickFactsSectionProps) {
 
     // Helper to render fact text with optional link
     const renderFactText = (fact: QuickFact) => {
-        if (!fact.url) {
+        if (!fact.url || !fact.linkText) {
             return fact.text;
         }
 
-        // Extract the domain/path from the URL to guess what text should be linked
-        // For example, "https://www.ehco.ai/lisa" -> we want to make "Lisa" clickable
-        const urlMatch = fact.url.match(/\/([^\/]+)$/);
-        const urlSegment = urlMatch ? urlMatch[1] : '';
+        // Split the text at the linked portion
+        const parts = fact.text.split(fact.linkText);
 
-        // Try to find this word (case-insensitive) in the text
-        const regex = new RegExp(`\\b(${urlSegment})\\b`, 'i');
-        const match = fact.text.match(regex);
-
-        if (!match) {
-            // If we can't find a match, just return the text as-is
-            return fact.text;
+        // Handle edge case where linkText appears multiple times
+        if (parts.length > 2) {
+            // Only link the first occurrence
+            return (
+                <>
+                    {parts[0]}
+                    <a
+                        href={fact.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-key-color dark:text-key-color-dark hover:underline"
+                    >
+                        {fact.linkText}
+                    </a>
+                    {parts.slice(1).join(fact.linkText)}
+                </>
+            );
         }
-
-        const linkText = match[0]; // Use the actual matched text to preserve case
-        const parts = fact.text.split(linkText);
 
         return (
             <>
@@ -73,7 +78,7 @@ export default function QuickFactsSection({ facts }: QuickFactsSectionProps) {
                     rel="noopener noreferrer"
                     className="text-key-color dark:text-key-color-dark hover:underline"
                 >
-                    {linkText}
+                    {fact.linkText}
                 </a>
                 {parts[1]}
             </>

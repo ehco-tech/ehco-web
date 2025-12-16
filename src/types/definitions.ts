@@ -7,10 +7,12 @@ export interface QuickFact {
     text: string;
     badge: 'verified' | 'community' | 'self-reported' | null;
     url?: string; // Optional external link for the fact
+    linkText?: string; // The specific text that should be linked (e.g., "Lisa")
 }
 
 export interface CurationParagraph {
     text: string; // Text with inline markers like "Some text[FN:1] more text[FN:2]"
+    html?: string; // Optional HTML content with preserved formatting (<a>, <u>, <strong>, etc.)
 }
 
 export interface CurationArticle {

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ahyeon (BABYMONSTER) Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #6b7280; text-decoration: none; font-size: 0.875rem;
+            margin-bottom: 32px; transition: color 0.2s ease;
+        }
+        .back-link:hover { color: #D10041; }
+        .back-link svg { width: 16px; height: 16px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 800px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .footnote-item.highlighted { background: rgba(209, 0, 65, 0.05); border-radius: 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+        @media (max-width: 640px) {
+            .main-content { padding: 24px 16px 60px; }
+            .page-title { font-size: 1.75rem; }
+            .quick-facts-header { padding: 16px 18px; }
+            .quick-facts-content { padding: 0 18px 18px; }
+            .fact-item { padding: 10px 12px; font-size: 0.875rem; }
+            .article-paragraph { font-size: 0.95rem; }
+            .bottom-nav { flex-direction: column; gap: 12px; }
+            .nav-button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+
+        <header class="page-header">
+            <h1 class="page-title">Jung Ahyeon Wiki</h1>
+            <p class="page-subtitle">정아현 • BABYMONSTER Center & All-Rounder</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🦋</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">25 facts</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Born April 11, 2007, in Toegye-dong, Chuncheon, Gangwon-do, South Korea<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Full name: Jung Ahyeon (정아현), Chinese name: Zhèng Yǎxián (郑雅贤)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Main vocalist, lead rapper, lead dancer, and center of BABYMONSTER<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Blood type A, height 163 cm, MBTI: ISTJ<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Representative emoji: 🦋 (butterfly), color: Bright Orange<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Trained for 5 years at YG Entertainment (joined in 2018)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Ranked #1 in BABYMONSTER's "Last Evaluation" final lineup announcement<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Fluent in Korean, English (started at age 5), and Chinese (started at age 7)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Attended Seongrim Elementary, Daeryong Middle School, now at Hanlim Multi Art School<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Began training at Ara Dance Academy in Chuncheon at age 11<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Passed auditions for both JYP and Banana Culture Entertainment in 2017-2018<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Viral "Dangerously" cover reached 39+ million views on YouTube<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Charlie Puth gifted BABYMONSTER the song "Like That" after seeing her cover<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Took health hiatus before debut, rejoined for BABYMONS7ER in April 2024<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Contributed vocals to WINNER's Kang Seung-yoon "Iyah" during trainee period<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Auditioned for YG with "The Show" by Lenka<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Yang Hyun-suk called her "the member with the highest vocal range" in the group<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Often compared to BLACKPINK's Jennie, earning nickname "Little Jennie"<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite singer is G-DRAGON<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Hobbies include drawing and video editing<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Started dancing at age 5, with her father recording her performances<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Has a younger brother<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite Sanrio character is Cinnamoroll<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Members say she resembles a squirrel (nicknamed "Ah-ramji")<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>In November 2025, announced she won't take the 2026 College Scholastic Ability Test<span class="fact-badge verified">Verified</span></span></div>
+                </div>
+                <button class="show-more-facts" onclick="showMoreFacts()">
+                    Show More Facts
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">
+                    EHCO Curated
+                    <span class="ehco-badge">EDITORIAL</span>
+                </h2>
+                <p class="curated-subtitle">Last edited: December 15, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Early Life and Path to YG Entertainment</h3>
+                <p class="article-paragraph">
+                    Jung Ahyeon was born on April 11, 2007, in Toegye-dong (also referred to as Hupyeong-dong in some sources), Chuncheon, Gangwon-do Province, South Korea. Growing up in the scenic mountainous region of Gangwon, she developed an early passion for performing arts. Her father actively supported her ambitions, capturing videos of her dance performances from the age of five.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+                <p class="article-paragraph">
+                    Ahyeon attended Seongrim Elementary School and later Daeryong Middle School in Chuncheon. At age 11, she enrolled at Ara Dance Academy in Chuncheon, where her dedication to refining her craft intensified.<a href="#fn2" class="footnote-ref">2</a> The academy became a crucial stepping stone, as she began preparing for entertainment company auditions held at the facility. Her multilingual abilities—having started English lessons at five and Chinese at seven—would later become significant assets in her idol career.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+                <p class="article-paragraph">
+                    In 2017, at just 11 years old, Ahyeon successfully passed the first round of auditions for Banana Culture Entertainment. However, her trajectory changed dramatically in 2018 when she passed auditions for both JYP Entertainment and YG Entertainment.<a href="#fn4" class="footnote-ref">4</a> She ultimately chose YG Entertainment, joining as a trainee and embarking on a rigorous five-year training period that would shape her into the all-rounder performer she is today. During her trainee years, she attended Hanlim Multi Art School, one of South Korea's most prestigious arts high schools, in the Applied Music Department.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Viral "Dangerously" Cover</h3>
+                <p class="article-paragraph">
+                    On April 22, 2023, YG Entertainment uploaded a performance video of Ahyeon covering Charlie Puth's "Dangerously" to BABYMONSTER's official YouTube channel as part of the "Last Evaluation" series.<a href="#fn6" class="footnote-ref">6</a> The cover immediately captured global attention, showcasing Ahyeon's extraordinary vocal abilities at just 16 years old. Her performance demonstrated seamless transitions between powerful chest voice and delicate falsetto, coupled with impactful high notes and emotional delivery that diverged from the original song's interpretation.<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    The video accumulated over 8.74 million views within its first ten days, and the momentum never slowed. Multiple vocal coaches and reaction content creators worldwide analyzed the performance, praising her technical proficiency and stage presence.<a href="#fn8" class="footnote-ref">8</a> WINNER's Yoon, who served as a judge on "Last Evaluation," remarked that watching Ahyeon felt like witnessing "a power show of her voice."<a href="#fn9" class="footnote-ref">9</a> Even more remarkably, Yang Hyun-suk, YG Entertainment's founder and executive producer, declared that Ahyeon possessed "the highest vocal range among the seven members" and described her as "the character that best suits the team's name."<a href="#fn9" class="footnote-ref">9</a>
+                </p>
+                <p class="article-paragraph">
+                    The cover's impact extended beyond view counts. Charlie Puth himself took notice after fans repeatedly asked if he had seen Ahyeon's version. On his TikTok community, Puth left a comment stating "I loved it," sending shockwaves through the K-pop community.<a href="#fn8" class="footnote-ref">8</a> This interaction eventually led to Puth gifting BABYMONSTER an original composition, "Like That," which was included in their debut mini-album "BABYMONS7ER."<a href="#fn10" class="footnote-ref">10</a> Yang Hyun-suk later revealed that Puth's gesture was specifically in response to Ahyeon's viral cover, describing it as "a huge gift" for both the members and fans.<a href="#fn10" class="footnote-ref">10</a> As of late 2024, the "Dangerously" cover has surpassed 39 million views, cementing its status as one of pre-debut K-pop's most legendary performance videos.<a href="#fn11" class="footnote-ref">11</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Final Evaluation and Unexpected Hiatus</h3>
+                <p class="article-paragraph">
+                    Throughout early 2023, BABYMONSTER's formation was documented in the reality series "Last Evaluation," which allowed the public to observe the seven potential members competing through monthly evaluations. Ahyeon was the second member officially revealed on January 16, 2023, through a live performance video.<a href="#fn12" class="footnote-ref">12</a> Her appearances on the show consistently drew praise from industry professionals and senior artists serving as judges.
+                </p>
+                <p class="article-paragraph">
+                    On May 11, 2023, YG Entertainment announced the final seven-member lineup through a special video on YouTube. Ahyeon ranked first in the final evaluation, solidifying her position as the group's center and affirming her all-rounder capabilities across vocals, rap, and dance.<a href="#fn13" class="footnote-ref">13</a> The announcement positioned her as one of the most anticipated rookies in K-pop's next generation, with many drawing comparisons to BLACKPINK's Jennie due to her versatile skillset and commanding stage presence—earning her the pre-debut nickname "Little Jennie."<a href="#fn14" class="footnote-ref">14</a>
+                </p>
+                <p class="article-paragraph">
+                    However, just days before BABYMONSTER's scheduled November 27, 2023 debut, YG Entertainment made a shocking announcement. On November 15, 2023, the company revealed that Ahyeon would not participate in the debut due to health reasons, and BABYMONSTER would debut as a six-member group.<a href="#fn15" class="footnote-ref">15</a> The following day, YG clarified that Ahyeon remained a member of the group but would not participate in debut activities, with her future return left uncertain.<a href="#fn16" class="footnote-ref">16</a> This development sparked widespread concern among fans who had followed her journey through "Last Evaluation," though the company assured the public that her health was the priority.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Triumphant Return and Official Debut</h3>
+                <p class="article-paragraph">
+                    BABYMONSTER proceeded with their debut as planned, releasing "Batter Up" on November 27, 2023, without Ahyeon. While the debut achieved impressive records, fans eagerly anticipated news of Ahyeon's condition. On January 1, 2024, Yang Hyun-suk addressed the situation in a video announcing BABYMONSTER's comeback plans, revealing that Ahyeon had been unable to train for several months due to her health condition and that the timeline for her return remained uncertain.<a href="#fn17" class="footnote-ref">17</a>
+                </p>
+                <p class="article-paragraph">
+                    The wait finally ended on January 25, 2024, when YG Entertainment released an announcement video confirming Ahyeon's return. The company stated that she had recovered and would rejoin BABYMONSTER for their upcoming first mini-album scheduled for April 1, 2024.<a href="#fn18" class="footnote-ref">18</a> The announcement also revealed that previously released songs "Batter Up" and "Stuck in the Middle" would be re-recorded to include Ahyeon's vocals, ensuring the complete seven-member sound fans had been anticipating.<a href="#fn18" class="footnote-ref">18</a>
+                </p>
+                <p class="article-paragraph">
+                    On April 1, 2024, Ahyeon made her official debut with BABYMONSTER as the group released their first mini-album "BABYMONS7ER," featuring the title track "SHEESH."<a href="#fn19" class="footnote-ref">19</a> Her return generated massive online engagement, with the hashtag #WelcomeBackAhyeon trending globally and amassing millions of interactions within 24 hours of the teaser release.<a href="#fn20" class="footnote-ref">20</a> The album's success validated the anticipation—it received over 460,000 pre-orders and debuted at number three on the Circle Album Chart, with "SHEESH" eventually peaking at number ten on the Circle Digital Chart.<a href="#fn21" class="footnote-ref">21</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Establishing Her Legacy as an All-Rounder</h3>
+                <p class="article-paragraph">
+                    Following her debut, Ahyeon quickly demonstrated why she had ranked first in the final evaluation. Her role as main vocalist, lead rapper, and lead dancer positioned her as one of K-pop's rare triple threats, a designation shared by only a handful of fourth and fifth-generation idols such as aespa's Karina or LE SSERAFIM's Yunjin.<a href="#fn20" class="footnote-ref">20</a> Industry observers noted her technically compressed vocal tone and excellent breath control during live performances, qualities that set her apart in an era when live vocal prowess often determines an idol's legitimacy.
+                </p>
+                <p class="article-paragraph">
+                    Throughout 2024, Ahyeon's performances reinforced her reputation. During BABYMONSTER's comeback stages and fan meeting tour across Asia in May 2024, she showcased solo stages that highlighted her individual artistry. The group's subsequent releases—"Forever" in July 2024 and their first full album "Drip" in November 2024—further established Ahyeon as a focal point of BABYMONSTER's sound and visual identity.<a href="#fn22" class="footnote-ref">22</a> The "Drip" music video's success, which became YouTube's most-viewed video within 24 hours upon release, demonstrated the drawing power she and her groupmates had cultivated.
+                </p>
+                <p class="article-paragraph">
+                    A particularly memorable moment came during the 2025 MAMA Awards on November 29, 2025, where Ahyeon performed alongside fellow members Rora and Pharita as "HUNTR/X"—characters from a Netflix K-pop demon hunter concept. They performed "What It Sounds Like" and "Golden," with critics praising their performance as a "golden peak" that reinforced BABYMONSTER's reputation as a performance powerhouse.<a href="#fn23" class="footnote-ref">23</a> In January 2025, Ahyeon embarked on BABYMONSTER's first world tour "Hello Monsters," which kicked off with two nights at Seoul's KSPO Dome. The tour would eventually draw 300,000 attendees across 32 dates, establishing the group as major arena-class performers barely a year after their debut.<a href="#fn24" class="footnote-ref">24</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Recognition and Future Aspirations</h3>
+                <p class="article-paragraph">
+                    Ahyeon's impact extends beyond performance metrics. Her social media posts consistently generate the highest engagement rates within BABYMONSTER's content, and her styling choices—favoring high-waisted jeans, crop tops, and oversized jackets in neutral tones with metallic accents—have influenced K-pop fashion trends among younger fans.<a href="#fn23" class="footnote-ref">23</a> She has appeared in fashion editorials for magazines including Nylon Korea and Dazed Korea, though she has not yet secured solo brand ambassador deals.<a href="#fn23" class="footnote-ref">23</a>
+                </p>
+                <p class="article-paragraph">
+                    In November 2025, Ahyeon made headlines when it was announced she would not take the 2026 College Scholastic Ability Test despite being in her senior year of high school.<a href="#fn25" class="footnote-ref">25</a> This decision reflected her full commitment to her idol career, particularly as BABYMONSTER's schedule intensified with their world tour and upcoming releases. On her personal Weverse account in December 2025, Ahyeon shared a vulnerable post stating "I need more confidence," revealing the pressures that accompany being labeled an all-rounder and consistently delivering high notes in demanding performances.<a href="#fn23" class="footnote-ref">23</a>
+                </p>
+                <p class="article-paragraph">
+                    Despite these pressures, industry recognition continues to accumulate. BABYMONSTER won Rookie Artist of the Year at the 39th Golden Disc Awards in 2025, with Ahyeon expressing that receiving their first award felt like "an unimaginable trophy" in her Weverse update on December 1, 2025.<a href="#fn23" class="footnote-ref">23</a> As publications like Rolling Stone Korea named BABYMONSTER among 2024's "Future of Music" artists and research firms like Sisa Journal and Gallup Korea designated them as "Next Generation Leaders," Ahyeon's individual trajectory as K-pop's next major solo artist seemed increasingly inevitable.<a href="#fn26" class="footnote-ref">26</a>
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">Sources</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://kpopartists.home.blog/2024/02/09/ahyeon-babymonster-profile-the-journey-of-a-rising-star/" target="_blank" rel="noopener">Kpop Artists: Ahyeon Profile</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://www.generasia.com/wiki/Ahyeon_(BABYMONSTER)" target="_blank" rel="noopener">Generasia: Ahyeon BABYMONSTER</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://kprofiles.com/ahyeon-babymonster-profile/" target="_blank" rel="noopener">Kpop Profiles: Ahyeon Profile</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://en.namu.wiki/w/아현" target="_blank" rel="noopener">NamuWiki: Ahyeon</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://www.koreaboo.com/news/babymonster-haram-ahyeon-hanlim-art-school-impress-academic-achievement/" target="_blank" rel="noopener">Koreaboo: BABYMONSTER Members Attend Hanlim Arts High School</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.youtube.com/watch?v=xw7Y2gviWbA" target="_blank" rel="noopener">YouTube: BABYMONSTER - AHYEON 'Dangerously' COVER</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://kbizoom.com/babymonster-ahyeon-proves-the-all-rounder-title-given-by-yg-with-her-explosive-singing-abilities-and-diverse-talents/" target="_blank" rel="noopener">KBIZoom: Ahyeon Proves All-Rounder Title</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://yg-life.com/archives/183365?lang=en" target="_blank" rel="noopener">YG Life: Charlie Puth Praises BABYMONSTER's Dangerously Cover</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://cms.yg-life.com/archives/183112?lang=en" target="_blank" rel="noopener">YG Life: BABYMONSTER's Excellent Team Work - Last Evaluation EP.7</a></span></div>
+                <div class="footnote-item" id="fn10"><span class="footnote-number">10</span><span class="footnote-text"><a href="https://www.nme.com/news/music/charlie-puth-gifted-babymonster-new-song-like-that-3602485" target="_blank" rel="noopener">NME: Charlie Puth Gifted BABYMONSTER Their New Song Like That</a></span></div>
+                <div class="footnote-item" id="fn11"><span class="footnote-number">11</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Babymonster" target="_blank" rel="noopener">Wikipedia: Babymonster</a></span></div>
+                <div class="footnote-item" id="fn12"><span class="footnote-number">12</span><span class="footnote-text"><a href="https://kpop.fandom.com/wiki/Ahyeon_(BABYMONSTER)" target="_blank" rel="noopener">Kpop Wiki: Ahyeon BABYMONSTER</a></span></div>
+                <div class="footnote-item" id="fn13"><span class="footnote-number">13</span><span class="footnote-text"><a href="https://kprofiles.com/babymonster-members-profile/" target="_blank" rel="noopener">Kpop Profiles: BABYMONSTER Members Profile</a></span></div>
+                <div class="footnote-item" id="fn14"><span class="footnote-number">14</span><span class="footnote-text"><a href="https://babymonster.blog/who-is-ahyeon-baby-monster-biography-personal-life-career-and-facts/" target="_blank" rel="noopener">BabyMonster Blog: Who is Ahyeon - Biography and Facts</a></span></div>
+                <div class="footnote-item" id="fn15"><span class="footnote-number">15</span><span class="footnote-text"><a href="https://www.soompi.com/article/1610149wpp/update-yg-entertainment-confirms-ahyeon-will-no-longer-debut-with-babymonster-due-to-health-reasons" target="_blank" rel="noopener">Soompi: YG Confirms Ahyeon Will Not Debut Due to Health Reasons</a></span></div>
+                <div class="footnote-item" id="fn16"><span class="footnote-number">16</span><span class="footnote-text"><a href="https://n.news.naver.com/entertain/article/109/0004945078" target="_blank" rel="noopener">Sports Donga via Naver: 베이비 몬스터 데뷔 초읽기</a></span></div>
+                <div class="footnote-item" id="fn17"><span class="footnote-number">17</span><span class="footnote-text"><a href="https://babymonster.fandom.com/wiki/Ahyeon" target="_blank" rel="noopener">BABYMONSTER Wiki: Ahyeon</a></span></div>
+                <div class="footnote-item" id="fn18"><span class="footnote-number">18</span><span class="footnote-text"><a href="https://www.soompi.com/article/1626726wpp/watch-babymonster-announces-ahyeons-return-drops-1st-comeback-teasers-for-stuck-in-the-middle" target="_blank" rel="noopener">Soompi: BABYMONSTER Announces Ahyeon's Return</a></span></div>
+                <div class="footnote-item" id="fn19"><span class="footnote-number">19</span><span class="footnote-text"><a href="https://www.soompi.com/article/1630093wpp/babymonster-announces-1st-mini-album-babymons7er" target="_blank" rel="noopener">Soompi: BABYMONSTER Announces 1st Mini Album BABYMONS7ER</a></span></div>
+                <div class="footnote-item" id="fn20"><span class="footnote-number">20</span><span class="footnote-text"><a href="https://omgidol.com/profiles/idols/ahyeon/" target="_blank" rel="noopener">OMG Idol: Ahyeon Profile and Career</a></span></div>
+                <div class="footnote-item" id="fn21"><span class="footnote-number">21</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Babymonster" target="_blank" rel="noopener">Wikipedia: Babymonster - BABYMONS7ER</a></span></div>
+                <div class="footnote-item" id="fn22"><span class="footnote-number">22</span><span class="footnote-text"><a href="https://www.ehco.ai/babymonster" target="_blank" rel="noopener">EHCO Timeline: BABYMONSTER</a></span></div>
+                <div class="footnote-item" id="fn23"><span class="footnote-number">23</span><span class="footnote-text"><a href="https://screenscore.digitalmama.id/en/idol/babymonster/ahyeon/" target="_blank" rel="noopener">Screen Score: Biografi Ahyeon Terlengkap</a></span></div>
+                <div class="footnote-item" id="fn24"><span class="footnote-number">24</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Hello_Monsters_World_Tour" target="_blank" rel="noopener">Wikipedia: Hello Monsters World Tour</a></span></div>
+                <div class="footnote-item" id="fn25"><span class="footnote-number">25</span><span class="footnote-text"><a href="https://kpop.fandom.com/wiki/Ahyeon_(BABYMONSTER)" target="_blank" rel="noopener">Kpop Wiki: Ahyeon - Education</a></span></div>
+                <div class="footnote-item" id="fn26"><span class="footnote-number">26</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Babymonster" target="_blank" rel="noopener">Wikipedia: Babymonster - Recognition</a></span></div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlighted');
+                    setTimeout(() => target.classList.remove('highlighted'), 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

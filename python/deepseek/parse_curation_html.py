@@ -150,9 +150,15 @@ class CurationParser:
                     # Make a copy to work with
                     fact_span_copy = BeautifulSoup(str(fact_span), 'html.parser').find('span')
 
-                    # Extract external link if present (before removing elements)
+                    # Extract external link and linked text if present (before removing elements)
                     link_elem = fact_span_copy.find('a')
-                    url = link_elem.get('href', '') if link_elem else None
+                    url = None
+                    link_text = None
+
+                    if link_elem:
+                        url = link_elem.get('href', '')
+                        # Extract the text inside the <a> tag
+                        link_text = link_elem.get_text(strip=True)
 
                     # Extract the badge if present
                     badge_elem = fact_span_copy.find('span', class_='fact-badge')
@@ -179,48 +185,73 @@ class CurationParser:
                         'badge': badge_type
                     }
 
-                    # Only add url field if it exists
+                    # Add url and linkText fields if they exist
                     if url:
                         fact_dict['url'] = url
+                    if link_text:
+                        fact_dict['linkText'] = link_text
 
                     facts.append(fact_dict)
 
         return facts
 
     def _extract_articles(self, soup: BeautifulSoup) -> List[Dict]:
-        """Extract all article sections with their paragraphs"""
+        """Extract all article sections with their paragraphs, preserving HTML formatting"""
         articles = []
         article_sections = soup.find_all('article', class_='article-section')
 
         for section in article_sections:
             title_elem = section.find('h3', class_='article-section-title')
-            title = title_elem.get_text(strip=True) if title_elem else ""
+
+            # Extract title, handling potential links in the title
+            if title_elem:
+                # Make a copy to preserve HTML
+                title_copy = BeautifulSoup(str(title_elem), 'html.parser').find('h3')
+                # Remove any footnote refs from title
+                for fn_link in title_copy.find_all('a', class_='footnote-ref'):
+                    fn_link.decompose()
+                title = title_copy.get_text(strip=True)
+            else:
+                title = ""
 
             paragraphs = []
             paragraph_elems = section.find_all('p', class_='article-paragraph')
 
             for para in paragraph_elems:
-                # Process the paragraph preserving footnote positions
-                # Replace footnote links with a special marker: [FN:X]
-                para_copy = BeautifulSoup(str(para), 'html.parser')
+                # Create a copy to work with
+                para_copy = BeautifulSoup(str(para), 'html.parser').find('p')
 
-                # Find all footnote links and replace them with markers
-                for link in para_copy.find_all('a', class_='footnote-ref'):
+                # Replace footnote links with [FN:X] markers for the text version
+                para_text_copy = BeautifulSoup(str(para), 'html.parser').find('p')
+                for link in para_text_copy.find_all('a', class_='footnote-ref'):
                     href = link.get('href', '')
-                    # Extract number from #fn1, #fn2, etc.
                     match = re.search(r'#fn(\d+)', href)
                     if match:
                         footnote_num = match.group(1)
-                        # Replace the link with a marker
                         link.replace_with(f'[FN:{footnote_num}]')
 
-                # Get the text with markers
-                text = para_copy.get_text()
-                # Clean up extra whitespace but preserve the markers
+                # Get plain text with footnote markers
+                text = para_text_copy.get_text(separator=' ', strip=True)
                 text = re.sub(r'\s+', ' ', text).strip()
 
+                # Create HTML version with formatting preserved
+                # Remove only footnote refs, keep all other HTML (links, formatting)
+                for link in para_copy.find_all('a', class_='footnote-ref'):
+                    href = link.get('href', '')
+                    match = re.search(r'#fn(\d+)', href)
+                    if match:
+                        footnote_num = match.group(1)
+                        # Replace with a span containing the footnote marker
+                        link.replace_with(f'[FN:{footnote_num}]')
+
+                # Get inner HTML, preserving all formatting tags
+                html_content = ''.join(str(child) for child in para_copy.children)
+                # Clean up extra whitespace
+                html_content = re.sub(r'\s+', ' ', html_content).strip()
+
                 paragraphs.append({
-                    'text': text
+                    'text': text,
+                    'html': html_content
                 })
 
             articles.append({
