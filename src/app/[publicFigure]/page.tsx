@@ -290,6 +290,23 @@ async function getCurationData(publicFigureId: string): Promise<CurationData | n
     }
 }
 
+// --- HELPER FUNCTIONS ---
+
+/**
+ * Count total number of events across all categories and subcategories
+ */
+function countTotalEvents(timelineData: TimelineContent['data']): number {
+    let total = 0;
+
+    Object.values(timelineData).forEach(mainCategory => {
+        Object.values(mainCategory.subCategories).forEach(events => {
+            total += events.length;
+        });
+    });
+
+    return total;
+}
+
 // --- WRAPPER COMPONENTS ---
 
 async function TimelineSection({
@@ -297,13 +314,15 @@ async function TimelineSection({
     uniqueArticleIds,
     figureId,
     figureName,
-    figureNameKr
+    figureNameKr,
+    totalEventCount
 }: {
     timelineContent: TimelineContent;
     uniqueArticleIds: string[];
     figureId: string;
     figureName: string;
     figureNameKr: string;
+    totalEventCount: number;
 }) {
     // Load ALL articles here - this component loads separately via Suspense
     const articles = await getArticlesByIds(uniqueArticleIds);
@@ -320,6 +339,7 @@ async function TimelineSection({
                 figureId={figureId}
                 figureName={figureName}
                 figureNameKr={figureNameKr}
+                totalEventCount={totalEventCount}
             />
         </div>
     );
@@ -560,16 +580,25 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
         const serializedApiResponse = JSON.parse(JSON.stringify(apiResponse));
         const serializedCurationData = curationData ? JSON.parse(JSON.stringify(curationData)) : null;
 
+        // Calculate total event count for tab ordering and display
+        const totalEventCount = countTotalEvents(apiResponse.timeline_content.data);
+
         // Build tabs array conditionally based on available data
-        // Order: Timeline (always first), Curation, Discography, Filmography
+        // Order Timeline and Curation based on event count:
+        // - If < 20 events: Curation first, then Timeline
+        // - If >= 20 events: Timeline first, then Curation
         const tabs = [];
 
-        // Timeline is always available and is the default tab
-        tabs.push({ id: 'timeline', label: 'Timeline' });
-
-        // Only add Curation tab if curation data is available
-        if (serializedCurationData) {
+        if (totalEventCount < 20 && serializedCurationData) {
+            // Curation first when there are few timeline events
             tabs.push({ id: 'curation', label: 'Curation' });
+            tabs.push({ id: 'timeline', label: 'Timeline' });
+        } else {
+            // Timeline first when there are many events (or no curation data)
+            tabs.push({ id: 'timeline', label: 'Timeline' });
+            if (serializedCurationData) {
+                tabs.push({ id: 'curation', label: 'Curation' });
+            }
         }
 
         // Only add Discography tab if figure has Spotify URL
@@ -604,7 +633,7 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                     {/* Tab Navigation and Content */}
                     <PublicFigureContent
                         tabs={tabs}
-                        activeTab="timeline"
+                        activeTab={tabs[0].id}
                     >
                         {{
                             curation: serializedCurationData ? (
@@ -637,6 +666,7 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
                                         figureId={serializedPublicFigure.id}
                                         figureName={serializedPublicFigure.name}
                                         figureNameKr={serializedPublicFigure.name_kr}
+                                        totalEventCount={totalEventCount}
                                     />
                                 </Suspense>
                             ),

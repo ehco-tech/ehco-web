@@ -23,6 +23,7 @@ interface CareerJourneyProps {
     figureId: string;
     figureName: string;
     figureNameKr: string;
+    totalEventCount: number;
 }
 
 // --- CONSTANTS ---
@@ -49,7 +50,8 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
     allArticleIds,
     figureId,
     figureName,
-    figureNameKr
+    figureNameKr,
+    totalEventCount
 }) => {
     const timelineData = apiResponse.data;
 
@@ -283,10 +285,7 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
         return total;
     };
 
-    const totalEventCount = availableCategories.reduce(
-        (total, cat) => total + getCategoryCount(cat),
-        0
-    );
+    // totalEventCount is now passed as a prop from the server
 
     // Get available subcategories for the active main category
     const availableSubCategories = useMemo(() => {

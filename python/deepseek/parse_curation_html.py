@@ -136,7 +136,7 @@ class CurationParser:
         return ""
 
     def _extract_quick_facts(self, soup: BeautifulSoup) -> List[Dict]:
-        """Extract all quick facts with their badges"""
+        """Extract all quick facts with their badges and optional external links"""
         facts = []
         fact_items = soup.find_all('div', class_='fact-item')
 
@@ -147,8 +147,15 @@ class CurationParser:
                 # Get the full text after the bullet
                 fact_span = text_elem.find_next_sibling('span')
                 if fact_span:
+                    # Make a copy to work with
+                    fact_span_copy = BeautifulSoup(str(fact_span), 'html.parser').find('span')
+
+                    # Extract external link if present (before removing elements)
+                    link_elem = fact_span_copy.find('a')
+                    url = link_elem.get('href', '') if link_elem else None
+
                     # Extract the badge if present
-                    badge_elem = fact_span.find('span', class_='fact-badge')
+                    badge_elem = fact_span_copy.find('span', class_='fact-badge')
                     badge_type = None
 
                     if badge_elem:
@@ -162,12 +169,21 @@ class CurationParser:
                         # Remove badge from text
                         badge_elem.decompose()
 
-                    fact_text = fact_span.get_text(strip=True)
+                    # Get text with proper spacing (separating elements with spaces)
+                    fact_text = fact_span_copy.get_text(separator=' ', strip=True)
+                    # Clean up multiple spaces
+                    fact_text = re.sub(r'\s+', ' ', fact_text)
 
-                    facts.append({
+                    fact_dict = {
                         'text': fact_text,
                         'badge': badge_type
-                    })
+                    }
+
+                    # Only add url field if it exists
+                    if url:
+                        fact_dict['url'] = url
+
+                    facts.append(fact_dict)
 
         return facts
 
