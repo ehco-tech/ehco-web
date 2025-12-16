@@ -6,6 +6,7 @@
 export interface QuickFact {
     text: string;
     badge: 'verified' | 'community' | 'self-reported' | null;
+    url?: string; // Optional external link for the fact
 }
 
 export interface CurationParagraph {
