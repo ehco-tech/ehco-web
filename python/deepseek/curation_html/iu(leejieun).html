@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IU(Lee Ji-eun) Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #6b7280; text-decoration: none; font-size: 0.875rem;
+            margin-bottom: 32px; transition: color 0.2s ease;
+        }
+        .back-link:hover { color: #D10041; }
+        .back-link svg { width: 16px; height: 16px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 800px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .footnote-item.highlighted { background: rgba(209, 0, 65, 0.05); border-radius: 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+        @media (max-width: 640px) {
+            .main-content { padding: 24px 16px 60px; }
+            .page-title { font-size: 1.75rem; }
+            .quick-facts-header { padding: 16px 18px; }
+            .quick-facts-content { padding: 0 18px 18px; }
+            .fact-item { padding: 10px 12px; font-size: 0.875rem; }
+            .article-paragraph { font-size: 0.95rem; }
+            .bottom-nav { flex-direction: column; gap: 12px; }
+            .nav-button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        
+        <div class="page-header">
+            <h1 class="page-title">IU(Lee Ji-eun) Wiki</h1>
+            <p class="page-subtitle">아이유 (이지은)</p>
+        </div>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">📋</span>
+                    Quick Facts
+                    <span class="quick-facts-count">42 facts</span>
+                </div>
+                <span class="collapse-icon">▲</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Real name is Lee Ji-eun (이지은), stage name "IU" stands for "I and You"<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Debuted on September 18, 2008 at age 15 under LOEN Entertainment<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Born May 16, 1993 in Seoul, South Korea<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Official fan club name is "UAENA" (combines "U" from IU + "ae" (love) + "na" (I))<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Currently managed by EDAM Entertainment (since 2020)<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Official colors are Neon Magenta and Pearl Gold<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Ranked 15th on Billboard's "21 Under 21: Music's Hottest Minors" list in 2012<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Her song "You and I" held the top spot on Billboard K-Pop Hot 100 for nearly a year in 2011<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Known for self-writing and producing her own music since 2015's "CHAT-SHIRE"<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Has won over 186 awards throughout her career<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Known for her distinctive vocal color often described as "honey voice"<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Her collaboration "People Pt.2" with BTS's Suga topped iTunes charts in 87 countries<span class="fact-badge verified">✓ Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite number is 3 (her birthday is the 16th: 1+6=7, 7-4(month before May)=3)<span class="fact-badge self-reported">Self-reported</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Close friends with Suzy, Yoo In-na, and actress Shin Se-kyung<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>First K-pop soloist to hold a concert at Olympic Stadium Seoul (2019)<span class="fact-badge verified">✓ Verified</span></span></div>
+                </div>
+                <button class="show-more-facts" id="showMoreBtn" onclick="showMoreFacts()">Show 27 more facts <span>▼</span></button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">EHCO Curated <span class="ehco-badge">Editorial</span></h2>
+                <p class="curated-subtitle">Last edited: December 15, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">From Child Prodigy to Chart Dominator</h3>
+                <p class="article-paragraph">
+                    IU's debut on September 18, 2008 marked the beginning of one of K-pop's most remarkable careers. Despite early struggles—her debut single "Lost and Found" failed to chart—she persevered through what she later described as the most difficult period of her life.<a href="#fn1" class="footnote-ref">1</a> By 2010, her duet "Nagging" with 2AM's Seulong became a turning point, ranking second in Gaon Chart's 2010 online sales with over 760 million points.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+                <p class="article-paragraph">
+                    Her breakthrough continued with "You and I" in 2011, which topped the newly established Billboard K-Pop Hot 100 chart<a href="#fn1" class="footnote-ref">1</a>—an unprecedented achievement for a soloist. This dominance caught international attention: in September 2012, Billboard recognized her as the 15th entry on their "21 Under 21: Music's Hottest Minors" list, praising her "unique charm and undeniable hits."<a href="#fn2" class="footnote-ref">2</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Self-Producing Era</h3>
+                <p class="article-paragraph">
+                    After a 17-month hiatus, IU returned in October 2015 with "CHAT-SHIRE"—a pivotal release that announced her evolution from performer to producer. The EP, with all tracks co-written by IU herself, debuted at the top of local charts.<a href="#fn1" class="footnote-ref">1</a> Her 2017 album "Palette" cemented this transformation, featuring the chart-dominating "Through the Night" which secured second place on Gaon's 2017 Digital General Top 100 Chart.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Unprecedented Chart Reign</h3>
+                <p class="article-paragraph">
+                    The 2020s showcased IU's unmatched ability to dominate charts across formats. In May 2020, her collaboration with BTS's Suga, "Eight," achieved global chart success. The music video recorded more than 12 million YouTube views in less than a day after its release.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+                <p class="article-paragraph">
+                    Her 2021 album "LILAC" represented her first solo full-length release since "Palette." She placed 16 songs in the top 100 on major music charts, including all 10 tracks of the new album.<a href="#fn4" class="footnote-ref">4</a> The pre-release track "Celebrity" topped multiple streaming charts, with "Hold My Hand" from 2011 even re-entering at No. 7—a testament to her deep catalog appeal.<a href="#fn4" class="footnote-ref">4</a>
+                </p>
+                <p class="article-paragraph">
+                    In 2024, IU made her triumphant return with her sixth EP "The Winning," featuring the pre-release single "Love Wins All" which swiftly ascended to the top of Melon's Top 100 chart within an hour of release.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Acting: From Drama Darling to Cannes</h3>
+                <p class="article-paragraph">
+                    IU's acting career began alongside her music in 2011 with "Dream High." But it was 2018's "My Mister" that marked her transformation into a serious actress. The tvN drama premiered with the second highest rating of tvN's Wednesday-Thursday lineup<a href="#fn6" class="footnote-ref">6</a>, and despite initial controversy over its premise, concluded with its highest ratings and critical acclaim, topping the weekly TV chart with a CPI score of 249.5.<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    In 2022, she made her commercial film debut in Hirokazu Kore-eda's "Broker," premiering at the Cannes Film Festival where co-star Song Kang-ho thanked her in his Best Actor acceptance speech.<a href="#fn1" class="footnote-ref">1</a> Most recently, her Netflix series "When Life Gives You Tangerines" (March 2025), which reunited her with "My Mister" director Kim Won-suk, received widespread praise and won Best Drama at the 61st Baeksang Arts Awards.<a href="#fn8" class="footnote-ref">8</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Record-Breaking World Tour</h3>
+                <p class="article-paragraph">
+                    IU's world tour "H.E.R.," held from March to September 2024, set a remarkable record as the most-attended world tour by a Korean female soloist, drawing 520,000 fans across Asia, Europe and North America.<a href="#fn9" class="footnote-ref">9</a> In May 2025, she announced her return to music with "Flower Bookmark 3," continuing her signature cover album series nearly eight years after its last installment.<a href="#fn9" class="footnote-ref">9</a>
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">Sources</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://www.ehco.ai/iu(leejieun)" target="_blank" rel="noopener">EHCO Timeline: IU(Lee Ji-eun)</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/10371927" target="_blank" rel="noopener">Korea Herald (Yonhap): IU on Billboard's top 21 list</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://www.koreatimes.co.kr/www/art/2020/05/732_289127.html" target="_blank" rel="noopener">Korea Times (Yonhap): IU, Suga's 'Eight' becomes chart sensation</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/2590030" target="_blank" rel="noopener">Korea Herald (Yonhap): IU dominates music charts with new, old songs</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://www.koreatimes.co.kr/www/art/2024/01/398_367842.html" target="_blank" rel="noopener">Korea Times (Yonhap): IU to release new album next month</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/1622454" target="_blank" rel="noopener">Korea Herald: #My Mister #IU trending</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://kpopherald.koreaherald.com/view.php?ud=201805291338471301961_2" target="_blank" rel="noopener">K-POP Herald (Yonhap): 'My Mister' tops weekly TV chart</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/10434248" target="_blank" rel="noopener">Korea Herald: 'When Life Gives You Tangerines' explores love, life</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/10488151" target="_blank" rel="noopener">Korea Herald: IU to return with cover album 'Flower Bookmark 3'</a></span></div>
+            </div>
+        </section>
+
+
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load 27 more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlighted');
+                    setTimeout(() => target.classList.remove('highlighted'), 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

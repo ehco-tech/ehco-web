@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharita (BABYMONSTER) Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #6b7280; text-decoration: none; font-size: 0.875rem;
+            margin-bottom: 32px; transition: color 0.2s ease;
+        }
+        .back-link:hover { color: #D10041; }
+        .back-link svg { width: 16px; height: 16px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 800px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .footnote-item.highlighted { background: rgba(209, 0, 65, 0.05); border-radius: 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+        @media (max-width: 640px) {
+            .main-content { padding: 24px 16px 60px; }
+            .page-title { font-size: 1.75rem; }
+            .quick-facts-header { padding: 16px 18px; }
+            .quick-facts-content { padding: 0 18px 18px; }
+            .fact-item { padding: 10px 12px; font-size: 0.875rem; }
+            .article-paragraph { font-size: 0.95rem; }
+            .bottom-nav { flex-direction: column; gap: 12px; }
+            .nav-button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+
+        <header class="page-header">
+            <h1 class="page-title">Pharita Chaikong Wiki</h1>
+            <p class="page-subtitle">ภาริตา ไชยคง • BABYMONSTER Lead Vocalist & Visual</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🦒</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">23 facts</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Born August 26, 2005, in Bangkok, Thailand<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Birth name: Pharita Boonpakdeethaveeyod (ภริตา บุญภักดีทวียศ)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Lead vocalist, visual, and English spokesperson of BABYMONSTER<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Blood type A, MBTI: INTP, Zodiac: Virgo<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Representative emoji: 🦒 (giraffe), nickname: "Look Pear" (Nong Prae)<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Third Thai idol to debut under YG Entertainment (after <a href="https://www.ehco.ai/lisa" target="_blank" rel="noopener noreferrer">Lisa</a> and Chiquita)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Trained for 4 years at YG Entertainment (2020-2024)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Sixth member revealed on February 2, 2023<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Ranked #5 in final BABYMONSTER debut announcement<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Attended Ruamrudee International School in Bangkok<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Former child model, won Teen Model Thailand 2018 at age 13<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Won Grand Prize at Inter Model Thailand<span class="fact-badge community">Fan Community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Auditioned with BLACKPINK's "How You Like That"<span class="fact-badge community">Fan Community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Contestant on Idol Paradise survival show under name "Pear" (GI3218)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Only left-handed member of BABYMONSTER<span class="fact-badge community">Fan Community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Mentioned <u>indirectly</u> by <a href="https://www.ehco.ai/lisa" target="_blank" rel="noopener noreferrer">Lisa</a> in Rolling Stone interview<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite animals: Giraffes and birds<span class="fact-badge community">Fan Community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite Sanrio character: Cinnamoroll<span class="fact-badge community">Fan Community</span></span></div>
+                </div>
+                <button class="show-more-facts" onclick="showMoreFacts()">
+                    Show More Facts
+                    <span>→</span>
+                </button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">
+                    EHCO Curated
+                    <span class="ehco-badge">EDITORIAL</span>
+                </h2>
+                <p class="curated-subtitle">Last edited: December 15, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">From Child Model to K-Pop Trainee</h3>
+                <p class="article-paragraph">
+                    Pharita Boonpakdeethaveeyod was born on August 26, 2005, in Bangkok, Thailand, into a business-oriented family. Her mother runs a local flower shop, while her father works in the finance sector.<a href="#fn1" class="footnote-ref">1</a> Growing up in Bangkok's international community, Pharita attended Ruamrudee International School, one of Thailand's most prestigious educational institutions known for producing top students and sending dozens to medical schools annually.<a href="#fn2" class="footnote-ref">2</a>
+                </p>
+                <p class="article-paragraph">
+                    Before pursuing K-pop, Pharita established herself as a successful child model in Thailand. At just 13 years old in 2018, she won the title of Teen Model Thailand, along with victories at Talent Kids & Teen 2018 and Asia Junior Fashion Runway 2018.<a href="#fn3" class="footnote-ref">3</a> Her modeling achievements extended internationally—she secured the Grand Prize and Champion title at the 2019 International Fashion Exhibition in China, earned a silver medal at the 2019 Asia Pacific Arts Festival, and even claimed the Junior Street Dance Champion title at the Idol World Dance Cup in South Korea.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+                <p class="article-paragraph">
+                    On February 29, 2020, Pharita was introduced as contestant GI3218 on the Thai survival show "Idol Paradise."<a href="#fn4" class="footnote-ref">4</a> However, she departed the program before it officially aired—a decision that would prove pivotal. In July 2020, at age 14, Pharita auditioned for YG Entertainment's global auditions, performing BLACKPINK's "How You Like That."<a href="#fn5" class="footnote-ref">5</a> Her audition stood out dramatically: she was selected from an astonishing 1,226 applicants, representing one of the most competitive acceptance rates in K-pop trainee recruitment.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Disney Visuals and Four Years of Training</h3>
+                <p class="article-paragraph">
+                    After passing the audition, Pharita made the bold decision to leave her family in Thailand and move to South Korea alone to pursue her dreams as a YG Entertainment trainee.<a href="#fn5" class="footnote-ref">5</a> Her training period would span four years—from 2020 to 2024—during which she developed her vocal abilities, dance skills, and Korean language proficiency.
+                </p>
+                <p class="article-paragraph">
+                    On February 13, 2023, YG Entertainment released Pharita's introduction video, titled "<a href="https://www.ehco.ai/babymonster" target="_blank" rel="noopener noreferrer">BABYMONSTER</a> – Introducing PHARITA," making her the second member to receive a dedicated feature after Ruka.<a href="#fn7" class="footnote-ref">7</a> The video showcased her covering songs including "What Other People Say" by Sam Fischer and Demi Lovato, "Congratulations" by Demi Lovato, and "Believer" by Imagine Dragons, while also highlighting her modeling background and guitar-playing ability.<a href="#fn8" class="footnote-ref">8</a>
+                </p>
+                <p class="article-paragraph">
+                    Yang Hyun-suk, YG Entertainment's founder and executive producer, made a memorable observation about Pharita's appearance, stating that she looked like "she came straight out of a Disney movie" due to her photogenic qualities and unrivaled visuals.<a href="#fn7" class="footnote-ref">7</a> In the introduction video, Yang expressed both concern and optimism: "I felt really sorry and was worried about PHARITA because she had to leave her family behind and come to this foreign country, but she's started to gain confidence these days and has been smiling a lot. Once she gets used to the country more, she'll spread her wings widely."<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The "All of Me" Performance</h3>
+                <p class="article-paragraph">
+                    During the "Last Evaluation" series that determined <a href="https://www.ehco.ai/babymonster" target="_blank" rel="noopener noreferrer">BABYMONSTER</a>'s final lineup, Pharita delivered a standout solo performance covering John Legend's "All of Me." The clean version of her performance was uploaded to BABYMONSTER's official YouTube channel on April 8, 2023, following Episode 5 of the series.<a href="#fn9" class="footnote-ref">9</a> Her rendition showcased her dreamy, pure vocal tone and emotional expressiveness that captivated audiences despite her young age.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+                <p class="article-paragraph">
+                    YG Entertainment's main producer Choi Hyun-suk praised Pharita's breath control and ability to maintain a stable tone, describing her performance as "consistent" during the vocal evaluation aired on Last Evaluation.<a href="#fn13" class="footnote-ref">13</a> Her vocal technique demonstrated her capability to hit deep low notes while effortlessly reaching high notes throughout the chorus—a versatility unusual for someone born in 2005.<a href="#fn3" class="footnote-ref">3</a> Within BABYMONSTER's lineup, Pharita specializes in hooks and high notes, possessing a high, resonant, and bright vocal tone that complements the group's overall sound.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Debut and <a href="https://www.ehco.ai/lisa" target="_blank" rel="noopener noreferrer">Lisa</a>'s Blessing</h3>
+                <p class="article-paragraph">
+                    On May 11, 2023, BABYMONSTER's final seven-member lineup was announced, with Pharita ranking fifth in the evaluation results.<a href="#fn5" class="footnote-ref">5</a> This achievement made her the third Thai idol to debut under YG Entertainment, following BLACKPINK's Lisa and her fellow BABYMONSTER member Chiquita.<a href="#fn10" class="footnote-ref">10</a>
+                </p>
+                <p class="article-paragraph">
+                    The connection between Pharita and <a href="https://www.ehco.ai/lisa" target="_blank" rel="noopener noreferrer">Lisa</a> extended beyond simply being labelmates. <a href="https://www.ehco.ai/lisa" target="_blank" rel="noopener noreferrer">Lisa</a> appeared in Pharita's introduction video and, along with Chiquita, dined with Lisa at a Thai restaurant where the BLACKPINK member gave them her signed CDs.<a href="#fn5" class="footnote-ref">5</a> More significantly, Lisa although did not mention Pharita's name but provding a hint saying "There is a Thai trainee that reminds me of when I was young. I’m trying to take care of her" in a Rolling Stone interview, providing a public endorsement that carried substantial weight in the K-pop industry.<a href="#fn12" class="footnote-ref">12</a> Pharita has consistently cited BLACKPINK, and Lisa specifically, as her role models, expressing her wish to follow in Lisa's footsteps one day.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    BABYMONSTER debuted as a six-member group on November 27, 2023, with the digital single "Batter Up," as member Ahyeon took a health hiatus.<a href="#fn11" class="footnote-ref">11</a> On April 1, 2024, the group officially debuted as a complete seven-member ensemble with their first mini-album "BABYMONS7ER."<a href="#fn11" class="footnote-ref">11</a> The EP received over 460,000 pre-orders and debuted at number three on the Circle Album Chart, with title track "SHEESH" eventually peaking at number ten on the Circle Digital Chart.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Rising Recognition and Challenges</h3>
+                <p class="article-paragraph">
+                    Throughout 2024, Pharita's live vocal performances on music shows like M Countdown and Inkigayo drew attention from Korean media outlets including OSEN, Newsen, and Star News, which praised her stable high notes and breath control during demanding choreography. Her multilingual abilities—fluency in Thai and English, with near-fluency in Korean achieved in just over two years of training—positioned her as BABYMONSTER's English spokesperson and international representative.
+                </p>
+                <p class="article-paragraph">
+                    However, Pharita's journey wasn't without obstacles. In March 2023, when <a href="https://www.ehco.ai/babymonster" target="_blank" rel="noopener noreferrer">BABYMONSTER</a>'s official lineup was announced, she faced criticism on Korean online forums regarding visual standards and her suitability for debut, with some viewers questioning her aura for a vocal position.<a href="#fn1" class="footnote-ref">1</a> During the group's promotional tour in Japan in May-June 2024, she suffered a minor wrist injury that required modifications to her choreography in certain performances.<a href="#fn1" class="footnote-ref">1</a> Despite these challenges, <u>most likely</u> due to her stable live performances gradually dispelled initial skepticism, earning growing recognition for her vocal prowess.
+                </p>
+                <p class="article-paragraph">
+                    As <a href="https://www.ehco.ai/babymonster" target="_blank" rel="noopener noreferrer">BABYMONSTER</a> released their first full studio album "<a href="https://www.ehco.ai/babymonster#discography" target="_blank" rel="noopener noreferrer">DRIP</a>" on November 1, 2024, and their second EP "We Go Up" on October 10, 2025, Pharita continued establishing herself as <u>one of the crucial</u> vocal pillar of the group. Her journey from Bangkok's modeling circuits to becoming one-in-1,226 at YG Entertainment exemplifies the competitive nature of K-pop and the dedication required to succeed in one of the industry's most demanding companies.
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">Sources</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://omgidol.com/profiles/idols/pharita/" target="_blank" rel="noopener">OMG Idol: Pharita (BABYMONSTER) Profile & Career</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://en.namu.wiki/w/파리타" target="_blank" rel="noopener">NamuWiki: Pharita</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://kbizoom.com/babymonster-pharita-profile-height-age-facts-updated/" target="_blank" rel="noopener">KBIZoom: BABYMONSTER Pharita Profile & Facts</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://kpop.fandom.com/wiki/Pharita" target="_blank" rel="noopener">Kpop Wiki: Pharita</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://kprofiles.com/pharita-babymonster-profile/" target="_blank" rel="noopener">Kpop Profiles: Pharita (BABYMONSTER) Profile</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Babymonster" target="_blank" rel="noopener">Wikipedia: Babymonster</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://yg-life.com/archives/181492?lang=en" target="_blank" rel="noopener">YG Life: Introduction Video of BABYMONSTER PHARITA Unveiled</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://babymonster.fandom.com/wiki/Pharita" target="_blank" rel="noopener">BABYMONSTER Wiki: Pharita</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://www.youtube.com/watch?v=c_TJXVZbL30" target="_blank" rel="noopener">Youtube: BABYMONSTER - PHARITA 'All Of Me' COVER (Clean Ver.)</a></span></div>
+                <div class="footnote-item" id="fn10"><span class="footnote-number">10</span><span class="footnote-text"><a href="https://kpopping.com/profiles/idol/Pharita" target="_blank" rel="noopener">Kpopping: Pharita (BABYMONSTER) profile</a></span></div>
+                <div class="footnote-item" id="fn11"><span class="footnote-number">11</span><span class="footnote-text"><a href="https://kprofiles.com/babymonster-members-profile/" target="_blank" rel="noopener">Kpop Profiles: BABYMONSTER Members Profile</a></span></div>
+                <div class="footnote-item" id="fn12"><span class="footnote-number">12</span><span class="footnote-text"><a href="https://www.rollingstone.com/music/music-features/blackpink-lisa-new-music-solo-1356338/" target="_blank" rel="noopener">RollingStone: Blackpink’s Lisa on Her Big Ambitions — and Why Going Solo Made Her Nervous</a></span></div>
+                <div class="footnote-item" id="fn13"><span class="footnote-number">13</span><span class="footnote-text"><a href="https://www.youtube.com/watch?v=4pcmRcjMhvc" target="_blank" rel="noopener">Youtube: BABYMONSTER - 'Last Evaluation' EP.2</a></span></div>
+                
+            </div>
+        </section>
+
+
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlighted');
+                    setTimeout(() => target.classList.remove('highlighted'), 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

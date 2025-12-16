@@ -9,12 +9,12 @@ interface CuratedArticleProps {
 
 export default function CuratedArticle({ article, onFootnoteClick }: CuratedArticleProps) {
     /**
-     * Parse text with inline footnote markers and render them as clickable buttons
-     * Text format: "Some text[FN:1] more text[FN:2]"
+     * Parse HTML with inline footnote markers and render them as clickable buttons
+     * HTML format: "Some text[FN:1] <a href='...'>link</a> more text[FN:2]"
      */
-    const renderParagraphWithFootnotes = (text: string) => {
-        // Split text by footnote markers: [FN:X]
-        const parts = text.split(/(\[FN:\d+\])/);
+    const renderParagraphWithFootnotes = (html: string) => {
+        // Split HTML by footnote markers: [FN:X]
+        const parts = html.split(/(\[FN:\d+\])/);
 
         return (
             <>
@@ -36,8 +36,14 @@ export default function CuratedArticle({ article, onFootnoteClick }: CuratedArti
                         );
                     }
 
-                    // Regular text
-                    return <span key={`text-${index}`}>{part}</span>;
+                    // HTML content with formatting - render safely
+                    return (
+                        <span
+                            key={`html-${index}`}
+                            dangerouslySetInnerHTML={{ __html: part }}
+                            className="[&_a]:text-key-color dark:[&_a]:text-key-color-dark [&_a:hover]:underline [&_a]:transition-colors [&_u]:underline [&_strong]:font-semibold [&_em]:italic"
+                        />
+                    );
                 })}
             </>
         );
@@ -54,7 +60,7 @@ export default function CuratedArticle({ article, onFootnoteClick }: CuratedArti
                         key={index}
                         className="text-base text-gray-600 dark:text-gray-300 leading-relaxed"
                     >
-                        {renderParagraphWithFootnotes(paragraph.text)}
+                        {renderParagraphWithFootnotes(paragraph.html || paragraph.text)}
                     </p>
                 ))}
             </div>
