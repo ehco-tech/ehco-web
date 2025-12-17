@@ -70,36 +70,36 @@ const ReportModal: React.FC<{
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-end sm:items-center justify-center p-4" onClick={handleBackdropClick}>
-      <div className="bg-white rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 sm:p-6 max-w-md w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Report Issue</h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Report Issue</h3>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             disabled={isSubmitting}
           >
-            <X size={20} className="text-gray-500" />
+            <X size={20} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>
 
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-600">
+        <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             <span className="font-medium">Figure:</span> {figureName}
           </p>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             <span className="font-medium">Event:</span> {eventTitle}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               What type of issue are you reporting? *
             </label>
             <select
               value={reportType}
               onChange={(e) => setReportType(e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+              className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
               required
               disabled={isSubmitting}
             >
@@ -113,35 +113,35 @@ const ReportModal: React.FC<{
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Please describe the issue in detail *
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Please provide specific details about the issue you found..."
-              className="w-full h-[10vh] p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
+              className="w-full h-[10vh] p-2 sm:p-3 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 resize-none"
               rows={4}
               required
               disabled={isSubmitting}
               maxLength={1000}
             />
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {description.length}/1000 characters
             </div>
           </div>
 
           <div>
             {isLoggedIn ? (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                 <div className="flex items-start gap-2">
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <div className="w-5 h-5 rounded-full bg-blue-500 dark:bg-blue-600 flex items-center justify-center flex-shrink-0 mt-0.5">
                     <div className="w-2 h-1 bg-white transform rotate-45 origin-bottom"></div>
                     <div className="w-1 h-3 bg-white transform -rotate-45 origin-bottom -ml-1"></div>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-blue-800">Follow-up notifications</p>
-                    <p className="text-sm text-blue-700 mt-1">
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Follow-up notifications</p>
+                    <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">
                       {/* 3. Escaped apostrophe */}
                       If we need additional information about your report, we&apos;ll send an email to{' '}
                       <span className="font-medium">{userEmail || 'your registered email'}</span>
@@ -151,7 +151,7 @@ const ReportModal: React.FC<{
               </div>
             ) : (
               <>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Contact Email (Optional)
                 </label>
                 <input
@@ -159,10 +159,10 @@ const ReportModal: React.FC<{
                   value={contactEmail}
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="your.email@example.com"
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
                   disabled={isSubmitting}
                 />
-                <div className="text-xs text-gray-500 mt-1">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                   {/* 4. Escaped apostrophe */}
                   Leave your email if you&apos;d like us to follow up with you
                 </div>
@@ -175,14 +175,14 @@ const ReportModal: React.FC<{
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !reportType || !description.trim()}
-              className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-4 py-2 bg-red-500 dark:bg-red-600 text-white rounded-lg hover:bg-red-600 dark:hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -206,22 +206,22 @@ const ReportModal: React.FC<{
 // Success Modal Component
 const SuccessModal: React.FC<{ onClose: () => void }> = ({ onClose }) => (
   <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full">
       <div className="text-center">
-        <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+        <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-6 h-6 bg-green-500 dark:bg-green-600 rounded-full flex items-center justify-center">
             <div className="w-2 h-1 bg-white transform rotate-45 origin-bottom"></div>
             <div className="w-1 h-3 bg-white transform -rotate-45 origin-bottom -ml-1"></div>
           </div>
         </div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Report Submitted</h3>
-        <p className="text-gray-600 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Report Submitted</h3>
+        <p className="text-gray-600 dark:text-gray-300 mb-6">
           {/* 5. Escaped apostrophe */}
           Thank you for your feedback! We&apos;ll review your report and take appropriate action.
         </p>
         <button
           onClick={onClose}
-          className="w-full bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
+          className="w-full bg-green-500 dark:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 dark:hover:bg-green-700 transition-colors"
         >
           Close
         </button>
