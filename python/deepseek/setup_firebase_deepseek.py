@@ -26,7 +26,8 @@ class NewsManager:
             base_url="https://api.deepseek.com"
         )
         self.model = "deepseek-chat"
-        
+        # self.model = "deepseek-reasoner"
+
         print("✓ DeepSeek ASYNC client initialized successfully")
         
     def setup_firebase(self):

@@ -14,12 +14,13 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
     def __init__(self, predefined_names=None, csv_filepath="k_celebrities_master.csv"):
         """
         Initialize the predefined public figure extractor.
-        
+
         Args:
             predefined_names (list, optional): List of public figure names to look for.
                                             If None, loads names from CSV file.
             csv_filepath (str, optional): Path to the CSV file containing predefined figures.
                                         Only used if predefined_names is None.
+                                        Default is "k_celebrities_master.csv" in the current directory.
         """
         super().__init__()
         self.predefined_names = predefined_names or []
@@ -28,6 +29,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         # Define group hierarchies - parent group -> list of sub-groups
         self.group_hierarchies = {
             "NCT": ["NCT 127", "NCT Dream", "NCT Wish", "WayV"],
+            "TREASURE": ["T5"],
             # You can add more hierarchies here if needed
             # "SEVENTEEN": ["SEVENTEEN Hip-hop Team", "SEVENTEEN Vocal Team", "SEVENTEEN Performance Team"],
         }
@@ -80,15 +82,28 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         return list(expanded_figures)
     
     
-    def _load_predefined_names_from_csv(self, csv_filepath="./python/deepseek/k_celebrities_master.csv"):
+    def _load_default_predefined_names(self):
+        """
+        Return a default hardcoded list of public figure names as a fallback.
+
+        Returns:
+            list: Default list of public figure names
+        """
+        # This is a minimal fallback list - you can expand this as needed
+        return [
+            "BTS", "BLACKPINK", "IU", "Seventeen", "NewJeans",
+            "aespa", "TWICE", "Stray Kids", "NCT", "EXO"
+        ]
+
+    def _load_predefined_names_from_csv(self, csv_filepath="k_celebrities_master.csv"):
         """
         Load predefined public figure names from a CSV file.
-        
+
         The CSV file should have columns: Name, Occupation, Type, Nationality
-        
+
         Args:
             csv_filepath (str): Path to the CSV file containing public figure data
-            
+
         Returns:
             tuple: (names_list, names_data_dict) where:
                 - names_list is a simple list of all names
@@ -97,7 +112,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         try:
             predefined_names = []
             predefined_data = {}  # Store all celebrity data for easier access
-            
+
             if not os.path.exists(csv_filepath):
                 print(f"CSV file not found: {csv_filepath}")
                 print(f"Current working directory: {os.getcwd()}")
