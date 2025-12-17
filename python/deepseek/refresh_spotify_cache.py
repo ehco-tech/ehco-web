@@ -85,13 +85,28 @@ class SpotifyRefresher:
             if response.status_code == 200:
                 return response
 
-            # Rate limit hit
+            # Rate limit hit - stop script and inform user
             if response.status_code == 429:
-                retry_after = int(response.headers.get('Retry-After', 5))
-                wait_time = max(retry_after, 2 ** attempt)  # Exponential backoff
-                print(f"  ⏳ Rate limit hit. Waiting {wait_time} seconds before retry {attempt + 1}/{max_retries}...")
-                time.sleep(wait_time)
-                continue
+                retry_after = int(response.headers.get('Retry-After', 60))
+                minutes = retry_after // 60
+                seconds = retry_after % 60
+
+                print(f"\n{'=' * 60}")
+                print(f"🛑 SPOTIFY API RATE LIMIT REACHED")
+                print(f"{'=' * 60}")
+                print(f"⏰ You need to wait: {retry_after} seconds", end='')
+                if minutes > 0:
+                    print(f" ({minutes} minute{'s' if minutes != 1 else ''} {seconds} second{'s' if seconds != 1 else ''})")
+                else:
+                    print()
+                print(f"⏰ Wait until approximately: {datetime.fromtimestamp(time.time() + retry_after).strftime('%I:%M:%S %p')}")
+                print(f"\n💡 The script has been stopped. You can resume later using:")
+                print(f"   --start-id <current_figure_id>")
+                print(f"   or --start-index <current_index>")
+                print(f"{'=' * 60}\n")
+
+                # Raise exception to stop the script
+                raise Exception(f"Rate limit reached. Please wait {retry_after} seconds before making more API calls.")
 
             # Other errors
             print(f"  ⚠️ Warning: API request failed with status {response.status_code}")
