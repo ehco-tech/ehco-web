@@ -3,20 +3,70 @@
 
 import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Star } from 'lucide-react';
+import { Star, X, LogIn } from 'lucide-react';
 import type { PublicFigure } from '@/app/[publicFigure]/page';
 import { useAuth } from '@/context/AuthContext';
 import { addToFavorites, removeFromFavorites, isInFavorites } from '@/lib/favorites-service';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 
 interface HeroSectionProps {
     publicFigure: PublicFigure;
 }
 
+// Login Prompt Modal Component
+const LoginPromptModal: React.FC<{ onClose: () => void; onLogin: () => void; onSignup: () => void }> = ({
+    onClose,
+    onLogin,
+    onSignup
+}) => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={onClose}>
+        <div className="bg-white rounded-lg p-6 max-w-sm w-full relative" onClick={(e) => e.stopPropagation()}>
+            <button
+                onClick={onClose}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close modal"
+            >
+                <X size={24} />
+            </button>
+            <div className="text-center">
+                <Star className="mx-auto mb-4 text-blue-500" size={48} />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Add to Favorites</h3>
+                <p className="text-gray-600 mb-6">Sign in or create an account to add this figure to your favorites.</p>
+
+                <div className="space-y-3">
+                    <button
+                        onClick={onLogin}
+                        className="w-full bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <LogIn size={18} />
+                        Sign In
+                    </button>
+
+                    <button
+                        onClick={onSignup}
+                        className="w-full bg-gray-100 text-gray-800 font-semibold py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        Create Account
+                    </button>
+
+                    <button
+                        onClick={onClose}
+                        className="w-full text-gray-500 text-sm hover:text-gray-700 transition-colors"
+                    >
+                        Maybe later
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
 export default function HeroSection({ publicFigure }: HeroSectionProps) {
     const [showAllMembers, setShowAllMembers] = useState(false);
     const [isFavorited, setIsFavorited] = useState(false);
     const [isLoadingFavorite, setIsLoadingFavorite] = useState(true);
+    const [showSignInModal, setShowSignInModal] = useState(false);
     const { user } = useAuth();
     const router = useRouter();
 
@@ -40,8 +90,8 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
     // Handle favorite toggle
     const handleFavoriteToggle = async () => {
         if (!user) {
-            // Redirect to login if not authenticated
-            router.push('/login');
+            // Show sign-in modal instead of redirecting
+            setShowSignInModal(true);
             return;
         }
 
@@ -61,6 +111,20 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         } catch (error) {
             console.error('Error toggling favorite:', error);
         }
+    };
+
+    // Handle login redirect
+    const handleLoginRedirect = () => {
+        sessionStorage.setItem('redirectPath', window.location.pathname);
+        setShowSignInModal(false);
+        router.push('/login');
+    };
+
+    // Handle signup redirect
+    const handleSignupRedirect = () => {
+        sessionStorage.setItem('redirectPath', window.location.pathname);
+        setShowSignInModal(false);
+        router.push('/signup');
     };
 
     // console.log(publicFigure.officialColors);
@@ -379,6 +443,16 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
                     )}
                 </div>
             </div>
+
+            {/* Login Prompt Modal */}
+            {showSignInModal && createPortal(
+                <LoginPromptModal
+                    onClose={() => setShowSignInModal(false)}
+                    onLogin={handleLoginRedirect}
+                    onSignup={handleSignupRedirect}
+                />,
+                document.body
+            )}
         </div>
     );
 }
