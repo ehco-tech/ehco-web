@@ -98,6 +98,10 @@ class FigureDataEnricher:
             return combined_string.split('|')[0]
         return combined_string
     
+    def _has_been_researched(self, figure_data: Dict) -> bool:
+        """Check if a figure has already been researched by checking if fandomName field exists"""
+        return 'fandomName' in figure_data
+
     def _print_research_results(self, name: str, update_data: Dict):
         """Print the research results in a readable format"""
         print(f"\n📊 Research Results for: {name}")
@@ -126,18 +130,28 @@ class FigureDataEnricher:
             
             figures_list = list(figures)
             print(f"Found {len(figures_list)} figures to process")
-            
+
+            skipped_count = 0
+            processed_count = 0
+
             for i, figure_doc in enumerate(figures_list, 1):
                 figure_data = figure_doc.to_dict()
                 figure_id = figure_doc.id
                 name = figure_data.get('name', '')
                 occupation = figure_data.get('occupation', '')
-                
+
                 if not name:
                     print(f"Skipping figure {figure_id} - no name found")
                     continue
-                
+
+                # Check if figure has already been researched
+                if self._has_been_researched(figure_data):
+                    print(f"\n[{i}/{len(figures_list)}] ⏭️  Skipping {name} - already researched")
+                    skipped_count += 1
+                    continue
+
                 print(f"\n[{i}/{len(figures_list)}] Researching: {name} ({occupation})")
+                processed_count += 1
                 
                 # Research the data
                 researched_data = await self.research_figure_data(name, occupation)
@@ -172,8 +186,13 @@ class FigureDataEnricher:
                 
                 # Small delay to be respectful of API limits
                 await asyncio.sleep(1)
-                
-            print("\n✅ All figures processed successfully!")
+
+            print("\n" + "=" * 50)
+            print(f"✅ Processing complete!")
+            print(f"📊 Processed: {processed_count} figures")
+            print(f"⏭️  Skipped: {skipped_count} figures (already researched)")
+            print(f"📝 Total: {len(figures_list)} figures")
+            print("=" * 50)
             
         except Exception as e:
             print(f"Error processing figures: {e}")
