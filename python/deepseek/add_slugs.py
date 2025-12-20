@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 import os
 import unicodedata
 import re
+import argparse
 
 
 def initialize_firebase():
@@ -79,6 +80,7 @@ def run_migration(db, figure_id_to_test: str = None):
     print("\nStarting slug migration script...")
     figures_ref = db.collection("selected-figures")
     updated_count = 0
+    skipped_count = 0
 
     try:
         if figure_id_to_test:
@@ -102,6 +104,14 @@ def run_migration(db, figure_id_to_test: str = None):
                 print(f"⚠️  Skipping document {doc.id}: 'name' field is missing.")
                 continue
 
+            # Check if slug already exists
+            if "slug" in data and data["slug"]:
+                print(
+                    f"  ⏭️  Skipping '{figure_name}' ({doc.id}): slug already exists ('{data['slug']}')"
+                )
+                skipped_count += 1
+                continue
+
             slug = create_slug(figure_name)
 
             if slug:
@@ -116,7 +126,7 @@ def run_migration(db, figure_id_to_test: str = None):
                 )
 
         print(
-            f"\n✅ Migration completed successfully! Updated {updated_count} documents."
+            f"\n✅ Migration completed successfully! Updated {updated_count} documents, skipped {skipped_count} documents that already had slugs."
         )
 
     except Exception as e:
@@ -126,18 +136,22 @@ def run_migration(db, figure_id_to_test: str = None):
 
 # --- SCRIPT EXECUTION ---
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Add slugs to selected-figures collection in Firestore."
+    )
+    parser.add_argument(
+        "--figure-id",
+        type=str,
+        help="ID of a single figure to process. If not provided, processes all figures.",
+    )
+    args = parser.parse_args()
+
     db_client = initialize_firebase()
 
     if db_client:
-        # --- STEP 1: TEST ON A SINGLE DOCUMENT FIRST (Highly Recommended) ---
-        # Find a document ID with special characters (e.g., "rosé") to test.
-        #
-        # UNCOMMENT THE LINE BELOW TO RUN IN TEST MODE:
-        # run_migration(db_client, figure_id_to_test="rosé")
-
-        # --- STEP 2: RUN THE FULL MIGRATION ---
-        # After confirming the test works, comment out the test line above
-        # and uncomment the line below to run on all documents.
-        #
-        # UNCOMMENT THE LINE BELOW TO RUN IN FULL MODE:
-        run_migration(db_client)
+        if args.figure_id:
+            print(f"Running migration for single figure: {args.figure_id}")
+            run_migration(db_client, figure_id_to_test=args.figure_id)
+        else:
+            print("Running migration for all figures")
+            run_migration(db_client)
