@@ -26,6 +26,7 @@ from typing import List, Dict, Any, Optional
 import logging
 
 from setup_firebase_deepseek import NewsManager
+from firestore_utils import FirestoreScanner
 
 logging.basicConfig(
     level=logging.INFO,
@@ -40,6 +41,7 @@ class EnhancedMalformedSummaryRepairer:
         self.db = self.news_manager.db
         self.create_backup = create_backup
         self.issues_found = []
+        self.scanner = FirestoreScanner(batch_size=50, delay_between_batches=1.0)
         
     async def close(self):
         """Close the database connection"""
@@ -176,15 +178,20 @@ class EnhancedMalformedSummaryRepairer:
     async def scan_all_figures(self) -> List[Dict[str, Any]]:
         """
         Scan all figures in the database for malformed summaries.
+        Uses safe batching to prevent timeout errors.
         """
-        logger.info("Starting full database scan...")
+        logger.info("Starting full database scan with safe batching...")
         all_issues = []
-        
-        figures_ref = self.db.collection("selected-figures").stream()
-        figure_count = 0
-        
-        for figure_doc in figures_ref:
-            figure_count += 1
+
+        # Use FirestoreScanner to safely fetch all figures
+        collection_ref = self.db.collection("selected-figures")
+        figure_docs = self.scanner.scan_collection_safe(collection_ref)
+        figure_count = len(figure_docs)
+
+        logger.info(f"Found {figure_count} figures to scan")
+
+        for idx, figure_doc in enumerate(figure_docs, 1):
+            logger.info(f"Progress: {idx}/{figure_count}")
             figure_id = figure_doc.id
             issues = await self.scan_figure(figure_id)
             all_issues.extend(issues)
