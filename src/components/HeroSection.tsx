@@ -199,7 +199,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'pearl cosmic mauve': '#e0b0ff',
         'phantom black': '#2f3434',
         'pastel rose pink': '#f8c8dc',
-        
+        'pearl aqua green': '#79e5cb'
     };
 
     // Helper function to convert color names to hex
