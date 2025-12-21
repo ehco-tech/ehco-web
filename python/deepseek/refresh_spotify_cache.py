@@ -16,7 +16,7 @@ import time
 import requests
 import base64
 import argparse
-from datetime import datetime
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 from setup_firebase_deepseek import NewsManager
 
@@ -222,7 +222,7 @@ class SpotifyRefresher:
             if not albums:
                 artist_cache_data.append({
                     'albums': [],
-                    'last_updated': datetime.utcnow().isoformat(),
+                    'last_updated': datetime.now(timezone.utc).isoformat(),
                     'artist_id': artist_id,
                     'artist_name': artist_name,
                     'error': 'No albums found from Spotify API'
@@ -251,7 +251,7 @@ class SpotifyRefresher:
             if albums_with_details:
                 artist_cache_data.append({
                     'albums': albums_with_details,
-                    'last_updated': datetime.utcnow().isoformat(),
+                    'last_updated': datetime.now(timezone.utc).isoformat(),
                     'artist_id': artist_id,
                     'artist_name': artist_name
                 })
@@ -260,7 +260,7 @@ class SpotifyRefresher:
             else:
                 artist_cache_data.append({
                     'albums': [],
-                    'last_updated': datetime.utcnow().isoformat(),
+                    'last_updated': datetime.now(timezone.utc).isoformat(),
                     'artist_id': artist_id,
                     'artist_name': artist_name,
                     'error': 'Failed to fetch album details'
@@ -270,7 +270,7 @@ class SpotifyRefresher:
         if artist_cache_data:
             cache_data = {
                 'artists': artist_cache_data,
-                'last_updated': datetime.utcnow().isoformat()
+                'last_updated': datetime.now(timezone.utc).isoformat()
             }
 
             figure_ref = self.db.collection('selected-figures').document(figure_id)

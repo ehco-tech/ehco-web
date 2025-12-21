@@ -21,7 +21,7 @@ import asyncio
 import argparse
 import json
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 import logging
 
@@ -226,7 +226,7 @@ class EnhancedMalformedSummaryRepairer:
         
         backup_data = {
             **data,
-            "backup_timestamp": datetime.utcnow().isoformat(),
+            "backup_timestamp": datetime.now(timezone.utc).isoformat(),
             "backup_reason": "malformed_summary_repair_enhanced",
             "original_document_id": document_id
         }
