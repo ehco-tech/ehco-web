@@ -182,7 +182,6 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'beige': '#f5f5dc',
         'light blue': '#add8e6',
         'navy blue': '#000080',
-        'neon red': '#ff3131',
         'neon yellow': '#cfff04',
         'neon blue': '#1f51ff',
         'pearl white': '#fff4e8',
@@ -199,7 +198,15 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'pearl cosmic mauve': '#e0b0ff',
         'phantom black': '#2f3434',
         'pastel rose pink': '#f8c8dc',
-        'pearl aqua green': '#79e5cb'
+        'pearl aqua green': '#79e5cb',
+        'hayoung yellow': '#f3b33e',
+        'jiwon magenta': '#bc2c9c',
+        'chaeyoung green': '#a0d543',
+        'nakyung purple': '#7032ab',
+        'jiheon blue': '#54afe8',
+        'light purple': '#cbc3e3',
+        'neon red': '#e11900',
+        'chic violet': '#7e00bf'
     };
 
     // Helper function to convert color names to hex
