@@ -134,6 +134,19 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                             </div>
                         )}
 
+                        {/* Group (for individual members) */}
+                        {!publicFigure.is_group && publicFigure.group && publicFigure.group.trim() !== '' && (
+                            <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">Group</span>
+                                <Link
+                                    href={`/${createUrlSlug(publicFigure.group)}`}
+                                    className="text-key-color dark:text-key-color-dark hover:underline text-right"
+                                >
+                                    {publicFigure.group}
+                                </Link>
+                            </div>
+                        )}
+
                         {/* Years Active */}
                         <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
                             <span className="text-gray-600 dark:text-gray-400 font-medium">Years Active</span>

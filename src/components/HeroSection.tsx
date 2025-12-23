@@ -139,7 +139,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
     const primaryColor = colors[0] || '#d10041'; // fallback to EHCO pink
     const secondaryColor = colors[1] || 'white';
 
-    const colorToHex: { [key: string]: string } = {
+    const colorToHex: { [key: string]: string | string[] } = {
         'pink': '#ffc0cb',
         'black': '#000000',
         'white': '#ffffff',
@@ -166,7 +166,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'pearl gold': '#aa7f2e',
         'hot pink': '#ff69b4',
         'neon green': '#39ff14',
-        'aurora': '#c88ddd',
+        'aurora': ['#c88ddd', '#9ceafe'],
         'neon lime': '#39ff14',
         'deep blue': '#00008b',
         'cosmic latte': '#fff8e7',
@@ -209,8 +209,8 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'chic violet': '#7e00bf'
     };
 
-    // Helper function to convert color names to hex
-    const getHexColor = (colorName: string): string => {
+    // Helper function to convert color names to hex or hex array
+    const getHexColor = (colorName: string): string | string[] => {
         const key = colorName.toLowerCase().trim();
         return colorToHex[key] || colorName; // Return as-is if already hex or unknown
     };
@@ -258,12 +258,23 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
     const textColor = getTextColor(primaryColor);
     // console.log(textColor);
 
-    const backgroundStyle = colors.length >= 3
-        ? { background: `linear-gradient(0deg, ${getHexColor(colors[0])} 0%, ${getHexColor(colors[1])} 50%, ${getHexColor(colors[2])} 100%)` }
-        : colors.length === 2
-            ? { background: `linear-gradient(0deg, ${getHexColor(colors[0])} 50%, ${getHexColor(colors[1])} 100%)` }
-            : colors.length === 1
-                ? { background: `linear-gradient(0deg, ${getHexColor(colors[0])} 50%, #ffffff 100%)` }
+    // Expand colors array to handle multi-value colors (like aurora)
+    const expandedColors: string[] = [];
+    colors.forEach(color => {
+        const hexColor = getHexColor(color);
+        if (Array.isArray(hexColor)) {
+            expandedColors.push(...hexColor);
+        } else {
+            expandedColors.push(hexColor);
+        }
+    });
+
+    const backgroundStyle = expandedColors.length >= 3
+        ? { background: `linear-gradient(0deg, ${expandedColors[0]} 0%, ${expandedColors[1]} 50%, ${expandedColors[2]} 100%)` }
+        : expandedColors.length === 2
+            ? { background: `linear-gradient(0deg, ${expandedColors[0]} 50%, ${expandedColors[1]} 100%)` }
+            : expandedColors.length === 1
+                ? { background: `linear-gradient(0deg, ${expandedColors[0]} 50%, #ffffff 100%)` }
                 : { background: `linear-gradient(0deg, #d10041 0%, #ffffff 100%)` };
 
     // Format large numbers

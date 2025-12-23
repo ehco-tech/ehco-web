@@ -59,7 +59,7 @@ class NewFiguresProcessor(PredefinedPublicFigureExtractor):
 
         return []
 
-    async def process_new_figures_in_all_articles(self, limit=None, batch_size=5):
+    async def process_new_figures_in_all_articles(self, limit=None, batch_size=5, start_after_article_id=None):
         """
         Process new figures from the CSV across ALL articles in the database.
         This ignores the public_figures_processed marker.
@@ -67,6 +67,7 @@ class NewFiguresProcessor(PredefinedPublicFigureExtractor):
         Args:
             limit (int, optional): Limit the number of articles to process
             batch_size (int, optional): Process articles in batches with delays
+            start_after_article_id (str, optional): Article ID to resume processing after (useful if interrupted)
 
         Returns:
             dict: Statistics about the processing
@@ -88,6 +89,17 @@ class NewFiguresProcessor(PredefinedPublicFigureExtractor):
             print("Fetching all articles from database...")
             query = self.news_manager.db.collection("newsArticles")
             query = query.order_by("contentID", direction=firestore.Query.DESCENDING)
+
+            # Add start_after functionality for resuming interrupted processing
+            if start_after_article_id:
+                print(f"Resuming processing after article ID: {start_after_article_id}")
+                start_doc_ref = self.news_manager.db.collection("newsArticles").document(start_after_article_id)
+                start_doc = start_doc_ref.get()
+                if start_doc.exists:
+                    query = query.start_after(start_doc)
+                    print(f"Successfully positioned query to start after article: {start_after_article_id}")
+                else:
+                    print(f"⚠ Warning: Article ID '{start_after_article_id}' not found. Starting from beginning.")
 
             if limit:
                 query = query.limit(limit)
@@ -217,6 +229,13 @@ async def main():
         help="Number of articles to process before pausing (default: 5)"
     )
 
+    parser.add_argument(
+        '--start-after',
+        type=str,
+        default=None,
+        help="Article ID to resume processing after (useful if script was interrupted)"
+    )
+
     args = parser.parse_args()
 
     print("\n" + "="*60)
@@ -228,6 +247,8 @@ async def main():
         print(f"Article limit: {args.limit} (testing mode)")
     else:
         print("Article limit: None (processing ALL articles)")
+    if args.start_after:
+        print(f"Resume point: Starting after article '{args.start_after}'")
     print("="*60 + "\n")
 
     # Create processor with the new figures CSV
@@ -236,7 +257,8 @@ async def main():
     # Process new figures across all articles
     await processor.process_new_figures_in_all_articles(
         limit=args.limit,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        start_after_article_id=args.start_after
     )
 
     print("\n✓ Processing complete!\n")
