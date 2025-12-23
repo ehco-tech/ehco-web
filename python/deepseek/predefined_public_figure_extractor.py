@@ -30,6 +30,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         self.group_hierarchies = {
             "NCT": ["NCT 127", "NCT Dream", "NCT Wish", "WayV"],
             "TREASURE": ["T5"],
+            "EXO": ["EXO-K", "EXO-M", "EXO-CBX", "EXO-SC"],
             # You can add more hierarchies here if needed
             # "SEVENTEEN": ["SEVENTEEN Hip-hop Team", "SEVENTEEN Vocal Team", "SEVENTEEN Performance Team"],
         }
