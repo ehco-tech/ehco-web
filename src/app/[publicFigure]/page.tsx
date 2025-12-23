@@ -63,6 +63,8 @@ export interface PublicFigureBase {
     tiktokLink?: string;
     tiktokFollowers?: string;
     weverseLink?: string;
+    berrizLink?: string;
+    fansLink?: string;
     totalAwards?: string;
     tmdb_id?: number | null;
     tmdb_verified?: boolean;
@@ -223,6 +225,8 @@ async function getPublicFigureData(publicFigureSlug: string): Promise<PublicFigu
         tiktokLink: data.tiktokLink || '',
         tiktokFollowers: data.tiktokFollowers || '',
         weverseLink: data.weverseLink || '',
+        berrizLink: data.berrizLink || '',
+        fansLink: data.fansLink || '',
         totalAwards: data.totalAwards || '',
         tmdb_id: data.tmdb_id || null,
         tmdb_verified: data.tmdb_verified || false,

@@ -48,7 +48,7 @@ class FeaturedUpdateUpdater:
         try:
             # Query recent-updates for this figure, sorted by lastUpdated (newest first)
             updates_ref = self.db.collection('recent-updates')
-            query = updates_ref.where('figureId', '==', figure_id) \
+            query = updates_ref.where(field_path='figureId', op_string='==', value=figure_id) \
                               .order_by('lastUpdated', direction=firestore.Query.DESCENDING) \
                               .limit(1)
             

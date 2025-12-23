@@ -106,7 +106,7 @@ class NewsManager:
             
             # If celebrity_name is provided, filter by it, otherwise get all documents
             if celebrity_name:
-                docs = news_ref.where('celebrity', '==', celebrity_name).stream()
+                docs = news_ref.where(field_path='celebrity', op_string='==', value=celebrity_name).stream()
             else:
                 docs = news_ref.stream()
             

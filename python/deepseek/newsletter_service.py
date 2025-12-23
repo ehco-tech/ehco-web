@@ -64,8 +64,8 @@ class NewsletterService:
                 queue_collection = self.db.collection('newsletter-queue')
 
                 # Query for both 'pending' and 'partial' status batches
-                pending_batches = queue_collection.where('status', '==', 'pending').stream()
-                partial_batches = queue_collection.where('status', '==', 'partial').stream()
+                pending_batches = queue_collection.where(field_path='status', op_string='==', value='pending').stream()
+                partial_batches = queue_collection.where(field_path='status', op_string='==', value='partial').stream()
 
                 # Combine both iterators
                 all_batches = list(pending_batches) + list(partial_batches)
@@ -552,7 +552,7 @@ class NewsletterService:
             
             # Get users with daily newsletter preference
             prefs_collection = self.db.collection('user-preferences')
-            daily_users_docs = prefs_collection.where('notifications.newsletter_frequency', '==', 'daily').stream()
+            daily_users_docs = prefs_collection.where(field_path='notifications.newsletter_frequency', op_string='==', value='daily').stream()
             
             daily_users = [doc.id for doc in daily_users_docs]
             

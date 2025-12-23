@@ -1237,7 +1237,7 @@ class PublicFigureExtractor:
                 query = self.news_manager.db.collection("public-figure-info").document(public_figure_id).collection("article-summaries")
                 
                 # Only get summaries that have event_dates but not event_contents
-                query = query.where("event_dates", "!=", None)
+                query = query.where(field_path="event_dates", op_string="!=", value=None)
                 
                 # Apply limit if specified (per public figure)
                 if limit is not None:

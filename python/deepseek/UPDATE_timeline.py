@@ -362,10 +362,10 @@ class CurationEngine:
                 most_recent_source_id = point_source_ids[-1] if point_source_ids else source_id
                 publish_date = extract_publish_date(most_recent_source_id)
                 
-                existing_query = cache_ref.where('figureId', '==', self.figure_id) \
-                                       .where('eventTitle', '==', event_title) \
-                                       .where('eventPointDate', '==', point_date) \
-                                       .where('eventPointDescription', '==', point_description) \
+                existing_query = cache_ref.where(field_path='figureId', op_string='==', value=self.figure_id) \
+                                       .where(field_path='eventTitle', op_string='==', value=event_title) \
+                                       .where(field_path='eventPointDate', op_string='==', value=point_date) \
+                                       .where(field_path='eventPointDescription', op_string='==', value=point_description) \
                                        .limit(1) \
                                        .stream()
                 
@@ -447,7 +447,7 @@ class CurationEngine:
         try:
             articles_to_process = []
             article_ref = self.db.collection('selected-figures').document(self.figure_id).collection('article-summaries')
-            articles_to_process = list(article_ref.where('is_processed_for_timeline', '==', False).stream())
+            articles_to_process = list(article_ref.where(field_path='is_processed_for_timeline', op_string='==', value=False).stream())
         except Exception as e:
             print(f"Error fetching unprocessed articles: {e}")
             await self.news_manager.close()

@@ -728,7 +728,13 @@ export default function Home() {
                 <div className="text-xs text-gray-500 dark:text-gray-400">Figures</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-key-color">96%</div>
+                <div className="text-2xl font-bold text-key-color">
+                  {statsLoading ? (
+                    <Loader2 className="animate-spin inline-block" size={24} />
+                  ) : (
+                    '96%'
+                  )}
+                </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">Accuracy</div>
               </div>
             </div>

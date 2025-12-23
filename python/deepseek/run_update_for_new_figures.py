@@ -195,8 +195,10 @@ class NewFiguresUpdater:
         logger.info("="*60)
 
     async def close_db_manager(self):
-        """Close database connection"""
-        await self.db._client.close()
+        """Close async clients"""
+        # Close the DeepSeek API client
+        await self.news_manager.close()
+        # Note: Firestore Admin SDK doesn't require explicit connection closing
 
 
 async def main():

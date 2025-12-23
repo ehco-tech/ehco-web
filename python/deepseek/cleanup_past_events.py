@@ -101,7 +101,7 @@ class RecentUpdatesCleanup:
         # Build query based on whether figure_id is specified
         if figure_id:
             print(f"Processing figure: {figure_id}")
-            query = cache_ref.where('figureId', '==', figure_id)
+            query = cache_ref.where(field_path='figureId', op_string='==', value=figure_id)
         else:
             print("Processing ALL figures")
             query = cache_ref
@@ -191,7 +191,7 @@ class RecentUpdatesCleanup:
         # Build query based on whether figure_id is specified
         if figure_id:
             print(f"Clearing all documents for figure: {figure_id}")
-            query = cache_ref.where('figureId', '==', figure_id)
+            query = cache_ref.where(field_path='figureId', op_string='==', value=figure_id)
         else:
             print("Clearing ALL documents in recent-updates collection")
             query = cache_ref
@@ -243,7 +243,7 @@ class RecentUpdatesCleanup:
         # Build query based on whether figure_id is specified
         if figure_id:
             print(f"Stats for figure: {figure_id}")
-            query = cache_ref.where('figureId', '==', figure_id)
+            query = cache_ref.where(field_path='figureId', op_string='==', value=figure_id)
         else:
             print("Stats for ALL figures")
             query = cache_ref

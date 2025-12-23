@@ -60,7 +60,7 @@ class PublicFigureSummaryCategorizer:
                 
                 # UPDATED QUERY: Fetch only documents where 'is_processed_for_timeline' is False.
                 summaries_ref = self.news_manager.db.collection("selected-figures").document(public_figure_id) \
-                                .collection("article-summaries").where("is_processed_for_timeline", "==", False).stream()
+                                .collection("article-summaries").where(field_path="is_processed_for_timeline", op_string="==", value=False).stream()
                 
                 summaries = []
                 for summary_doc in summaries_ref:
