@@ -80,7 +80,18 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                         <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
                             <span className="text-gray-600 dark:text-gray-400 font-medium">Label</span>
                             <span className="text-gray-900 dark:text-white text-right">
-                                {publicFigure.company || 'N/A'}
+                                {publicFigure.companyUrl ? (
+                                    <a
+                                        href={publicFigure.companyUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-key-color dark:text-key-color-dark hover:underline"
+                                    >
+                                        {publicFigure.company || 'N/A'}
+                                    </a>
+                                ) : (
+                                    publicFigure.company || 'N/A'
+                                )}
                             </span>
                         </div>
 
@@ -159,21 +170,6 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                         Official Links
                     </h2>
                     <div className="[&>*:last-child]:border-b-0">
-                        {/* Website */}
-                        {publicFigure.companyUrl && (
-                            <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                <span className="text-gray-600 dark:text-gray-400 font-medium">Website</span>
-                                <a
-                                    href={publicFigure.companyUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-key-color dark:text-key-color-dark hover:underline text-right"
-                                >
-                                    {publicFigure.companyUrl.replace(/^https?:\/\//, '')}
-                                </a>
-                            </div>
-                        )}
-
                         {/* Instagram */}
                         {publicFigure.instagramUrl && (
                             <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
@@ -262,17 +258,17 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                             </div>
                         )}
 
-                        {/* Weverse */}
-                        {publicFigure.weverseLink && (
+                        {/* Fan Community */}
+                        {(publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink) && (
                             <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                <span className="text-gray-600 dark:text-gray-400 font-medium">Weverse</span>
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">Fan Community</span>
                                 <a
-                                    href={publicFigure.weverseLink}
+                                    href={publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-key-color dark:text-key-color-dark hover:underline text-right"
                                 >
-                                    Weverse
+                                    {publicFigure.weverseLink ? 'Weverse' : publicFigure.berrizLink ? 'Berriz' : 'FANS'}
                                 </a>
                             </div>
                         )}

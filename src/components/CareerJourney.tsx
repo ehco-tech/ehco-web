@@ -66,6 +66,11 @@ const CareerJourney: React.FC<CareerJourneyProps> = ({
 
     // Initialize filters - check localStorage first for persisted filters
     const getInitialFilters = () => {
+        // Check if we're in the browser (client-side)
+        if (typeof window === 'undefined') {
+            return { mainCategory: 'Creative Works', subCategory: 'All Events' };
+        }
+
         try {
             const savedFilters = localStorage.getItem('timelineFilters');
             if (savedFilters) {

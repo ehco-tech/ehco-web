@@ -138,7 +138,7 @@ class UpdateTracker:
             
             # Check for duplicate updates in the last 24 hours
             logger.info("Checking for duplicate updates")
-            query = self.updates_collection.where('content_hash', '==', hash_id)
+            query = self.updates_collection.where(field_path='content_hash', op_string='==', value=hash_id)
             
             # Get query results
             existing_docs = query.get()

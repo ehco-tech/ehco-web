@@ -34,7 +34,7 @@ async def find_duplicate_cache_entries(figure_id: str = None, dry_run: bool = Tr
     # Build query
     if figure_id:
         print(f"Checking entries for figure: {figure_id}\n")
-        query = cache_ref.where('figureId', '==', figure_id)
+        query = cache_ref.where(field_path='figureId', op_string='==', value=figure_id)
     else:
         print(f"Checking ALL entries (all figures)\n")
         query = cache_ref
