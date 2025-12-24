@@ -1,7 +1,7 @@
 // src/app/login/login-form.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Mail } from 'lucide-react';
@@ -23,8 +23,9 @@ export default function LoginForm() {
   const [successMessage, setSuccessMessage] = useState('');
   const [showResendVerification, setShowResendVerification] = useState(false);
   const [resendingEmail, setResendingEmail] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
 
-  const { signIn, signInWithGoogle } = useAuth();
+  const { signIn, signInWithGoogle, user } = useAuth();
   const { showLoading } = useLoading(); // 2. Get the showLoading function from the context
   const router = useRouter();
 
@@ -44,6 +45,20 @@ export default function LoginForm() {
       setRememberMe(true);
     }
   }, []);
+
+  // Auto-focus email input on component mount
+  useEffect(() => {
+    if (emailInputRef.current) {
+      emailInputRef.current.focus();
+    }
+  }, []);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +206,7 @@ export default function LoginForm() {
               Email Address
             </label>
             <input
+              ref={emailInputRef}
               type="email"
               id="email"
               name="email"

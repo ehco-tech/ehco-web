@@ -176,10 +176,25 @@ function AlbumCard({ album, onClick }: AlbumCardProps) {
     const imageUrl = album.images[0]?.url || '/default-album-cover.png';
     const releaseYear = new Date(album.release_date).getFullYear();
 
+    const handleClick = (e: React.MouseEvent) => {
+        // Don't open modal if user is actively selecting text within this card
+        const selection = window.getSelection();
+        const selectedText = selection?.toString() || '';
+
+        // If there's selected text and the click is on a text element, don't open modal
+        if (selectedText.length > 0 && (e.target as HTMLElement).classList.contains('select-text')) {
+            return;
+        }
+
+        // Clear any existing selection and open modal
+        selection?.removeAllRanges();
+        onClick();
+    };
+
     return (
         <div
             className="cursor-pointer group"
-            onClick={onClick}
+            onClick={handleClick}
         >
             <div className="bg-white dark:bg-[#1d1d1f] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-all hover:shadow-lg">
                 {/* Album Cover */}
@@ -196,8 +211,8 @@ function AlbumCard({ album, onClick }: AlbumCardProps) {
 
                 {/* Album Info */}
                 <div className="p-4">
-                    <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1">{album.name}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                    <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1 select-text">{album.name}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 select-text">
                         {releaseYear} • {album.album_type === 'album' ? 'Studio Album' : album.album_type === 'single' ? 'Single' : 'EP'}
                     </p>
                 </div>

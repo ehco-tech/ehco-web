@@ -31,6 +31,7 @@ export default function Header() {
   // Check if current page is home page
   const isHomePage = pathname === '/';
   const isAllFiguresPage = pathname === '/all-figures';
+  const isAuthPage = pathname === '/login' || pathname === '/signup';
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,8 +82,10 @@ export default function Header() {
                         onClick={() => setIsSearchOpen(true)}
                       />
                     </div>
-                    {/* Divider after search icon - show on all screens */}
-                    <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>
+                    {/* Divider after search icon - hide on auth pages when user is not logged in */}
+                    {!(isAuthPage && !user) && (
+                      <div className="h-6 w-px bg-gray-300 dark:bg-gray-600 mr-2"></div>
+                    )}
                   </>
                 )}
 

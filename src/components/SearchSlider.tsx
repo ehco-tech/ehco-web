@@ -44,6 +44,7 @@ export default function SearchSlider({ isOpen, onClose }: SearchSliderProps) {
     const [searchResults, setSearchResults] = useState<PublicFigure[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isNavigating, setIsNavigating] = useState(false);
+    const inputRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
@@ -52,6 +53,17 @@ export default function SearchSlider({ isOpen, onClose }: SearchSliderProps) {
     useEffect(() => {
         setIsNavigating(false);
     }, [pathname, searchParams]);
+
+    // Auto-focus input when slider opens
+    useEffect(() => {
+        if (isOpen && inputRef.current) {
+            // Small delay to ensure the animation has started
+            const timer = setTimeout(() => {
+                inputRef.current?.focus();
+            }, 100);
+            return () => clearTimeout(timer);
+        }
+    }, [isOpen]);
 
     // Handle escape key press
     useEffect(() => {
@@ -219,13 +231,13 @@ export default function SearchSlider({ isOpen, onClose }: SearchSliderProps) {
                     <div className="flex-1 flex items-center relative">
                         <Search className="absolute left-3 text-gray-400 dark:text-slate-500 z-10" size={18} />
                         <input
+                            ref={inputRef}
                             type="text"
                             value={searchQuery}
                             onChange={handleInputChange}
                             onKeyDown={handleKeyDown}
                             placeholder="Search public figures"
                             className="pl-10 pr-10 py-2.5 border border-gray-200 dark:border-slate-700 rounded-lg w-full text-sm md:text-base text-black dark:text-white bg-white dark:bg-[#1d1d1f] placeholder:text-gray-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent"
-                            autoFocus
                         />
                         {searchQuery && (
                             <X
