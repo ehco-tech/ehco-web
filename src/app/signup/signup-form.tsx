@@ -69,7 +69,7 @@ export default function EnhancedSignupForm() {
   const [nicknameMessage, setNicknameMessage] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
 
-  const { signUp, signInWithGoogle } = useAuth();
+  const { signUp, signInWithGoogle, user } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -79,6 +79,13 @@ export default function EnhancedSignupForm() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [step]);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
 
   // Load popular figures on component mount
   useEffect(() => {

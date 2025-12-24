@@ -149,10 +149,25 @@ function CreditCard({ credit, onClick }: CreditCardProps) {
     const releaseYear = releaseDate ? new Date(releaseDate).getFullYear() : 'TBA';
     const role = credit.character || credit.job || '';
 
+    const handleClick = (e: React.MouseEvent) => {
+        // Don't open modal if user is actively selecting text within this card
+        const selection = window.getSelection();
+        const selectedText = selection?.toString() || '';
+
+        // If there's selected text and the click is on a text element, don't open modal
+        if (selectedText.length > 0 && (e.target as HTMLElement).classList.contains('select-text')) {
+            return;
+        }
+
+        // Clear any existing selection and open modal
+        selection?.removeAllRanges();
+        onClick();
+    };
+
     return (
         <div
             className="cursor-pointer group"
-            onClick={onClick}
+            onClick={handleClick}
         >
             <div className="bg-white dark:bg-[#1d1d1f] rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700 transition-all hover:shadow-lg">
                 {/* Poster */}
@@ -169,12 +184,12 @@ function CreditCard({ credit, onClick }: CreditCardProps) {
 
                 {/* Info */}
                 <div className="p-4">
-                    <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1">{title}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                    <h3 className="font-bold text-gray-900 dark:text-white truncate mb-1 select-text">{title}</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-1 select-text">
                         {releaseYear} • {credit.media_type === 'movie' ? 'Film' : 'TV Series'}
                     </p>
                     {role && (
-                        <p className="text-xs text-gray-500 dark:text-gray-500 truncate">{role}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-500 truncate select-text">{role}</p>
                     )}
                 </div>
             </div>

@@ -6,8 +6,10 @@
 export interface QuickFact {
     text: string;
     badge: 'verified' | 'community' | 'self-reported' | null;
-    url?: string; // Optional external link for the fact
-    linkText?: string; // The specific text that should be linked (e.g., "Lisa")
+    links?: Array<{
+        url: string;
+        text: string;
+    }>; // Optional array of links with their associated text
 }
 
 export interface CurationParagraph {

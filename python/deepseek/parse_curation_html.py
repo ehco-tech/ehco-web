@@ -150,15 +150,19 @@ class CurationParser:
                     # Make a copy to work with
                     fact_span_copy = BeautifulSoup(str(fact_span), 'html.parser').find('span')
 
-                    # Extract external link and linked text if present (before removing elements)
-                    link_elem = fact_span_copy.find('a')
-                    url = None
-                    link_text = None
+                    # Extract ALL external links and their associated text (before removing elements)
+                    link_elems = fact_span_copy.find_all('a')
+                    links = []
 
-                    if link_elem:
+                    for link_elem in link_elems:
                         url = link_elem.get('href', '')
-                        # Extract the text inside the <a> tag
                         link_text = link_elem.get_text(strip=True)
+
+                        if url and link_text:
+                            links.append({
+                                'url': url,
+                                'text': link_text
+                            })
 
                     # Extract the badge if present
                     badge_elem = fact_span_copy.find('span', class_='fact-badge')
@@ -185,11 +189,9 @@ class CurationParser:
                         'badge': badge_type
                     }
 
-                    # Add url and linkText fields if they exist
-                    if url:
-                        fact_dict['url'] = url
-                    if link_text:
-                        fact_dict['linkText'] = link_text
+                    # Add links array if any links were found
+                    if links:
+                        fact_dict['links'] = links
 
                     facts.append(fact_dict)
 
