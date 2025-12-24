@@ -31,6 +31,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
             "NCT": ["NCT 127", "NCT Dream", "NCT Wish", "WayV"],
             "TREASURE": ["T5"],
             "EXO": ["EXO-K", "EXO-M", "EXO-CBX", "EXO-SC"],
+            "SUPER JUNIOR": ["SUPER JUNIOR-K.R.Y.", "SUPER JUNIOR-T", "SUPER JUNIOR-M", "SUPER JUNIOR-Happy", "SUPER JUNIOR-D&E", "SUPER JUNIOR-L.S.S"]
             # You can add more hierarchies here if needed
             # "SEVENTEEN": ["SEVENTEEN Hip-hop Team", "SEVENTEEN Vocal Team", "SEVENTEEN Performance Team"],
         }
