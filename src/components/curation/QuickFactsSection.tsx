@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { QuickFact } from '@/types/definitions';
 
 interface QuickFactsSectionProps {
@@ -41,48 +42,54 @@ export default function QuickFactsSection({ facts }: QuickFactsSectionProps) {
         }
     };
 
-    // Helper to render fact text with optional link
+    // Helper to render fact text with optional links
     const renderFactText = (fact: QuickFact) => {
-        if (!fact.url || !fact.linkText) {
+        if (!fact.links || fact.links.length === 0) {
             return fact.text;
         }
 
-        // Split the text at the linked portion
-        const parts = fact.text.split(fact.linkText);
+        // Build a list of all link texts and their corresponding URLs
+        // Sort by position in text to process in order
+        const linkMap = fact.links.map((link) => ({
+            text: link.text,
+            url: link.url,
+            index: fact.text.indexOf(link.text),
+        })).sort((a, b) => a.index - b.index);
 
-        // Handle edge case where linkText appears multiple times
-        if (parts.length > 2) {
-            // Only link the first occurrence
-            return (
-                <>
-                    {parts[0]}
-                    <a
-                        href={fact.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-key-color dark:text-key-color-dark hover:underline"
-                    >
-                        {fact.linkText}
-                    </a>
-                    {parts.slice(1).join(fact.linkText)}
-                </>
-            );
-        }
+        // Split text and insert links
+        const parts: (string | ReactNode)[] = [];
+        let currentIndex = 0;
 
-        return (
-            <>
-                {parts[0]}
+        linkMap.forEach((link, idx) => {
+            if (link.index === -1) return; // Skip if link text not found
+
+            // Add text before this link
+            if (link.index > currentIndex) {
+                parts.push(fact.text.substring(currentIndex, link.index));
+            }
+
+            // Add the link
+            parts.push(
                 <a
-                    href={fact.url}
+                    key={`link-${idx}`}
+                    href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-key-color dark:text-key-color-dark hover:underline"
                 >
-                    {fact.linkText}
+                    {link.text}
                 </a>
-                {parts[1]}
-            </>
-        );
+            );
+
+            currentIndex = link.index + link.text.length;
+        });
+
+        // Add remaining text after the last link
+        if (currentIndex < fact.text.length) {
+            parts.push(fact.text.substring(currentIndex));
+        }
+
+        return <>{parts}</>;
     };
 
     return (
