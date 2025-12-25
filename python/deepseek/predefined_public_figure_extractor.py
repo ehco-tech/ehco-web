@@ -101,7 +101,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         """
         Load predefined public figure names from a CSV file.
 
-        The CSV file should have columns: Name, Occupation, Type, Nationality
+        The CSV file should have columns: Name, Occupation, Type, Nationality, Group (optional)
 
         Args:
             csv_filepath (str): Path to the CSV file containing public figure data
@@ -120,46 +120,47 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                 print(f"Current working directory: {os.getcwd()}")
                 print("Falling back to default hardcoded list")
                 return self._load_default_predefined_names(), {}
-                
+
             print(f"Loading public figures from CSV: {csv_filepath}")
-            
+
             with open(csv_filepath, 'r', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
-                
+
                 # Verify required columns exist
                 required_columns = ['Name', 'Occupation', 'Type', 'Nationality']
                 first_row = next(reader, None)
                 csvfile.seek(0)  # Reset file pointer to beginning
                 reader = csv.DictReader(csvfile)  # Recreate reader
-                
+
                 if first_row is None:
                     print("CSV file is empty")
                     return self._load_default_predefined_names(), {}
-                    
+
                 missing_columns = [col for col in required_columns if col not in first_row]
                 if missing_columns:
                     print(f"CSV missing required columns: {', '.join(missing_columns)}")
                     return self._load_default_predefined_names(), {}
-                
+
                 # Read all rows
                 for row in reader:
                     name = row.get('Name', '').strip()
                     if not name:
                         continue
-                        
+
                     # Add to list of names
                     predefined_names.append(name)
-                    
+
                     # Store complete data in dictionary for this name
                     predefined_data[name] = {
                         'occupation': row.get('Occupation', '').strip(),
                         'type': row.get('Type', '').strip(),
-                        'nationality': row.get('Nationality', '').strip()
+                        'nationality': row.get('Nationality', '').strip(),
+                        'group': row.get('Group', '').strip()  # Optional Group column for units
                     }
-                    
+
             print(f"Successfully loaded {len(predefined_names)} public figures from CSV")
             return predefined_names, predefined_data
-            
+
         except Exception as e:
             print(f"Error loading from CSV: {e}")
             print("Falling back to default hardcoded list")
@@ -193,20 +194,33 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                 # Split by commas or similar if it's a list in string format
                 occupations = [o.strip() for o in occupation_str.split(',')]
                 initial_data['occupation'] = occupations
-            
-            # Determine if it's a group based on the 'type' field
+
+            # Determine if it's a group or unit based on the 'type' field
             type_str = csv_data.get('type', '').lower()
             if type_str:
-                is_group = 'group' in type_str
-                initial_data['is_group'] = is_group
-                if is_group:
+                # Handle Group type
+                if type_str == 'group':
+                    initial_data['is_group'] = True
                     initial_data['gender'] = 'Group'
-            
+                    initial_data['group'] = ''  # Groups don't have a parent group
+                # Handle Unit type
+                elif type_str == 'unit':
+                    initial_data['is_group'] = True
+                    initial_data['gender'] = 'Unit'
+                    # Get the parent group name from the CSV
+                    parent_group = csv_data.get('group', '')
+                    initial_data['group'] = parent_group
+                # Handle Individual type
+                elif type_str == 'individual':
+                    initial_data['is_group'] = False
+                    # Gender will be set by the research method
+                    # Group field will be set by the research method (if applicable)
+
             # Set nationality if available
             nationality = csv_data.get('nationality', '')
             if nationality:
                 initial_data['nationality'] = nationality
-            
+
             print(f"Pre-filled data for {name}: {json.dumps(initial_data, indent=2)}")
         
         # Call the original research method from the parent class
