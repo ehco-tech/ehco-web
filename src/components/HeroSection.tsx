@@ -206,7 +206,8 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         'jiheon blue': '#54afe8',
         'light purple': '#cbc3e3',
         'neon red': '#e11900',
-        'chic violet': '#7e00bf'
+        'chic violet': '#7e00bf',
+        'pearl sapphire blue': '#00239b',
     };
 
     // Helper function to convert color names to hex or hex array
