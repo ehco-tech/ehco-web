@@ -95,14 +95,36 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                             </span>
                         </div>
 
-                        {/* Members (for groups) */}
-                        {publicFigure.is_group && publicFigure.members && publicFigure.members.length > 0 && (
+                        {/* Group (for individual members and units) */}
+                        {('group' in publicFigure && publicFigure.group && publicFigure.group.trim() !== '' &&
+                          (publicFigure.gender === 'unit' || !publicFigure.is_group)) && (
+                            <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
+                                <span className="text-gray-600 dark:text-gray-400 font-medium">Group</span>
+                                <span className="text-gray-900 dark:text-white text-right">
+                                    {publicFigure.group.split(' / ').map((groupName, index, array) => (
+                                        <React.Fragment key={groupName}>
+                                            <Link
+                                                href={`/${createUrlSlug(groupName.trim())}`}
+                                                className="text-key-color dark:text-key-color-dark hover:underline"
+                                            >
+                                                {groupName.trim()}
+                                            </Link>
+                                            {index < array.length - 1 && ' / '}
+                                        </React.Fragment>
+                                    ))}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Members (for groups and units) */}
+                        {((publicFigure.is_group && 'members' in publicFigure && publicFigure.members && publicFigure.members.length > 0) ||
+                          (publicFigure.gender === 'unit' && 'members' in publicFigure && publicFigure.members && publicFigure.members.length > 0)) && (
                             <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
                                 <span className="text-gray-600 dark:text-gray-400 font-medium">Members</span>
                                 <div className="text-gray-900 dark:text-white text-right flex-1 ml-4">
                                     <div>
                                         <span className="inline">
-                                            {(showAllMembers ? publicFigure.members : publicFigure.members.slice(0, MEMBERS_LIMIT)).map((m, index) => (
+                                            {('members' in publicFigure ? (showAllMembers ? publicFigure.members : publicFigure.members!.slice(0, MEMBERS_LIMIT)) : []).map((m, index) => (
                                                 <React.Fragment key={m.name}>
                                                     <Link
                                                         href={`/${createUrlSlug(m.name)}`}
@@ -110,16 +132,16 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                                                     >
                                                         {m.name}
                                                     </Link>
-                                                    {index < (showAllMembers ? publicFigure.members!.length : Math.min(MEMBERS_LIMIT, publicFigure.members!.length)) - 1 && ', '}
+                                                    {index < (showAllMembers && 'members' in publicFigure ? publicFigure.members!.length : Math.min(MEMBERS_LIMIT, 'members' in publicFigure ? publicFigure.members!.length : 0)) - 1 && ', '}
                                                 </React.Fragment>
                                             ))}
-                                            {publicFigure.members.length > MEMBERS_LIMIT && !showAllMembers && (
+                                            {'members' in publicFigure && publicFigure.members!.length > MEMBERS_LIMIT && !showAllMembers && (
                                                 <span className="text-gray-500 dark:text-gray-400">
-                                                    {' '}+ {publicFigure.members.length - MEMBERS_LIMIT} more
+                                                    {' '}+ {publicFigure.members!.length - MEMBERS_LIMIT} more
                                                 </span>
                                             )}
                                         </span>
-                                        {publicFigure.members.length > MEMBERS_LIMIT && (
+                                        {'members' in publicFigure && publicFigure.members!.length > MEMBERS_LIMIT && (
                                             <div className="mt-2">
                                                 <button
                                                     onClick={() => setShowAllMembers(!showAllMembers)}
@@ -131,19 +153,6 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                                         )}
                                     </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Group (for individual members) */}
-                        {!publicFigure.is_group && publicFigure.group && publicFigure.group.trim() !== '' && (
-                            <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
-                                <span className="text-gray-600 dark:text-gray-400 font-medium">Group</span>
-                                <Link
-                                    href={`/${createUrlSlug(publicFigure.group)}`}
-                                    className="text-key-color dark:text-key-color-dark hover:underline text-right"
-                                >
-                                    {publicFigure.group}
-                                </Link>
                             </div>
                         )}
 

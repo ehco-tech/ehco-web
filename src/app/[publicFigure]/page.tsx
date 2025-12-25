@@ -237,6 +237,10 @@ async function getPublicFigureData(publicFigureSlug: string): Promise<PublicFigu
 
     if (publicFigureData.is_group) {
         (publicFigureData as GroupProfile).members = data.members || [];
+        // For unit figures, also populate the group field
+        if (data.gender === 'unit') {
+            (publicFigureData as any).group = data.group || '';
+        }
     } else {
         (publicFigureData as IndividualPerson).birthDate = data.birthDate || '';
         (publicFigureData as IndividualPerson).chineseZodiac = data.chineseZodiac || '';

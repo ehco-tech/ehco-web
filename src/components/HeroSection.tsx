@@ -253,7 +253,7 @@ export default function HeroSection({ publicFigure }: HeroSectionProps) {
         const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 
         // Return white for dark backgrounds, black for light backgrounds
-        return luminance > 0.2 ? '#000000' : '#FFFFFF';
+        return luminance > 0.21 ? '#000000' : '#FFFFFF';
     };
 
     const textColor = getTextColor(primaryColor);
