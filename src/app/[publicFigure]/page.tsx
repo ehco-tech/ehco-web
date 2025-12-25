@@ -85,6 +85,7 @@ export interface IndividualPerson extends PublicFigureBase {
 export interface GroupProfile extends PublicFigureBase {
     is_group: true;
     members?: IndividualPerson[];
+    group?: string; // For unit figures
 }
 
 export type PublicFigure = IndividualPerson | GroupProfile;
@@ -239,7 +240,7 @@ async function getPublicFigureData(publicFigureSlug: string): Promise<PublicFigu
         (publicFigureData as GroupProfile).members = data.members || [];
         // For unit figures, also populate the group field
         if (data.gender === 'unit') {
-            (publicFigureData as any).group = data.group || '';
+            (publicFigureData as GroupProfile).group = data.group || '';
         }
     } else {
         (publicFigureData as IndividualPerson).birthDate = data.birthDate || '';
