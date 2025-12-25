@@ -1,11 +1,12 @@
-Name,Occupation,Type,Nationality
-Zhoumi,Singer (SUPER JUNIOR-M),Individual,Chinese
-M&D,Boy Group,Group,South Korean
-EXO-K,Boy Group,Group,South Korean
-EXO-M,Boy Group,Group,South Korean
-EXO-CBX,Boy Group,Group,South Korean
-EXO-SC,Boy Group,Group,South Korean
-Girls' Generation-TTS,Girl Group,Group,South Korean
-Girls' Generation-Oh!GG,Girl Group,Group,South Korean
-SuperM,Boy Group,Group,South Korean
-NCT U,Boy Group,Group,South Korean
+Name,Occupation,Type,Nationality,Group
+Zhoumi,Singer (SUPER JUNIOR-M),Individual,Chinese,SUPER JUNIOR
+M&D,Boy Group,Unit,South Korean,SUPER JUNIOR
+EXO-K,Boy Group,Unit,South Korean,EXO
+EXO-M,Boy Group,Unit,South Korean,EXO
+EXO-CBX,Boy Group,Unit,South Korean,EXO
+EXO-SC,Boy Group,Unit,South Korean,EXO
+Girls' Generation-TTS,Girl Group,Unit,South Korean,Girls' Generation
+Girls' Generation-Oh!GG,Girl Group,Unit,South Korean,Girls' Generation
+SuperM,Boy Group,Group,South Korean,
+NCT U,Boy Group,Unit,South Korean,NCT
+NCT DOJAEJUNG,Boy Group,Unit,South Korean,NCT
