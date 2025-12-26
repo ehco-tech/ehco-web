@@ -143,7 +143,7 @@ export default function RootLayout({
           </div>
 
           {/* Horizontal Banner Ad - Below Header (320x50) */}
-          <div className="pt-16 bg-gray-50 dark:bg-black">
+          {/* <div className="pt-16 bg-gray-50 dark:bg-black">
             <div className="flex justify-center items-center py-3 bg-white dark:bg-[#1d1d1f]">
               <div id="ad-banner-horizontal">
                 <Script id="ad-banner-config" strategy="lazyOnload">
@@ -163,7 +163,7 @@ export default function RootLayout({
                 />
               </div>
             </div>
-          </div>
+          </div> */}
 
           {/* Main Content with Sidebar Layout */}
           <div className="min-h-screen bg-gray-50 dark:bg-black">
@@ -175,7 +175,7 @@ export default function RootLayout({
               </main>
 
               {/* Right Sidebar Ad - Desktop Only (160x300) */}
-              <aside className="hidden lg:block w-[180px] sticky top-20 self-start p-4">
+              {/* <aside className="hidden lg:block w-[180px] sticky top-20 self-start p-4">
                 <div id="ad-sidebar-skyscraper" className="flex justify-center">
                   <Script id="ad-sidebar-config" strategy="lazyOnload">
                     {`
@@ -193,7 +193,7 @@ export default function RootLayout({
                     strategy="lazyOnload"
                   />
                 </div>
-              </aside>
+              </aside> */}
             </div>
           </div>
 
