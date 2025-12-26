@@ -19,6 +19,7 @@ import { notFound } from 'next/navigation';
 import { getSpotifyData } from '@/lib/spotify-data-reader';
 import { getTMDbData } from '@/lib/tmdb-data-reader';
 import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
+import ScrollNavigation from '@/components/ScrollNavigation';
 
 // --- IMPORTED TYPES ---
 import {
@@ -629,6 +630,7 @@ async function PublicFigurePageContent({ publicFigureId }: { publicFigureId: str
             >
                 <div className="min-h-screen bg-gray-50 dark:bg-black">
                     <JsonLd data={schemaData} />
+                    <ScrollNavigation />
 
                     {/* Hero Section */}
                     <HeroSection publicFigure={serializedPublicFigure} />
