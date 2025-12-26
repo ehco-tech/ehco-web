@@ -1,4 +1,4 @@
-Name,Occupation,Type,Nationality
+Name,Occupation,Type,Nationality,Group
 Ahn Bo-hyun,Actor,Individual,South Korean
 Bae Doona,Actress,Individual,South Korean
 Bae Suzy,Actress / Singer,Individual,South Korean
@@ -82,10 +82,10 @@ Ive,Girl Group,Group,South Korean
 Le Sserafim,Girl Group,Group,South Korean
 Monsta X,Boy Group,Group,South Korean
 NCT,Boy Group (multiple units),Group,South Korean
-NCT 127,Boy Group,Group,South Korean
-NCT Dream,Boy Group,Group,South Korean
-Way V,Boy Group,Group,South Korean
-NCT Wish,Boy Group,Group,South Korean
+NCT 127,Boy Group,Unit,South Korean,NCT
+NCT Dream,Boy Group,Unit,South Korean,NCT
+Way V,Boy Group,Unit,South Korean,NCT
+NCT Wish,Boy Group,Unit,South Korean,NCT
 NewJeans,Girl Group,Group,South Korean
 Nmixx,Girl Group,Group,South Korean
 Red Velvet,Girl Group,Group,South Korean
@@ -322,7 +322,7 @@ Q,Singer / Dancer (THE BOYZ),Individual,South Korean
 Sunwoo,Rapper / Singer / Dancer (THE BOYZ),Individual,South Korean
 Eric,Rapper / Dancer (THE BOYZ),Individual,South Korean
 TREASURE,Boy Group,Group,South Korean
-T5,Boy Group,Group,South Korean
+T5,Boy Group,Unit,South Korean,TREASURE
 Choi Hyunsuk,Rapper / Dancer / Singer (TREASURE),Individual,South Korean
 Jihoon,Singer / Dancer / (TREASURE / T5),Individual,South Korean
 Yoshi,Rapper (TREASURE),Individual,South Korean
@@ -341,12 +341,12 @@ Chaeryeong,Dancer / Singer / Rapper (ITZY),Individual,South Korean
 Yuna,Singer / Rapper / Dancer (ITZY),Individual,South Korean
 GOT the beat,Girl Group,Group,South Korean
 SUPER JUNIOR,Boy Group,Group,South Korean
-SUPER JUNIOR-K.R.Y.,Boy Group,Group,South Korean
-SUPER JUNIOR-T,Boy Group,Group,South Korean
-SUPER JUNIOR-M,Boy Group,Group,South Korean
-SUPER JUNIOR-Happy,Boy Group,Group,South Korean
-SUPER JUNIOR-D&E,Boy Group,Group,South Korean
-SUPER JUNIOR-L.S.S,Boy Group,Group,South Korean
+SUPER JUNIOR-K.R.Y.,Boy Group,Unit,South Korean,SUPER JUNIOR
+SUPER JUNIOR-T,Boy Group,Unit,South Korean,SUPER JUNIOR
+SUPER JUNIOR-M,Boy Group,Unit,South Korean,SUPER JUNIOR
+SUPER JUNIOR-Happy,Boy Group,Unit,South Korean,SUPER JUNIOR
+SUPER JUNIOR-D&E,Boy Group,Unit,South Korean,SUPER JUNIOR
+SUPER JUNIOR-L.S.S,Boy Group,Unit,South Korean,SUPER JUNIOR
 Leeteuk,Singer / Rapper / Dancer (SUPER JUNIOR),Individual,South Korean
 Heechul,Singer / Rapper (SUPER JUNIOR),Individual,South Korean
 Yesung,Singer / Rapper (SUPER JUNIOR),Individual,South Korean
@@ -356,3 +356,14 @@ Siwon,Singer / Dancer (SUPER JUNIOR),Individual,South Korean
 Donghae,Singer / Dancer / Rapper (SUPER JUNIOR),Individual,South Korean
 Ryeowook,Singer (SUPER JUNIOR),Individual,South Korean
 Kyuhyun,Singer / Rapper / Dancer (SUPER JUNIOR),Individual,South Korean
+Zhoumi,Singer (SUPER JUNIOR-M),Individual,Chinese
+M&D,Boy Group,Unit,South Korean,SUPER JUNIOR
+EXO-K,Boy Group,Unit,South Korean,EXO
+EXO-M,Boy Group,Unit,South Korean,EXO
+EXO-CBX,Boy Group,Unit,South Korean,EXO
+EXO-SC,Boy Group,Unit,South Korean,EXO
+Girls' Generation-TTS,Girl Group,Unit,South Korean,Girls' Generation
+Girls' Generation-Oh!GG,Girl Group,Unit,South Korean,Girls' Generation
+SuperM,Boy Group,Group,South Korean
+NCT U,Boy Group,Unit,South Korean,NCT
+NCT DOJAEJUNG,Boy Group,Unit,South Korean,NCT
