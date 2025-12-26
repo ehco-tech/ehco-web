@@ -130,7 +130,7 @@ export default function RootLayout({
           crossOrigin="anonymous"></script>
       </head>
       <body className={inter.className}>
-        <Script id="ad-config" strategy="afterInteractive">
+        <Script id="ad-config-1" strategy="afterInteractive">
           {`
             atOptions = {
               'key' : '4b77689bf7394b9ee645a2a752c04a33',
@@ -145,7 +145,7 @@ export default function RootLayout({
           src="https://www.highperformanceformat.com/4b77689bf7394b9ee645a2a752c04a33/invoke.js"
           strategy="afterInteractive"
         />
-        <Script id="ad-config" strategy="afterInteractive">
+        <Script id="ad-config-2" strategy="afterInteractive">
           {`
             atOptions = {
               'key' : 'b6fd012836d0efc4358182fcf429e9f4',
