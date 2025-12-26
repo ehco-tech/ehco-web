@@ -130,36 +130,6 @@ export default function RootLayout({
           crossOrigin="anonymous"></script>
       </head>
       <body className={inter.className}>
-        <Script id="ad-config-1" strategy="afterInteractive">
-          {`
-            atOptions = {
-              'key' : '4b77689bf7394b9ee645a2a752c04a33',
-              'format' : 'iframe',
-              'height' : 50,
-              'width' : 320,
-              'params' : {}
-            };
-          `}
-        </Script>
-        <Script
-          src="https://www.highperformanceformat.com/4b77689bf7394b9ee645a2a752c04a33/invoke.js"
-          strategy="afterInteractive"
-        />
-        <Script id="ad-config-2" strategy="afterInteractive">
-          {`
-            atOptions = {
-              'key' : 'b6fd012836d0efc4358182fcf429e9f4',
-              'format' : 'iframe',
-              'height' : 300,
-              'width' : 160,
-              'params' : {}
-            };
-          `}
-        </Script>
-        <Script
-          src="https://www.highperformanceformat.com/b6fd012836d0efc4358182fcf429e9f4/invoke.js"
-          strategy="afterInteractive"
-        />
         <Script
           src="https://pl28337917.effectivegatecpm.com/43cb9ad4088581450e0265e080cc75ec/invoke.js"
           strategy="afterInteractive"
@@ -171,11 +141,61 @@ export default function RootLayout({
           <div className="fixed top-0 left-0 right-0 z-50 shadow-md">
             <Header />
           </div>
-          {/* <ProfileCompletionBanner /> */}
-          <main className="min-h-screen pt-16 bg-gray-50 dark:bg-black">
-            {children}
-            <JsonLd data={websiteSchema} />
-          </main>
+
+          {/* Horizontal Banner Ad - Below Header (320x50) */}
+          <div className="pt-16 bg-gray-50 dark:bg-black">
+            <div className="flex justify-center items-center py-3 bg-white dark:bg-[#1d1d1f]">
+              <div id="ad-banner-horizontal">
+                <Script id="ad-banner-config" strategy="lazyOnload">
+                  {`
+                    atOptions = {
+                      'key' : '4b77689bf7394b9ee645a2a752c04a33',
+                      'format' : 'iframe',
+                      'height' : 50,
+                      'width' : 320,
+                      'params' : {}
+                    };
+                  `}
+                </Script>
+                <Script
+                  src="https://www.highperformanceformat.com/4b77689bf7394b9ee645a2a752c04a33/invoke.js"
+                  strategy="lazyOnload"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content with Sidebar Layout */}
+          <div className="min-h-screen bg-gray-50 dark:bg-black">
+            <div className="flex flex-col lg:flex-row max-w-[1400px] mx-auto">
+              {/* Main Content */}
+              <main className="flex-1 w-full lg:w-auto">
+                {children}
+                <JsonLd data={websiteSchema} />
+              </main>
+
+              {/* Right Sidebar Ad - Desktop Only (160x300) */}
+              <aside className="hidden lg:block w-[180px] sticky top-20 self-start p-4">
+                <div id="ad-sidebar-skyscraper" className="flex justify-center">
+                  <Script id="ad-sidebar-config" strategy="lazyOnload">
+                    {`
+                      atOptions = {
+                        'key' : 'b6fd012836d0efc4358182fcf429e9f4',
+                        'format' : 'iframe',
+                        'height' : 300,
+                        'width' : 160,
+                        'params' : {}
+                      };
+                    `}
+                  </Script>
+                  <Script
+                    src="https://www.highperformanceformat.com/b6fd012836d0efc4358182fcf429e9f4/invoke.js"
+                    strategy="lazyOnload"
+                  />
+                </div>
+              </aside>
+            </div>
+          </div>
 
           {/* Footer - white background with only copyright and links */}
           <footer className="mt-0 bg-white dark:bg-[#1d1d1f] border-t border-gray-200 dark:border-gray-800 py-8">
