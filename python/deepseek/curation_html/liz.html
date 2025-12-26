@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liz (IVE) Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #6b7280; text-decoration: none; font-size: 0.875rem;
+            margin-bottom: 32px; transition: color 0.2s ease;
+        }
+        .back-link:hover { color: #D10041; }
+        .back-link svg { width: 16px; height: 16px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 1200px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .celebrity-link { color: #D10041; text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+        .celebrity-link:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .highlighted { background: rgba(209, 0, 65, 0.08) !important; transition: background 0.3s ease; }
+        @media (max-width: 640px) {
+            .page-title { font-size: 1.75rem; }
+            .main-content { padding: 32px 16px 60px; }
+            .bottom-nav { flex-direction: column; gap: 12px; }
+            .nav-button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <a href="#" class="back-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Search
+        </a>
+
+        <header class="page-header">
+            <h1 class="page-title">Liz Wiki</h1>
+            <p class="page-subtitle">리즈 • IVE Main Vocalist</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🐱</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">22 facts</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Born November 21, 2004, in Nohyeong-dong, Jeju City, Jeju Island, South Korea<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Full name: Kim Ji-won (김지원), Stage name derived from Elizabeth Bennet of "Pride and Prejudice"<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Main vocalist of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a><span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Passed Starship x Pepsi Summer Open Audition in 2019<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Appeared in <a href="https://www.ehco.ai/girls'generation" class="celebrity-link">Girls' Generation</a> <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>'s "This Christmas" MV (2017) as young Taeyeon—before becoming a trainee<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Fourth member revealed of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> on November 5, 2021<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Blood Type: AB | MBTI: INTP (previously INFP)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Passed High School Equivalency Exam after dropping out to focus on training<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Representative color in <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> is Cyan<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Known as "Tone Fairy" for her clear, pure vocal quality<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Subject of viral "German Liz" meme due to her Western-style facial features<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Role model: <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a> of <a href="https://www.ehco.ai/girls'generation" class="celebrity-link">Girls Generation</a><span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Has two pet cats named Milk and Kumi<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Collaborated with <a href="https://www.ehco.ai/soyeon" class="celebrity-link">Soyeon</a> (<a href="https://www.ehco.ai/idle" class="celebrity-link">(G)I-DLE)</a> and <a href="https://www.ehco.ai/winter" class="celebrity-link">Winter</a> (<a href="https://www.ehco.ai/aespa" class="celebrity-link">aespa</a>) on "NOBODY" (2023)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Appeared on MBC's "The King of Mask Singer" in May 2024, covering <a href="https://www.ehco.ai/iu" class="celebrity-link">IU</a> and <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a> songs<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Selected as special MC on MBC's "Show! Music Core" alongside <a href="https://www.ehco.ai/gaeul" class="celebrity-link">Gaeul</a> (February 2025)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Brand ambassador: Olive Young Vegan Beauty (2022), Zigzag/Kakaostyle (2023), 8seconds (2025)<span class="fact-badge verified">Verified</span></span></div>
+                </div>
+                <button class="show-more-facts" onclick="showMoreFacts()">
+                    <span>Show More Facts</span>
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">
+                    EHCO Curated
+                    <span class="ehco-badge">EDITORIAL</span>
+                </h2>
+                <p class="curated-subtitle">Last edited: December 25, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">From Jeju Island to Taeyeon's Music Video: An Unlikely Beginning</h3>
+                <p class="article-paragraph">
+                    Kim Ji-won's path to becoming Liz of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> began not in a Seoul audition room, but on the windswept island of Jeju. Born on November 21, 2004, in Nohyeong-dong, Jeju City, Liz grew up far from the K-pop industry's epicenter. Her early years were marked by musical inclination—she was a member of the KBS Jeju choir during elementary school and developed proficiency in piano—but her dream of becoming an idol remained distant.
+                </p>
+                <p class="article-paragraph">
+                    The first glimpse of her potential came in December 2017, when a 13-year-old Liz appeared in the music video for <a href="https://www.ehco.ai/girls'generation" class="celebrity-link">Girls Generation</a> member <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>'s winter ballad "This Christmas."<a href="#fn1" class="footnote-ref">1</a> Cast to portray the younger version of Taeyeon herself, Liz delivered the role before she had even joined any entertainment agency as a trainee. The casting was serendipitous—and for Liz, personally significant. "This Christmas" was the song that sparked her love for K-pop, and <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a> would become her lifelong role model.<a href="#fn2" class="footnote-ref">2</a> Meeting her idol on set, however, proved overwhelming for the shy girl from Jeju. "I was so shy that I could only say, 'I'm a fan,'" she later recalled.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Pepsi Audition That Changed Everything</h3>
+                <p class="article-paragraph">
+                    Nearly two years after her music video appearance, Liz's trajectory shifted decisively. In the summer of 2019, Starship Entertainment hosted its "Pepsi Summer Open Audition"—the same audition whose promotional video happened to feature <a href="https://www.ehco.ai/anyujin" class="celebrity-link">An Yujin</a> and <a href="https://www.ehco.ai/jangwonyoung" class="celebrity-link">Jang Wonyoung</a>, then active members of IZ*ONE.<a href="#fn4" class="footnote-ref">4</a> A 14-year-old Liz, then in her third year of middle school, traveled from Jeju to audition—and delivered a performance that left an immediate impression.
+                </p>
+                <p class="article-paragraph">
+                    According to a member of Starship's rookie development team, Liz's vocal talent and visuals were "overwhelming."<a href="#fn5" class="footnote-ref">5</a> The staff member recalled Liz's eagerness when introducing herself despite her shy personality. For her audition songs, Liz performed <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>'s "This Christmas" and Kim Sejeong's "Flower Road"—songs that demonstrated both her vocal range and her emotional delivery.<a href="#fn3" class="footnote-ref">3</a> She passed, joining Starship's trainee system alongside future groupmates. To pursue her idol dreams, Liz made a significant sacrifice: she transferred from Halla Middle School in Jeju to Unbuk Middle School in Seoul in her third year, leaving behind her island home and family.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+                <p class="article-paragraph">
+                    An interesting footnote to Liz's audition decision: she has mentioned that one reason she applied specifically to Starship Entertainment was because she was a fan of actor Lee Kwang-soo, known for his appearances on the variety show "Running Man." When researching agencies, she discovered that Lee Kwang-soo was affiliated with King Kong by Starship, a subsidiary—and thought she might have the opportunity to see him there.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Training Years and the Road Not Taken</h3>
+                <p class="article-paragraph">
+                    During her trainee period at Starship Entertainment, Liz formed a particularly close bond with Japanese trainee <a href="https://www.ehco.ai/rei" class="celebrity-link">Naoi Rei</a>, who had joined in 2018 after passing the Loen Friends Global Audition in Japan. The two trainees depended on each other and shared a room—Rei later remarked that when they first met, she thought Liz "looked like a doll."<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    Liz was reportedly considered for Mnet's reality survival show "Produce 48" in 2018, but ultimately did not participate.<a href="#fn8" class="footnote-ref">8</a> The decision—whether made by Liz, her family, or the agency—proved consequential. Had she competed alongside <a href="https://www.ehco.ai/jangwonyoung" class="celebrity-link">Jang Wonyoung</a> and <a href="https://www.ehco.ai/anyujin" class="celebrity-link">An Yujin</a>, her career might have taken a different shape entirely. Instead, she continued training at Starship, honing her vocal abilities under instructors who praised her "clear and elegant vocal tone" and "emotive delivery."<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    To focus fully on her training and debut preparations, Liz dropped out of Cheongdam High School. She later passed the High School Equivalency Exam, demonstrating her commitment to both her education and her career.<a href="#fn6" class="footnote-ref">6</a> From joining Starship in 2019 to her eventual debut, Liz trained for approximately two years.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">IVE Debut: The Nervous Vocalist and the Relaxing Pill</h3>
+                <p class="article-paragraph">
+                    On November 2, 2021, Starship Entertainment announced they would debut a new girl group—their first since WJSN in 2016. Members were revealed sequentially from November 3 to 8: <a href="https://www.ehco.ai/anyujin" class="celebrity-link">Yujin</a>, <a href="https://www.ehco.ai/gaeul" class="celebrity-link">Gaeul</a>, <a href="https://www.ehco.ai/jangwonyoung" class="celebrity-link">Wonyoung</a>, Liz, <a href="https://www.ehco.ai/rei" class="celebrity-link">Rei</a>, and <a href="https://www.ehco.ai/leeseo" class="celebrity-link">Leeseo</a>. Liz was revealed as the fourth member on November 5, 2021, receiving 50,000 likes on her profile release within just 2.5 hours on Twitter—a testament to the anticipation surrounding the group.<a href="#fn8" class="footnote-ref">8</a>
+                </p>
+                <p class="article-paragraph">
+                    The Korea Herald covered <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s debut showcase on December 1, 2021, where the six-member group introduced themselves to the world with their debut single "Eleven."<a href="#fn9" class="footnote-ref">9</a> Speaking about the music video during the showcase, Liz offered a glimpse of her thoughtful personality: "Just like the famous saying that one can capture the greatest beauty in nature, we wanted to express the beauty and charms that are tailored to us in our music video."<a href="#fn9" class="footnote-ref">9</a>
+                </p>
+                <p class="article-paragraph">
+                    What the public didn't see was the depth of Liz's pre-debut anxiety. She later revealed that on the day of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s debut showcase, she had to take a relaxing pill to calm her nerves.<a href="#fn8" class="footnote-ref">8</a> Her shy personality—so pronounced that she gets nervous ordering food—made the high-pressure debut environment particularly challenging. Yet when "Eleven" topped all South Korean charts upon release and <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> earned their first music show win just one week after debut on MBC M's Show Champion, the payoff was undeniable.<a href="#fn10" class="footnote-ref">10</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The "Tone Fairy" and the Body Image Battle</h3>
+                <p class="article-paragraph">
+                    As <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> ascended to the top of the fourth-generation girl group hierarchy—winning Song of the Year at the 2022 Melon Music Awards and MAMA Awards with "Love Dive," just 360 days after debut—Liz's contributions as main vocalist became increasingly central to their sound.<a href="#fn11" class="footnote-ref">11</a> Her clear, smooth vocal tone earned her the nickname "Tone Fairy" among Korean fans, who praised her ability to deliver both powerful high notes and delicate falsettos.<a href="#fn12" class="footnote-ref">12</a> Her vocal segments in songs like "Love Dive" and "I AM" became known as "paradise parts" for their emotional impact.<a href="#fn13" class="footnote-ref">13</a>
+                </p>
+                <p class="article-paragraph">
+                    However, the spotlight brought harsh scrutiny. Beginning in mid-2022, Liz faced persistent criticism on Korean online communities regarding her weight fluctuations. Standing alongside members like the statuesque <a href="https://www.ehco.ai/jangwonyoung" class="celebrity-link">Jang Wonyoung</a>, any changes in her frame were magnified and dissected. Some posts on Pann—a Korean forum—were later found to have been deliberately edited to make her appear larger than she was, a malicious form of cyberbullying.<a href="#fn14" class="footnote-ref">14</a>
+                </p>
+                <p class="article-paragraph">
+                    In February 2023, Liz addressed the criticism directly during a live stream. When a fan asked how she was doing amidst the controversy, she responded that she was "doing fine now" and that she is "always happy, thanks to DIVE" (IVE's fandom). She assured fans that the criticism "doesn't bother her anymore."<a href="#fn15" class="footnote-ref">15</a> By the time of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s first studio album "I've IVE" in April 2023, fans noted her visibly slimmer appearance—though many expressed concern that the online harassment may have contributed to what appeared to be intense weight loss.<a href="#fn16" class="footnote-ref">16</a> The conversation around Liz's body became a focal point for broader discussions about the K-pop industry's treatment of female idols and unrealistic beauty standards.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">"German Liz": The Power of a Viral Meme</h3>
+                <p class="article-paragraph">
+                    Among the lighter phenomena surrounding Liz's career is the "German Liz" meme, which gained traction among international fans around 2022-2023. The joke originated from Liz's Western-style facial features—her deep-set eyes, defined nose, and overall appearance led fans to jokingly speculate that she was German rather than Korean. The meme spawned an elaborate fictional backstory: fans created the character "Elizabeth Helga Müller," a German singer from Bavaria who supposedly left her homeland in 2021 to pursue K-pop stardom.<a href="#fn17" class="footnote-ref">17</a>
+                </p>
+                <p class="article-paragraph">
+                    Rather than ignore the joke, Liz has embraced it with good humor. When <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> performed at Lollapalooza Berlin in 2024, fans greeted her with German flags, treating it as a "homecoming" for "German Liz." She has acknowledged the running joke and occasionally participates in it, demonstrating the playful personality that has emerged as she's grown more comfortable in the spotlight.<a href="#fn17" class="footnote-ref">17</a> The meme also spawned discussions on Korean forums, with domestic fans trying to understand the international joke's origins—a rare instance of a K-pop meme traveling from international to Korean fan communities.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Breaking Out: "NOBODY" and Solo Ventures</h3>
+                <p class="article-paragraph">
+                    Liz's selection as <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s representative for the special collaboration single "NOBODY" in November 2023 marked a significant milestone in her career. Joining forces with <a href="https://www.ehco.ai/soyeon" class="celebrity-link">Jeon Soyeon</a> of <a href="https://www.ehco.ai/idle" class="celebrity-link">I-dle</a> and <a href="https://www.ehco.ai/winter" class="celebrity-link">Winter</a> of aespa, Liz was chosen over her more publicly prominent groupmates—a testament to her vocal abilities.<a href="#fn18" class="footnote-ref">18</a> The Korea Herald noted that "NOBODY" was created to support Busan's bid to host the 2030 World Expo, with the disco-influenced production highlighting "the strengths of K-pop."<a href="#fn19" class="footnote-ref">19</a>
+                </p>
+                <p class="article-paragraph">
+                    In May 2024, Liz showcased her vocal prowess on MBC's singing competition "The King of Mask Singer," appearing as "Hourglass." She covered <a href="https://www.ehco.ai/iu(leejieun)" class="celebrity-link">IU</a>'s challenging "The Red Shoes," impressing the audience and celebrity panelists. Judge Yoon Sang specifically praised her for successfully pulling off such a difficult song.<a href="#fn20" class="footnote-ref">20</a> Though she lost in Round 2, the program later released footage of her rehearsal for Round 3—a planned cover of <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>'s ballad "If"—giving fans a glimpse of what might have been.
+                </p>
+                <p class="article-paragraph">
+                    December 2024 brought Liz's first solo OST: "Summer" for the tvN drama "Love Your Enemy." The track, portraying a love that remains unchanging over time, allowed Liz to demonstrate her emotional depth as a vocalist outside of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s group context.<a href="#fn21" class="footnote-ref">21</a> She followed this in May 2025 with another OST contribution, "Heavy Love" for the drama "Heavenly Ever After," cementing her growing presence in the Korean drama soundtrack sphere.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Quiet Force Behind IVE's Success</h3>
+                <p class="article-paragraph">
+                    Seven years after appearing as young Taeyeon in a Christmas music video, Liz finally met her idol properly. In February 2025, when <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a> appeared on tvN's "Amazing Saturday" alongside <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a> as a panelist, Liz's face turned bright red with emotion. <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>, for her part, marveled at Liz's dimples, calling them "so pretty."<a href="#fn22" class="footnote-ref">22</a> In March 2025, Liz attended <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a>'s "The Tense" concert—a full-circle moment for the girl from Jeju who once could only manage to say "I'm a fan."
+                </p>
+                <p class="article-paragraph">
+                    Today, Liz continues to evolve as an artist and public figure. Her February 2025 appointment as special MC on "Show! Music Core" alongside <a href="https://www.ehco.ai/gaeul" class="celebrity-link">Gaeul</a> demonstrates her growing confidence in public-facing roles—a marked change from the girl who needed medication to calm her nerves at debut.<a href="#fn23" class="footnote-ref">23</a> Her variety show appearances on programs like "Running Man," "Knowing Bros," and "Amazing Saturday" have revealed a wit and humor that contradicts her introverted INTP personality type, earning her recognition as one of <a href="https://www.ehco.ai/ive" class="celebrity-link">IVE</a>'s representative members for entertainment programs.
+                </p>
+                <p class="article-paragraph">
+                    Within the group, Liz remains the "quiet and calm friend" that <a href="https://www.ehco.ai/gaeul" class="celebrity-link">Gaeul</a> described early in their career—but one who has learned to shine when the moment demands it. Her journey from the shores of Jeju Island to the center of K-pop's fourth generation illustrates both the industry's relentless pressures and its capacity to transform shy dreamers into confident performers. The girl who once appeared as young <a href="https://www.ehco.ai/taeyeon" class="celebrity-link">Taeyeon</a> has carved out her own identity—not as anyone's shadow, but as the "Tone Fairy" whose clear voice anchors one of K-pop's most successful groups.
+                </p>
+            </article>
+        </section>
+
+        <section class="footnotes-section">
+            <h3 class="footnotes-title">Sources & References</h3>
+            <div class="footnotes-grid">
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://www.soompi.com/article/1719765wpp/watch-ives-liz-gets-shy-meeting-girls-generations-taeyeon-in-amazing-saturday-preview" target="_blank" rel="noopener">Soompi: IVE's Liz Gets Shy Meeting Girls' Generation's Taeyeon In "Amazing Saturday" Preview (February 2025)</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://ive.fandom.com/wiki/Liz" target="_blank" rel="noopener">IVE Official Fan Documentation: The song that got Liz into K-Pop is Taeyeon's "This Christmas"</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://en.namu.wiki/w/리즈(IVE)" target="_blank" rel="noopener">NamuWiki: Liz (IVE) - Audition details and trainee background (Korean source documentation)</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://iconpolls.com/blogs/liz-ive-biography-nationality-education-net-worth-2025-and-career" target="_blank" rel="noopener">IconPolls: Liz (IVE) Biography - Pepsi Audition with Yujin and Wonyoung appearance</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://ive.fandom.com/wiki/Liz" target="_blank" rel="noopener">IVE Wiki: Starship rookie development team described Liz's vocal talent and visuals as "overwhelming"</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.seoulvibes.net/liz-profile/" target="_blank" rel="noopener">Seoul Vibes: Liz and Her Profile - Education and trainee transition from Jeju to Seoul</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://kpopping.com/profiles/idol/Liz2" target="_blank" rel="noopener">Kpopping: Liz (IVE) Profile - Rei thought Liz looked like a doll when they first met</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://kprofiles.com/liz-ive-profile/" target="_blank" rel="noopener">Kprofiles: Liz (IVE) Profile - Produce 48 consideration, debut showcase, Twitter reception</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/2734051" target="_blank" rel="noopener">The Korea Herald: Rookie girl group Ive ready to make a splash with 'Eleven' (December 1, 2021)</a></span></div>
+                <div class="footnote-item" id="fn10"><span class="footnote-number">10</span><span class="footnote-text"><a href="https://www.soompi.com/article/1502797wpp/watch-ive-takes-tearful-1st-ever-win-on-show-champion-with-eleven-performances-by-everglow-oneus-and-more" target="_blank" rel="noopener">Soompi: IVE Takes Tearful 1st-Ever Win On "Show Champion" (December 8, 2021)</a></span></div>
+                <div class="footnote-item" id="fn11"><span class="footnote-number">11</span><span class="footnote-text"><a href="https://www.nme.com/news/music/2022-melon-music-awards-winners-performances-ive-newjeans-le-sserafim-3356629" target="_blank" rel="noopener">NME: IVE win Best Song of the Year at the 2022 Melon Music Awards (November 28, 2022)</a></span></div>
+                <div class="footnote-item" id="fn12"><span class="footnote-number">12</span><span class="footnote-text"><a href="https://www.allkpop.com/video/2024/12/ives-liz-debuts-as-ost-singer-with-summer-for-drama-love-your-enemy" target="_blank" rel="noopener">AllKPop: IVE's Liz debuts as OST singer - known as "tone fairy" for her exceptional vocal skills (December 2024)</a></span></div>
+                <div class="footnote-item" id="fn13"><span class="footnote-number">13</span><span class="footnote-text"><a href="https://www.k-ennews.com/news/articleView.html?idxno=5927" target="_blank" rel="noopener">K-EnNews: IVE Liz Releases OST 'Summer' - fans refer to her vocal segments as "paradise parts"</a></span></div>
+                <div class="footnote-item" id="fn14"><span class="footnote-number">14</span><span class="footnote-text"><a href="https://meaww.com/was-ive-liz-edited-look-big-pann-fat-shamers-kpop-fan-reaction" target="_blank" rel="noopener">MEAWW: Was IVE's Liz edited to look big? Fans slam fat-shamers (August 2022)</a></span></div>
+                <div class="footnote-item" id="fn15"><span class="footnote-number">15</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2023/02/ives-liz-says-that-she-is-unfazed-by-any-malicious-comments-about-her-weight" target="_blank" rel="noopener">AllKPop: IVE's Liz says that she is unfazed by any malicious comments about her weight (February 2023)</a></span></div>
+                <div class="footnote-item" id="fn16"><span class="footnote-number">16</span><span class="footnote-text"><a href="https://www.koreaboo.com/news/fans-worry-ive-liz-after-intense-weight-loss/" target="_blank" rel="noopener">Koreaboo: Fans Worry For IVE's Liz After Her Intense Weight Loss (March 2024)</a></span></div>
+                <div class="footnote-item" id="fn17"><span class="footnote-number">17</span><span class="footnote-text"><a href="https://www.tiktok.com/discover/german-liz-explained" target="_blank" rel="noopener">TikTok: German Liz Explained - Viral meme documentation and Lollapalooza Berlin reception</a></span></div>
+                <div class="footnote-item" id="fn18"><span class="footnote-number">18</span><span class="footnote-text"><a href="https://www.soompi.com/article/1624501wpp/watch-members-of-gi-dle-aespa-and-ive-to-release-special-collaboration-single-nobody" target="_blank" rel="noopener">Soompi: (G)I-DLE's Soyeon, aespa's Winter, And IVE's Liz Collaborate For "NOBODY" (November 2023)</a></span></div>
+                <div class="footnote-item" id="fn19"><span class="footnote-number">19</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/3260526" target="_blank" rel="noopener">The Korea Herald: Soyeon, Winter, Liz's collaborative song 'Nobody' comes out Thursday (November 16, 2023)</a></span></div>
+                <div class="footnote-item" id="fn20"><span class="footnote-number">20</span><span class="footnote-text"><a href="https://www.soompi.com/article/1662521wpp/watch-main-vocalist-of-popular-girl-group-covers-iu-and-taeyeon-on-the-king-of-mask-singer" target="_blank" rel="noopener">Soompi: Main Vocalist Of Popular Girl Group Covers IU And Taeyeon On "The King Of Mask Singer" (May 2024)</a></span></div>
+                <div class="footnote-item" id="fn21"><span class="footnote-number">21</span><span class="footnote-text"><a href="https://www.allkpop.com/video/2024/12/ives-liz-debuts-as-ost-singer-with-summer-for-drama-love-your-enemy" target="_blank" rel="noopener">AllKPop: IVE's Liz debuts as OST singer with 'Summer' for drama 'Love Your Enemy' (December 2024)</a></span></div>
+                <div class="footnote-item" id="fn22"><span class="footnote-number">22</span><span class="footnote-text"><a href="https://www.soompi.com/article/1719765wpp/watch-ives-liz-gets-shy-meeting-girls-generations-taeyeon-in-amazing-saturday-preview" target="_blank" rel="noopener">Soompi: Taeyeon marvels "[Liz's] dimples are so pretty" during "Amazing Saturday" (February 2025)</a></span></div>
+                <div class="footnote-item" id="fn23"><span class="footnote-number">23</span><span class="footnote-text"><a href="https://en.wikipedia.org/wiki/Liz_(South_Korean_singer)" target="_blank" rel="noopener">Liz official documentation: Liz and Gaeul selected as special MCs on Show! Music Core (February 2025)</a></span></div>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-button">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Previous: Rei
+            </a>
+            <a href="#" class="nav-button primary">
+                View IVE Group Profile
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+        </nav>
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlighted');
+                    setTimeout(() => target.classList.remove('highlighted'), 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

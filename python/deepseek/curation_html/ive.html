@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IVE Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.7; min-height: 100vh; }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 3000px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .footnote-item.highlighted { background: rgba(209, 0, 65, 0.05); border-radius: 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+        a { color: #D10041; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (max-width: 640px) { .main-content { padding: 24px 16px 60px; } .page-title { font-size: 1.75rem; } .quick-facts-header { padding: 16px 18px; } .quick-facts-content { padding: 0 18px 18px; } .fact-item { padding: 10px 12px; font-size: 0.875rem; } .article-paragraph { font-size: 0.95rem; } .bottom-nav { flex-direction: column; gap: 12px; } .nav-button { width: 100%; justify-content: center; } }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+
+        <header class="page-header">
+            <h1 class="page-title">IVE Wiki</h1>
+            <p class="page-subtitle">아이브 • Starship Entertainment • 4th Generation K-pop</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🔥</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">24 facts</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Full Name: IVE (아이브) — derived from "I HAVE," expressing confident self-presentation<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Agency: Starship Entertainment (subsidiary of Kakao Entertainment)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Debut Date: December 1, 2021 with single album "Eleven"<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Members: <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">An Yujin</a> (Leader), <a href="https://www.ehco.ai/gaeul" target="_blank" rel="noopener noreferrer">Gaeul</a>, <a href="https://www.ehco.ai/rei" target="_blank" rel="noopener noreferrer">Rei</a>, <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Jang Wonyoung</a>, <a href="https://www.ehco.ai/liz" target="_blank" rel="noopener noreferrer">Liz</a>, <a href="https://www.ehco.ai/leeseo" target="_blank" rel="noopener noreferrer">Leeseo</a><span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Official Fandom Name: DIVE (다이브) — combining "Dive Into IVE" and the play on "I've"<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>First Music Show Win: Show Champion (December 8, 2021) — just 7 days after debut, fastest girl group record<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>"Eleven" earned 13 music show wins, including triple crowns on Music Bank, Music Core, and Inkigayo<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>"Love Dive" (2022) became best-performing single of the year in South Korea — topped Circle Digital Chart for 4 weeks<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Song of the Year (Daesang): 2022 MAMA Awards, Melon Music Awards, Golden Disc Awards, Asia Artist Awards<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>"After Like" (2022) sampled Gloria Gaynor's "I Will Survive" — achieved first Perfect All-Kill, 14 music show wins<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>First Studio Album: "I've IVE" (April 10, 2023) — won Album of the Year at 2023 Melon Music Awards<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Billboard Global 200: "Love Dive" peaked at #15, charted for 29 consecutive weeks<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Lollapalooza: First K-pop girl group to perform at 3 different Lollapalooza cities (Chicago, Berlin, Paris)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Album Sales: Five-time million sellers — "IVE Empathy" (2025) sold 1.04 million copies in first week<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Concept Philosophy: "True love begins with loving oneself" — themes of self-confidence and individuality<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Charitable Donations: ₩350 million total to Hope Bridge (Turkey earthquake relief 2023, wildfire relief 2025)<span class="fact-badge verified">Verified</span></span></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <header class="curated-header">
+                <h2 class="curated-title">
+                    EHCO Curated
+                    <span class="ehco-badge">EDITORIAL</span>
+                </h2>
+                <p class="curated-subtitle">Last edited: December 25, 2025</p>
+            </header>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Defining Fourth-Generation Excellence</h3>
+                <p class="article-paragraph">
+                    When Starship Entertainment announced plans to debut a new girl group in the second half of 2021—their first since WJSN in 2016—industry attention was inevitable. The label had confirmed that former <a href="https://www.ehco.ai/izone" target="_blank" rel="noopener noreferrer">IZ*ONE</a> members <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Jang Wonyoung</a> and <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">An Yujin</a> would be part of the lineup, generating immediate buzz around the project. In November 2021, official social media accounts launched under the name IVE, with members revealed sequentially between November 3 and 8.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+                <p class="article-paragraph">
+                    The group name carries intentional weight. "IVE is short for 'I Have' and conveys a message that the band is well-prepared and is ready to get their feet in the door by showing what they have," <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Jang Wonyoung</a> explained during their debut showcase. The philosophy positioned IVE not as a group growing toward completeness, but as one arriving fully formed—a "complete girl group" from inception.<a href="#fn2" class="footnote-ref">2</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Six Paths to Starship: The Origin Stories</h3>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer"><b>An Yujin</b></a>, born September 1, 2003 in Cheongju, realized her idol aspirations after attending a year-end ceremony in Seoul with friends. The then-aspiring trainee began sending emails to entertainment companies, attaching singing clips and photos. Starship Entertainment responded with an audition invitation, and remarkably, she was the only candidate at her session. "The staff told me only I would be auditioning," <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">Yujin</a> later recalled. She joined the company as a trainee in 2016, ultimately representing Starship on Mnet's Produce 48 in 2018 alongside fellow trainees <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Jang Wonyoung</a> and Cho Ka-hyeon. Finishing fifth, she debuted with project group IZ*ONE on October 29, 2018.<a href="#fn3" class="footnote-ref">3</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer"><b>Jang Wonyoung</b></a> entered the entertainment industry through chance encounter. At just twelve years old, she was attending her older sister Jang Da-ah's middle school graduation ceremony when a Starship casting agent spotted her. The scout was struck by her "tall stature and cute face." After approximately fourteen months of training, she competed on Produce 48, where her commanding stage presence and youthful charisma earned her first place—making her the youngest center in the show's history at fourteen. As IZ*ONE's center, she balanced intense promotional schedules with home-schooling, passing qualification exams with perfect scores in Korean, English, and Mathematics.<a href="#fn4" class="footnote-ref">4</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/gaeul" target="_blank" rel="noopener noreferrer"><b>Gaeul</b></a> (Kim Gaeul, born September 24, 2002) was discovered through her passion for dance. In April 2017, during her third year of middle school, she competed in the preliminary round of the Incheon Youth Dance Competition. Unknown to her, Starship Entertainment scouts were watching. "At the time, she had no idea agency scouts were watching," records indicate. However, this was not her first encounter with industry interest—another agency had previously approached her, but her parents rejected the offer, making a deal that if she were scouted again at a future competition, they would support her dreams. When Starship extended their offer, fate aligned. Gaeul trained for approximately 4.5 years—the longest of any IVE member—and notably shared trainee periods with both <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">Yujin</a> and <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Wonyoung</a> before their Produce 48 departure.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/rei" target="_blank" rel="noopener noreferrer"><b>Rei</b></a> (Naoi Rei, born February 3, 2004 in Nagoya, Aichi Prefecture, Japan) represents Starship's first Japanese artist. Her love for K-pop was cultivated through her mother, a <a href="https://www.ehco.ai/tvxq" target="_blank" rel="noopener noreferrer">TVXQ</a> fan who introduced her to Korean music. Rei developed particular admiration for <a href="https://www.ehco.ai/redvelvet" target="_blank" rel="noopener noreferrer">Red Velvet</a>, especially member Joy. In April 2018, at fourteen, she participated in the Loen Friends Global Audition in Japan, performing <a href="https://www.ehco.ai/blackpink" target="_blank" rel="noopener noreferrer">BLACKPINK</a>'s "Whistle" and Red Velvet's "Happiness." Her distinct vocal tone caught the judges' attention, earning her a trainee position. One month later, she moved to Seoul alone, committing to learn Korean without translation tools during training. After 3.5 years, she debuted as IVE's main rapper and only foreign member.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/liz" target="_blank" rel="noopener noreferrer"><b>Liz</b></a> (Kim Ji-won, born November 21, 2004) hails from Jeju Island, where she was active in her school's dance club and athletics. Her K-pop awakening came through <a href="https://www.ehco.ai/taeyeon" target="_blank" rel="noopener noreferrer">Girls' Generation's Taeyeon</a>, who became her role model. In December 2017, before joining any agency, Liz appeared in Taeyeon's "This Christmas" music video, portraying the singer's younger self—though she was reportedly too shy to say anything beyond "I'm a fan" upon meeting her idol. In summer 2019, she auditioned at Starship's Pepsi Summer Open Audition. According to a member of Starship's rookie development team, Liz's vocal talent and visuals were "overwhelming," and her eagerness during introduction impressed despite her naturally shy personality. She moved to Seoul with her mother and younger brother to pursue training.<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/leeseo" target="_blank" rel="noopener noreferrer"><b>Leeseo</b></a> (Lee Hyun-seo, born February 21, 2007) entered the entertainment sphere earliest among the members. In 2016, during her second year of elementary school, she won the SM Entertainment Kids Model Contest, becoming part of SM Kids' first generation—selected from approximately 400 candidates. Three years later, in 2019, a pivotal encounter occurred: while shopping with her parents at Shinsegae Department Store's Gangnam branch, sixth-grader Leeseo went to buy a drink and was spotted by a Starship Entertainment director. Her "eye-catching appearance" led to an immediate audition invitation. She trained for approximately 2.5 years before debuting at age fourteen as IVE's maknae.<a href="#fn8" class="footnote-ref">8</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">"Eleven": A Record-Breaking Debut</h3>
+                <p class="article-paragraph">
+                    On December 1, 2021, IVE released their debut single album "Eleven." The title track, a pop-dance number exploring how affection deepens between lovers, featured lyrics by Seo Ji-eum—known for work with <a href="https://www.ehco.ai/exo" target="_blank" rel="noopener noreferrer">EXO</a> and <a href="https://www.ehco.ai/redvelvet" target="_blank" rel="noopener noreferrer">Red Velvet</a>. "Best of the best players in soccer are usually categorized as 'best 11,' and the same idea applies to our group," <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Wonyoung</a> explained of the title's significance. The commercial response exceeded expectations: within its first week, the album sold 152,229 copies—the highest first-week sales for a girl group debut album in 2021.<a href="#fn2" class="footnote-ref">2</a>
+                </p>
+                <p class="article-paragraph">
+                    On December 8—exactly seven days after debut—IVE earned their first music show win on MBC M's Show Champion, setting a new record for the fastest first win by a girl group in K-pop history, surpassing <a href="https://www.ehco.ai/itzy" target="_blank" rel="noopener noreferrer">ITZY</a>'s previous nine-day record with "Dalla Dalla" (2019). "Eleven" ultimately secured thirteen music show trophies, including triple crowns on KBS2's Music Bank, MBC's Music Core, and SBS' Inkigayo. The track reached number nine on Billboard's World Digital Song Sales and charted on the Billboard Global 200 for fourteen consecutive weeks.<a href="#fn9" class="footnote-ref">9</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">2022: "Love Dive" and the Daesang Sweep</h3>
+                <p class="article-paragraph">
+                    IVE's sophomore release solidified their position as the year's breakthrough act. On April 5, 2022, they released their second single album "Love Dive," which charted at number one on the Circle Digital Chart—their first chart-topping song in South Korea. The track peaked at number ten on Billboard's Global Excl. US chart, charting for twenty-nine consecutive weeks. Within a week of release, "Love Dive" had spawned a TikTok challenge that accumulated 200 million views.<a href="#fn10" class="footnote-ref">10</a>
+                </p>
+                <p class="article-paragraph">
+                    The song's impact extended through year-end award season. "Love Dive" earned Song of the Year (Daesang) at four major ceremonies: the MAMA Awards, Melon Music Awards, Golden Disc Awards, and Asia Artist Awards. IVE became only the fourth K-pop group in history to win both a rookie award and a Daesang in the same year, following <a href="https://www.ehco.ai/2ne1" target="_blank" rel="noopener noreferrer">2NE1</a>, <a href="https://www.ehco.ai/missa" target="_blank" rel="noopener noreferrer">Miss A</a>, and <a href="https://www.ehco.ai/aespa" target="_blank" rel="noopener noreferrer">aespa</a>. South Korean music webzine IZM Critic ranked it as the best K-pop song of 2022, praising its "universal reason and long-standing sense of success in music art."<a href="#fn11" class="footnote-ref">11</a>
+                </p>
+                <p class="article-paragraph">
+                    Just four months later, IVE returned with "After Like," released August 22, 2022. The disco-influenced track sampled Gloria Gaynor's 1978 anthem "I Will Survive," creating an instantly recognizable hook. "After Like" achieved IVE's first Perfect All-Kill—a rare music chart achievement where a song simultaneously tops real-time, daily, and weekly charts across all major South Korean streaming platforms. The song claimed fourteen music show wins, more than any other track that year. The accompanying single album sold over 1.7 million copies.<a href="#fn12" class="footnote-ref">12</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Global Expansion and "I've IVE"</h3>
+                <p class="article-paragraph">
+                    IVE's trajectory continued upward through 2023. In February, they embarked on their first solo tour, "The Prom Queens," with six sold-out dates across Seoul, Yokohama, and Kobe. The Asia tour leg later attracted 97,000 spectators across six stops in Southeast Asia and Taiwan. On March 24, Starship announced IVE had signed with Columbia Records for US promotion, facilitated through parent company Kakao Entertainment's partnership with the label.<a href="#fn13" class="footnote-ref">13</a>
+                </p>
+                <p class="article-paragraph">
+                    Their first studio album, "I've IVE," arrived on April 10, 2023. The pre-release single "Kitsch," dropped March 27, debuted at number one on the Circle Digital Chart and achieved IVE's second Perfect All-Kill. The album itself featured significant member participation—seven of eleven songs included songwriting credits from the members. Rei, in particular, emerged as a prolific contributor, writing rap lyrics in Korean, Japanese, and English for tracks including "After Like," "Kitsch," "Royal," and "Hypnosis." At the 2023 Melon Music Awards, "I've IVE" won Album of the Year.<a href="#fn14" class="footnote-ref">14</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">2024-2025: Five-Time Million Sellers</h3>
+                <p class="article-paragraph">
+                    IVE's commercial dominance continued with their second extended play, "IVE SWITCH," released April 29, 2024. In August 2024, they performed at Lollapalooza Chicago, beginning what would become a groundbreaking festival run. Their third EP, "IVE EMPATHY," arrived February 3, 2025, preceded by pre-release track "Rebel Heart" on January 13. The album sold over 1.04 million copies in its first week, making IVE five-time million sellers. "Rebel Heart" achieved a Perfect All-Kill and claimed eleven music show wins, while title track "Attitude" secured four additional trophies—fifteen wins total from a single album cycle.<a href="#fn15" class="footnote-ref">15</a>
+                </p>
+                <p class="article-paragraph">
+                    Billboard recognized "Rebel Heart" among "The 25 Best K-Pop Songs of 2025 (So Far): Critic's Picks," praising the song's "rich vocal harmonies, uplifting chorus, and lush soundscape that blends emotional strings with uptempo drums." The track spent ten consecutive weeks on Billboard's Global Excl. US chart and accumulated over 57 million Spotify streams. In July 2025, IVE performed at both Lollapalooza Berlin and Lollapalooza Paris, becoming the first K-pop girl group to appear at Lollapalooza in three different cities over two consecutive years. At Paris, they delivered a dynamic 55-minute set with live band accompaniment, with songs like "Rebel Heart" drawing massive Korean sing-alongs from French audiences.<a href="#fn16" class="footnote-ref">16</a>
+                </p>
+                <p class="article-paragraph">
+                    Throughout their career, IVE has maintained a public commitment to social causes. In February 2023, the group and Starship donated ₩150 million to the Hope Bridge National Disaster Relief Association following the devastating earthquakes in Turkey and Syria. In March 2025, they contributed an additional ₩200 million for wildfire relief efforts in South Korea. Their artistic identity, centered on the message that "true love begins with loving oneself," has evolved from self-confidence into empathy for others—a thematic expansion reflected in their 2025 album title.<a href="#fn17" class="footnote-ref">17</a>
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">References</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://www.soompi.com/article/1496506wpp/watch-starship-entertainment-reveals-official-social-media-accounts-and-logo-for-new-girl-group-ive" target="_blank" rel="noopener">Soompi: Starship Entertainment Announces Debut Date For New Girl Group IVE (November 8, 2021)</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/2734051" target="_blank" rel="noopener">The Korea Herald: Rookie girl group Ive ready to make a splash with 'Eleven' (December 1, 2021)</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://www.kpopstarz.com/articles/307370/20220626/how-6-ive-members-scouted-starship-entertainment.htm" target="_blank" rel="noopener">KpopStarz: Here's How 6 IVE Members Were Scouted by Starship Entertainment (June 26, 2022)</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2019/04/izones-jang-won-young-reveals-how-she-was-scouted-by-her-music-label" target="_blank" rel="noopener">allkpop: IZ*ONE's Jang Won Young reveals how she was scouted by her music label (April 3, 2019)</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://www.koreaboo.com/stories/ive-gaeul-debut-scouted-starship-chose/" target="_blank" rel="noopener">Koreaboo: IVE's Gaeul Chose Starship Entertainment Despite Being Scouted By Other Companies (April 21, 2022)</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.soompi.com/article/1496665wpp/starships-new-girl-group-ive-confirms-an-yu-jin-as-1st-member-unveils-new-profile-photos" target="_blank" rel="noopener">Soompi: Starship's New Girl Group IVE Confirms Jang Won Young, An Yu Jin + Introduces Members (November 2021)</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://www.soompi.com/article/1719765wpp/watch-ives-liz-gets-shy-meeting-girls-generations-taeyeon-in-amazing-saturday-preview" target="_blank" rel="noopener">Soompi: IVE's Liz Gets Shy Meeting Girls' Generation's Taeyeon In "Amazing Saturday" Preview (February 1, 2025)</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://www.kpopstarz.com/articles/307370/20220626/how-6-ive-members-scouted-starship-entertainment.htm" target="_blank" rel="noopener">KpopStarz: Leeseo scouted at Shinsegae Department Store in 2019 while buying drinks (June 26, 2022)</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2021/12/ive-become-the-fastest-girl-group-to-take-home-first-music-show-win-with-eleven-in-just-7-days" target="_blank" rel="noopener">allkpop: IVE become the fastest girl group to take home first music show win with 'ELEVEN' in just 7 days (December 8, 2021)</a></span></div>
+                <div class="footnote-item" id="fn10"><span class="footnote-number">10</span><span class="footnote-text"><a href="https://www.grammy.com/news/k-pop-group-ive-new-ep-ive-mine-interview-videos" target="_blank" rel="noopener">Grammy.com: K-Pop Group IVE Are Unabashedly Themselves — "Love Dive" reached No. 1 on Billboard's Hot Trending Songs Chart (October 2023)</a></span></div>
+                <div class="footnote-item" id="fn11"><span class="footnote-number">11</span><span class="footnote-text"><a href="https://www.billboard.com/music/awards/2022-mama-awards-winners-full-list-1235178173/" target="_blank" rel="noopener">Billboard: 2022 MAMA Awards Winners — Song of the Year: IVE "LOVE DIVE" (December 1, 2022)</a></span></div>
+                <div class="footnote-item" id="fn12"><span class="footnote-number">12</span><span class="footnote-text"><a href="https://www.soompi.com/article/1556598wpp/winners-of-2022-mama-awards-day-2" target="_blank" rel="noopener">Soompi: Winners Of 2022 MAMA Awards Day 2 — IVE wins Song of the Year, only third group to win Daesang and rookie award same year (December 3, 2022)</a></span></div>
+                <div class="footnote-item" id="fn13"><span class="footnote-number">13</span><span class="footnote-text"><a href="https://world.kbs.co.kr/service/contents_view.htm?lang=e&board_seq=436501" target="_blank" rel="noopener">KBSWorld: IVE signs with Columbia Records for US debut</a></span></div>
+                <div class="footnote-item" id="fn14"><span class="footnote-number">14</span><span class="footnote-text"><a href="https://www.grammy.com/news/k-pop-group-ive-new-ep-ive-mine-interview-videos" target="_blank" rel="noopener">Grammy.com: IVE's first studio album "I've IVE" featured seven songs with member songwriting credits (October 2023)</a></span></div>
+                <div class="footnote-item" id="fn15"><span class="footnote-number">15</span><span class="footnote-text"><a href="https://www.koreatimes.co.kr/entertainment/k-pop/20250112/ive-set-for-february-comeback-pre-release-of-rebel-heart-monday" target="_blank" rel="noopener">The Korea Times: IVE set for February comeback, pre-release of 'REBEL HEART' Monday (January 13, 2025)</a></span></div>
+                <div class="footnote-item" id="fn16"><span class="footnote-number">16</span><span class="footnote-text"><a href="https://www.koreatimes.co.kr/entertainment/k-pop/20250711/ive-to-become-first-k-pop-girl-group-to-perform-at-lollapalooza-berlin" target="_blank" rel="noopener">The Korea Times: IVE to become first K-pop girl group to perform at Lollapalooza Berlin — only group invited to 3 Lollapaloozas in 2 years (July 11, 2025)</a></span></div>
+                <div class="footnote-item" id="fn17"><span class="footnote-number">17</span><span class="footnote-text"><a href="https://www.starnewskorea.com/global/en/2025072415296936032" target="_blank" rel="noopener">Starnews Korea: IVE Returns Home in Triumph After Lollapalooza—Gearing Up for August Comeback (July 24, 2025)</a></span></div>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <a href="https://www.ehco.ai/starship-entertainment" class="nav-button">← Starship Entertainment</a>
+            <a href="https://www.ehco.ai/ive" class="nav-button primary">View Full Timeline →</a>
+        </nav>
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.classList.add('highlighted'); setTimeout(() => target.classList.remove('highlighted'), 2000); }
+            });
+        });
+    </script>
+</body>
+</html>

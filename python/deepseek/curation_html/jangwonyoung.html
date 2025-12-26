@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jang Wonyoung (IVE) Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 8px;
+            color: #6b7280; text-decoration: none; font-size: 0.875rem;
+            margin-bottom: 32px; transition: color 0.2s ease;
+        }
+        .back-link:hover { color: #D10041; }
+        .back-link svg { width: 16px; height: 16px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 1200px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .celebrity-link { color: #D10041; text-decoration: none; font-weight: 500; transition: color 0.2s ease; }
+        .celebrity-link:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .highlighted { background: rgba(209, 0, 65, 0.08) !important; transition: background 0.3s ease; }
+        @media (max-width: 640px) {
+            .page-title { font-size: 1.75rem; }
+            .main-content { padding: 32px 16px 60px; }
+            .bottom-nav { flex-direction: column; gap: 12px; }
+            .nav-button { width: 100%; justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <a href="#" class="back-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            Back to Search
+        </a>
+
+        <header class="page-header">
+            <h1 class="page-title">Jang Wonyoung Wiki</h1>
+            <p class="page-subtitle">장원영 • IVE Visual, Vocalist & Center</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🍀</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">24 facts</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Born August 31, 2004, in Ichon-dong, Yongsan-gu, Seoul, South Korea<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Full name: Jang Won-young (장원영), English name: Vicky<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Visual, vocalist, dancer, and center of <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a><span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Former center and maknae of project group IZ*ONE (2018-2021)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Ranked 1st place on Mnet's Produce 48 with 338,366 votes<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Street-cast by Starship Entertainment in April 2017 at her sister's graduation ceremony<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Father is a music teacher; she plays piano, violin, and flute<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Graduated from School of Performing Arts Seoul (SOPA) on February 9, 2023<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Passed Korean qualification exam with perfect scores in Korean, English, and Mathematics<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Height: approximately 173cm (5'8")<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Known as "4th Generation It Girl" and "Giant Baby" (for tall height with baby face)<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Representative color in <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> is Red; was Candy Pink 10 in IZ*ONE<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Miu Miu global brand ambassador since December 2021<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>First Korean ambassador for French jewelry house Fred Joaillier (August 2022)<span class="fact-badge verified">Verified</span></span></div>                  <div class="fact-item"><span class="fact-bullet">•</span><span>Coined viral phrase "Lucky Vicky" (럭키비키) representing her positive mindset<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Role model is actress <a href="https://www.ehco.ai/junjihyun" target="_blank" rel="noopener noreferrer">Jun Ji-hyun</a><span class="fact-badge self-reported">Self-reported</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Originally dreamed of becoming an announcer before being scouted<span class="fact-badge self-reported">Self-reported</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Favorite ice cream flavor is mint chocolate<span class="fact-badge community">Fan community</span></span></div>
+                </div>
+                <button class="show-more-facts" onclick="showMoreFacts()">Show More Facts ↓</button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">
+                    EHCO Curated
+                    <span class="ehco-badge">EDITORIAL</span>
+                </h2>
+                <p class="curated-subtitle">Last edited: December 25, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Fateful Discovery at a Graduation Ceremony</h3>
+                <p class="article-paragraph">
+                    Jang Wonyoung's entry into the entertainment industry was never part of her life plan. As she revealed on tvN's You Quiz on the Block in January 2025, she had always written "announcer" on questionnaires asking about her dream job.<a href="#fn1" class="footnote-ref">1</a> That trajectory changed on an ordinary April day in 2017, when a twelve-year-old Wonyoung accompanied her family to her older sister Jang Jin-young's middle school graduation ceremony.
+                </p>
+                <p class="article-paragraph">
+                    A Starship Entertainment scout—notably a rookie staff member who wasn't even part of the official recruitment team—spotted the tall, striking girl and immediately approached her.<a href="#fn1" class="footnote-ref">1</a> The scout was reportedly captivated by Wonyoung's "tall height and cute mask."<a href="#fn2" class="footnote-ref">2</a> In her You Quiz appearance, Wonyoung described the encounter with characteristic wonder: "She cast me and then just left. On top of that, she was a rookie staff member. She was very young and so I would greet her 'Unnie thank you' but three days later, she disappeared."<a href="#fn1" class="footnote-ref">1</a> The young trainee never saw the scout again, leading her to describe her path to stardom as "destiny."
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The Produce 48 Phenomenon and IZ*ONE Era</h3>
+                <p class="article-paragraph">
+                    After training at Starship Entertainment for one year and two months, Wonyoung was selected to represent the agency on Mnet's reality survival show Produce 48 in May 2018.<a href="#fn3" class="footnote-ref">3</a> The show, a collaboration between Korea's Produce 101 franchise and Japan's AKB48 system, brought together 96 contestants competing for 12 debut spots. Wonyoung, among the youngest contestants, earned the nickname "Giant Baby" for her baby-faced appearance despite standing at approximately 168cm—a height that would continue growing throughout her career.<a href="#fn4" class="footnote-ref">4</a>
+                </p>
+                <p class="article-paragraph">
+                    The show's finale on August 30, 2018—coincidentally Wonyoung's 14th birthday—marked a defining moment in her career. She topped the final rankings with 338,366 votes, earning the center position in the newly formed project group IZ*ONE.<a href="#fn4" class="footnote-ref">4</a> Fellow contestant Miyawaki Sakura of HKT48 finished second, and the two would later be selected together to center a collaborative performance between Nogizaka46, Keyakizaka46, and AKB48 at Japan's FNS Music Festival.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    IZ*ONE officially debuted on October 29, 2018, with the mini album COLOR*IZ and title track "La Vie En Rose." The debut EP sold over 225,000 units and peaked at number two on the South Korean Gaon Album Chart.<a href="#fn6" class="footnote-ref">6</a> The group's momentum was temporarily disrupted in late 2019 when the Mnet vote manipulation investigation revealed irregularities in the Produce series, leading to a hiatus. However, after agencies reached an agreement in January 2020, IZ*ONE resumed activities and released their first studio album Bloom*Iz in February 2020, which broke the then-record for highest first-week sales by a girl group on Hanteo, selling over 356,000 copies.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+                <p class="article-paragraph">
+                    During her IZ*ONE tenure, Wonyoung balanced stardom with education. Off the Record Entertainment announced in April 2019 that she would pursue homeschooling, subsequently leaving Yonggang Middle School. She passed the Korean qualification exam with perfect scores in Korean, English, and Mathematics—a testament to her determination to excel beyond the stage.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Re-Debut with IVE: Starship's Monster Rookies</h3>
+                <p class="article-paragraph">
+                    Following IZ*ONE's disbandment on April 29, 2021, Wonyoung returned to Starship Entertainment alongside her former IZ*ONE groupmate <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">An Yujin</a>. Speculation swirled about their futures until November 2, 2021, when Starship announced plans for a new girl group—their first since WJSN in 2016.<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    The Korea Herald covered IVE's debut showcase on December 1, 2021, where the six-member group—comprising <a href="https://www.ehco.ai/anyujin" target="_blank" rel="noopener noreferrer">Yujin</a>, <a href="https://www.ehco.ai/gaeul" target="_blank" rel="noopener noreferrer">Gaeul</a>, <a href="https://www.ehco.ai/jangwonyoung" target="_blank" rel="noopener noreferrer">Wonyoung</a>, <a href="https://www.ehco.ai/lizz" target="_blank" rel="noopener noreferrer">Lizz</a>, <a href="https://www.ehco.ai/rei" target="_blank" rel="noopener noreferrer">Rei</a>, and <a href="https://www.ehco.ai/leeseo" target="_blank" rel="noopener noreferrer">Leeseo</a>"threw their glitzy hats into the ring" with ambitions to follow in the footsteps of labelmates SISTAR and WJSN.<a href="#fn7" class="footnote-ref">7</a> Wonyoung explained the group's name, "<a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>," as short for "I Have," conveying the message that "the band is well-prepared and is ready to get their feet in the door by showing what they have."<a href="#fn7" class="footnote-ref">7</a> The title track "Eleven," described by Wonyoung as "a pop-dance-based tune peppered with energetic and rhythmical instrumentals," expressed "how a girl falls in love."<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s debut shattered expectations. "Eleven" peaked at number two on both the Circle Digital Chart and the K-pop Hot 100, while also charting in the top ten in Japan, Malaysia, and Singapore.<a href="#fn8" class="footnote-ref">8</a> On December 8, 2021—exactly one week after debut—IVE earned their first music show win on MBC M's Show Champion, tying the record for the fastest first win by a girl group.<a href="#fn9" class="footnote-ref">9</a> The debut single album recorded the highest first-week sales for a girl group debut album, selling over 152,000 copies in its first week alone.<a href="#fn10" class="footnote-ref">10</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Chart Dominance: The Year of "Love Dive" and Beyond</h3>
+                <p class="article-paragraph">
+                    <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s second single album, Love Dive, released on April 5, 2022, catapulted the group from successful rookies to generational artists. The title track topped the Circle Digital Chart for four weeks and became the best-performing single of the year in South Korea.<a href="#fn11" class="footnote-ref">11</a> Time magazine named it one of the best K-pop songs of 2022, with writer Kat Moon describing it as "dreamy and ethereal" with "decadent vocals you can't help but be submerged in."<a href="#fn11" class="footnote-ref">11</a>
+                </p>
+                <p class="article-paragraph">
+                    The accolades were historic. At the 2022 Melon Music Awards in November, <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> won the Daesang (Grand Prize) for Song of the Year with "Love Dive"—just 360 days after debut, making them the third-fastest girl group to win a grand prize.<a href="#fn12" class="footnote-ref">12</a> Days later at the 2022 MAMA Awards, they claimed Song of the Year and Best Dance Performance (Female Group).<a href="#fn13" class="footnote-ref">13</a> <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> became only the fourth group in K-pop history to win both a rookie award and a daesang in the same year, following <a href="https://www.ehco.ai/2ne1" target="_blank" rel="noopener noreferrer">2NE1</a>, <a href="https://www.ehco.ai/missa" target="_blank" rel="noopener noreferrer">Miss A</a>, and <a href="https://www.ehco.ai/aespa" target="_blank" rel="noopener noreferrer">aespa</a>.<a href="#fn11" class="footnote-ref">11</a>
+                </p>
+                <p class="article-paragraph">
+                    The group continued their chart domination with "After Like" (August 2022), which achieved a "Perfect All-Kill"—simultaneously topping real-time, daily, and weekly charts across South Korea's major music platforms.<a href="#fn9" class="footnote-ref">9</a> Their debut studio album I've IVE (April 2023) spawned two more number-one singles, "Kitsch" and "I Am," cementing <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s reputation for consistent chart success. By September 2025, the group had sold over 12 million album copies worldwide.<a href="#fn14" class="footnote-ref">14</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The "Lucky Vicky" Phenomenon</h3>
+                <p class="article-paragraph">
+                    Perhaps no aspect of Wonyoung's public persona has resonated more broadly than her optimistic worldview, crystallized in the viral phrase "Lucky Vicky" (럭키비키). The meme originated during <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s 2023 tour when Wonyoung visited a bakery in Spain. Finding her favorite pastry sold out, she reframed the situation with characteristic positivity: "I get to buy the freshly baked one. I knew it—the goddess of fortune is on my side!"<a href="#fn15" class="footnote-ref">15</a>
+                </p>
+                <p class="article-paragraph">
+                    The phrase combines "Lucky" with "Vicky"—Wonyoung's English name, derived from "Victoria," the goddess of victory, which she has used since kindergarten.<a href="#fn16" class="footnote-ref">16</a> What began as a fan meme evolved into a cultural touchstone. By 2024, "Wonyoung-style thinking" (원영적 사고) had been featured in corporate branding seminars, discussed at academic conferences, and integrated into ChatGPT prompts teaching positive psychology.<a href="#fn17" class="footnote-ref">17</a> Even Indonesian politician Anies Baswedan adopted the phrase on social media.<a href="#fn18" class="footnote-ref">18</a>
+                </p>
+                <p class="article-paragraph">
+                    Speaking on You Quiz on the Block in January 2025, Wonyoung clarified the philosophy's meaning: "'Lucky Vicky' is such a positive way of thinking that some might confuse it with self-rationalization. However, for me, it's about finding small happiness in everyday life and being grateful for those moments."<a href="#fn15" class="footnote-ref">15</a> She added, "I've lived like this since I was young. I'm naturally an optimistic person. Rather than dwelling on bad situations, I think about what comes next... The saying, 'This too shall pass,' really resonates with me."<a href="#fn15" class="footnote-ref">15</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Confronting Malicious Rumors: The Sojang Lawsuit</h3>
+                <p class="article-paragraph">
+                    Despite her public positivity, Wonyoung faced years of targeted harassment from "cyber wreckers"—online content creators who spread malicious rumors about celebrities. The most notorious was YouTuber "Sojang," who consistently published defamatory content about Wonyoung between October 2021 and June 2023, allegedly earning 250 million KRW through video monetization during this period.<a href="#fn19" class="footnote-ref">19</a>
+                </p>
+                <p class="article-paragraph">
+                    In October 2023, Wonyoung personally filed a civil lawsuit against Sojang for defamation, while Starship Entertainment pursued parallel criminal and civil cases, including an overseas lawsuit to obtain the YouTuber's identity through Google's U.S. headquarters.<a href="#fn20" class="footnote-ref">20</a> On December 21, 2023, the Seoul Central District Court ruled in Wonyoung's favor, ordering Sojang to pay 100 million KRW (approximately $75,100 USD) in damages.<a href="#fn20" class="footnote-ref">20</a>
+                </p>
+                <p class="article-paragraph">
+                    The landmark ruling established important precedent. Wonyoung's lawyer emphasized that it demonstrated "YouTubers who used the fact that it is an overseas site as a shield to insult celebrities can no longer avoid the law."<a href="#fn21" class="footnote-ref">21</a> By June 2025, the court had also sentenced Sojang's operator to two years in prison (suspended for three years) on criminal charges, with prosecutors appealing for a stricter sentence.<a href="#fn19" class="footnote-ref">19</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Fashion Icon and Brand Powerhouse</h3>
+                <p class="article-paragraph">
+                    Wonyoung's influence extends far beyond music. Following IZ*ONE's disbandment, she quickly established herself as a fashion industry force. In July 2021, Amorepacific announced her as global ambassador for skincare brand Innisfree, followed by streetwear label Kirsh naming her as their muse that October.<a href="#fn5" class="footnote-ref">5</a> The December 2021 issue of Harper's Bazaar Korea, which featured Wonyoung on the cover, announced her appointment as Miu Miu's brand ambassador—making her the youngest model to grace the magazine's cover.<a href="#fn22" class="footnote-ref">22</a>
+                </p>
+                <p class="article-paragraph">
+                    Her September 2022 attendance at Paris Fashion Week as ambassador for both Miu Miu and Fred Joaillier marked a turning point. Fred's announcement made her the first Korean ambassador for the French jewelry house.<a href="#fn5" class="footnote-ref">5</a> Maeil Business Newspaper subsequently described her as "a blue chip in the advertising world."<a href="#fn5" class="footnote-ref">5</a> By 2023, influencer marketing platform Lefty ranked her as the 13th top influencer of Paris Fashion Week, estimating her appearance generated $3 million in media value for Miu Miu alone.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    Her endorsement portfolio has grown to include SK Telecom, EIDER, Hapa Kristin, Gospheres, Suecomma Bonnie, SJSJ, and Amuse cosmetics, among others. Billboard's 2025 K-Pop Artist 100 profile noted her "tall stature, elegant aura and unmistakable presence" and described her as "the visual icon of the group," while highlighting her composure and positive mindset.<a href="#fn23" class="footnote-ref">23</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">MC Career and Hosting Prowess</h3>
+                <p class="article-paragraph">
+                    On September 27, 2021—before <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s debut—KBS announced Wonyoung would co-host Music Bank alongside <a href="https://www.ehco.ai/enhypen" target="_blank" rel="noopener noreferrer">ENHYPHEN</a>'s <a href="https://www.ehco.ai/sunghoon" target="_blank" rel="noopener noreferrer">Sunghoon</a>, succeeding TXT's Soobin and Oh My Girl's Arin.<a href="#fn24" class="footnote-ref">24</a> The pairing, known as "Jangkkuz" by fans, received praise for their chemistry, earning the Best Couple Award at the 2021 KBS Entertainment Awards.<a href="#fn5" class="footnote-ref">5</a> In September 2022, Wonyoung made history as the first MC to have her Music Bank contract renewed—a testament to her hosting abilities.<a href="#fn25" class="footnote-ref">25</a> She continued in the role until January 2023, completing sixteen months of weekly broadcasts.
+                </p>
+                <p class="article-paragraph">
+                    Her hosting career expanded to prestigious award ceremonies. She co-hosted the 2021 Asia Artist Awards with Super Junior's Leeteuk, beginning what would become five consecutive years of hosting the annual ceremony through 2025.<a href="#fn5" class="footnote-ref">5</a> She has also hosted the KBS Music Bank Global Festival (2023, 2024), KCON LA (2023), and various Starship Entertainment events. Billboard noted that she "stands as the visual icon of the group" while being "active across endorsements, music and television."<a href="#fn23" class="footnote-ref">23</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Artistic Growth and Songwriting</h3>
+                <p class="article-paragraph">
+                    Beyond performance, Wonyoung has developed as a songwriter. She wrote two tracks for <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s debut studio album I've IVE (April 2023): "Mine" and "Shine with Me."<a href="#fn5" class="footnote-ref">5</a> For the extended play I've Mine (October 2023), she contributed "OTT." Her most personal writing came with "Blue Heart" on the 2024 EP <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> Switch. In an interview with Nylon, she revealed the song was inspired by her experiences in the entertainment industry, "where women faced hyperscrutiny from media and fans."<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+                <p class="article-paragraph">
+                    The February 2025 mini-album <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> EMPATHY featured Wonyoung's contribution to the title track "ATTITUDE"—a song whose message that "while some situations cannot be changed, one's attitude toward them can" felt fitting from the artist who popularized Lucky Vicky.<a href="#fn26" class="footnote-ref">26</a> At the press conference, she reflected on her viral philosophy's impact: "At some point, the public started viewing my mindset positively and gave me these labels, which made me realize the importance of walking the right and virtuous path. I also feel that I've personally been influenced in a positive way by this name."<a href="#fn26" class="footnote-ref">26</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Legacy and Cultural Impact</h3>
+                <p class="article-paragraph">
+                    At twenty years old, Jang Wonyoung has accumulated a career that would be remarkable for artists twice her age. From a chance scouting at her sister's graduation ceremony to becoming the center of two successful girl groups, a multi-brand ambassador, award-winning MC, and viral cultural phenomenon, her trajectory exemplifies K-pop's capacity to produce multifaceted entertainers.
+                </p>
+                <p class="article-paragraph">
+                    Her favorite lyric from IVE's "ATTITUDE"—"Even if I stumble, luck is always on my side"—encapsulates her public philosophy.<a href="#fn16" class="footnote-ref">16</a> As she told Harper's Bazaar Korea: "What I've realized is that effort always comes back to you in some form—like a boomerang. If you haven't seen results yet, it just means the time hasn't come. In those moments, instead of feeling discouraged, it's better to think, 'Ah, my efforts must be taking root somewhere right now!'"<a href="#fn16" class="footnote-ref">16</a>
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">Sources</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2025/01/jang-won-young-reveals-how-it-was-destiny-that-she-became-a-singer-and-that-she-originally-wanted-to-be-an-announcer" target="_blank" rel="noopener">AllKPop: Jang Won Young reveals how it was destiny that she became a singer (January 15, 2025)</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://www.kpopstarz.com/articles/307370/20220626/how-6-ive-members-scouted-starship-entertainment.htm" target="_blank" rel="noopener">KpopStarz: Here's How 6 IVE Members Were Scouted by Starship Entertainment (June 26, 2022)</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://www.soompi.com/article/1203347wpp/watch-produce-48-kicks-off-position-battle-performances-wanna-one-boa-partial-rankings-revealed" target="_blank" rel="noopener">Soompi: Produce 48 Kicks Off Position Battle (July 20, 2018)</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://www.soompi.com/article/1223325wpp/announcing-top-12-produce-48" target="_blank" rel="noopener">Soompi: Announcing The TOP 12 Of "Produce 48" – IZ*ONE (August 31, 2018)</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://www.billboard.com/lists/k-pop-artist-100-2025/" target="_blank" rel="noopener">Billboard: The 2025 Billboard K-Pop Artist 100</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.billboard.com/music/music-news/korean-japanese-girl-group-izone-la-vie-en-rose-8482221/" target="_blank" rel="noopener">Billboard: Korean-Japanese Girl Group IZ*ONE Releases First Single 'La Vie en Rose' (October 29, 2018)</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://www.koreaherald.com/article/2734051" target="_blank" rel="noopener">The Korea Herald: Rookie girl group Ive ready to make a splash with 'Eleven' (December 1, 2021)</a></span></div>
+                <div class="footnote-item" id="fn8"><span class="footnote-number">8</span><span class="footnote-text"><a href="https://www.soompi.com/article/1504489wpp/ives-eleven-rises-to-no-1-soompis-k-pop-music-chart-2021-december-week-3" target="_blank" rel="noopener">Soompi: IVE's "ELEVEN" Rises To No. 1 (December 20, 2021)</a></span></div>
+                <div class="footnote-item" id="fn9"><span class="footnote-number">9</span><span class="footnote-text"><a href="https://www.soompi.com/article/1502797wpp/watch-ive-takes-tearful-1st-ever-win-on-show-champion-with-eleven-performances-by-everglow-oneus-and-more" target="_blank" rel="noopener">Soompi: IVE Takes Tearful 1st-Ever Win On "Show Champion" (December 8, 2021)</a></span></div>
+                <div class="footnote-item" id="fn10"><span class="footnote-number">10</span><span class="footnote-text"><a href="https://www.soompi.com/article/1502829wpp/ive-achieves-2nd-highest-1st-week-sales-of-any-girl-group-debut-album-in-hanteo-history" target="_blank" rel="noopener">Soompi: IVE Achieves 2nd-Highest 1st-Week Sales Of Any Girl Group Debut Album In Hanteo History (December 8, 2021)</a></span></div>
+                <div class="footnote-item" id="fn11"><span class="footnote-number">11</span><span class="footnote-text"><a href="https://www.soompi.com/article/1562750wpp/circle-chart-reveals-year-end-digital-and-album-charts-for-2022" target="_blank" rel="noopener">Soompi: Circle Chart Reveals Year-End Digital And Album Charts For 2022 (January 13, 2023)</a></span></div>
+                <div class="footnote-item" id="fn12"><span class="footnote-number">12</span><span class="footnote-text"><a href="https://www.nme.com/news/music/2022-melon-music-awards-winners-performances-ive-newjeans-le-sserafim-3356629" target="_blank" rel="noopener">NME: IVE win Best Song of the Year at the 2022 Melon Music Awards (November 28, 2022)</a></span></div>
+                <div class="footnote-item" id="fn13"><span class="footnote-number">13</span><span class="footnote-text"><a href="https://www.billboard.com/music/awards/2022-mama-awards-winners-full-list-1235178173/" target="_blank" rel="noopener">Billboard: Here Are the 2022 MAMA Awards Winners: Full List (December 1, 2022)</a></span></div>
+                <div class="footnote-item" id="fn14"><span class="footnote-number">14</span><span class="footnote-text"><a href="https://www.soompi.com/article/1556781wpp/bts-txt-twice-blackpink-stray-kids-ive-nct-and-more-make-billboards-year-end-charts" target="_blank" rel="noopener">Soompi: BTS, TXT, TWICE, BLACKPINK, Stray Kids, IVE, NCT, And More Make Billboard's Year-End Charts (December 1, 2022)</a></span></div>
+                <div class="footnote-item" id="fn15"><span class="footnote-number">15</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2025/01/jang-won-young-lucky-vicky-is-not-self-rationalization-but-gratitude-for-everyday-happiness" target="_blank" rel="noopener">AllKPop: Jang Won Young: 'Lucky Vicky is not self-rationalization, but gratitude for everyday happiness' (January 15, 2025)</a></span></div>
+                <div class="footnote-item" id="fn16"><span class="footnote-number">16</span><span class="footnote-text"><a href="https://www.soompi.com/article/1759315wpp/ives-jang-won-young-talks-about-her-lucky-vicky-mindset-origin-of-her-english-name-and-more" target="_blank" rel="noopener">Soompi: IVE's Jang Won Young Talks About Her "Lucky Vicky" Mindset (July 13, 2025)</a></span></div>
+                <div class="footnote-item" id="fn17"><span class="footnote-number">17</span><span class="footnote-text"><a href="https://www.koreaboo.com/news/ive-jang-wonyoung-lucky-vicky-meme-so-popular-even-chatgpt/" target="_blank" rel="noopener">Koreaboo: IVE Jang Wonyoung's "Lucky Vicky" Meme Is So Popular Even ChatGPT Has Hopped On (May 9, 2024)</a></span></div>
+                <div class="footnote-item" id="fn18"><span class="footnote-number">18</span><span class="footnote-text"><a href="https://voi.id/en/lifestyle/421529" target="_blank" rel="noopener">VOI: Getting To Know Lucky Vicky, Jang Wonyoung IVE's Mindset Who Becomes Popular</a></span></div>
+                <div class="footnote-item" id="fn19"><span class="footnote-number">19</span><span class="footnote-text"><a href="https://www.pinkvilla.com/entertainment/ives-jang-wonyoung-defamation-case-sojang-fights-back-appeals-50-million-krw-penalty-order-1391891" target="_blank" rel="noopener">Pinkvilla: IVE's Jang Wonyoung defamation case: Sojang fights back, appeals penalty order (June 20, 2025)</a></span></div>
+                <div class="footnote-item" id="fn20"><span class="footnote-number">20</span><span class="footnote-text"><a href="https://www.soompi.com/article/1637771wpp/starship-entertainment-updates-on-legal-proceedings-against-youtuber-ives-jang-won-young-wins-civil-lawsuit" target="_blank" rel="noopener">Soompi: Starship Entertainment Updates On Legal Proceedings; IVE's Jang Won Young Wins Civil Lawsuit (January 17, 2024)</a></span></div>
+                <div class="footnote-item" id="fn21"><span class="footnote-number">21</span><span class="footnote-text"><a href="https://www.koreaboo.com/news/ive-wonyoung-lawyer-explains-caught-sued-sojang/" target="_blank" rel="noopener">Koreaboo: IVE Wonyoung's Lawyer Explains How They Caught And Sued Sojang (February 9, 2024)</a></span></div>
+                <div class="footnote-item" id="fn22"><span class="footnote-number">22</span><span class="footnote-text"><a href="https://www.envimedia.co/wonyoungs-blooming-fashion-empire/" target="_blank" rel="noopener">EnVi Media: Jang Wonyoung's Blooming Fashion Empire (August 30, 2023)</a></span></div>
+                <div class="footnote-item" id="fn23"><span class="footnote-number">23</span><span class="footnote-text"><a href="https://www.billboard.com/lists/k-pop-artist-100-2025/" target="_blank" rel="noopener">Billboard: The 2025 Billboard K-Pop Artist 100</a></span></div>
+                <div class="footnote-item" id="fn24"><span class="footnote-number">24</span><span class="footnote-text"><a href="https://www.soompi.com/article/1490541wpp/enhypens-sunghoon-and-jang-won-young-confirmed-to-be-new-music-bank-mcs" target="_blank" rel="noopener">Soompi: ENHYPEN's Sunghoon And Jang Won Young Confirmed To Be New "Music Bank" MCs (September 27, 2021)</a></span></div>
+                <div class="footnote-item" id="fn25"><span class="footnote-number">25</span><span class="footnote-text"><a href="https://www.nme.com/news/music/ive-wonyoung-wins-lawsuit-against-controversial-youtuber-sojang-3572110" target="_blank" rel="noopener">NME: IVE's Wonyoung wins lawsuit against controversial YouTuber Sojang (January 17, 2024)</a></span></div>
+                <div class="footnote-item" id="fn26"><span class="footnote-number">26</span><span class="footnote-text"><a href="https://www.allkpop.com/article/2025/02/ives-jang-won-young-opens-up-about-the-impact-of-the-lucky-vicky-syndrome" target="_blank" rel="noopener">AllKPop: IVE's Jang Won Young opens up about the impact of the "Lucky Vicky" syndrome (February 3, 2025)</a></span></div>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-button">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Previous: An Yujin
+            </a>
+            <a href="#" class="nav-button primary">
+                View IVE Group Profile
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+        </nav>
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    target.classList.add('highlighted');
+                    setTimeout(() => target.classList.remove('highlighted'), 2000);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
