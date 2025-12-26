@@ -145,6 +145,21 @@ export default function RootLayout({
           src="https://www.highperformanceformat.com/4b77689bf7394b9ee645a2a752c04a33/invoke.js"
           strategy="afterInteractive"
         />
+        <Script id="ad-config" strategy="afterInteractive">
+          {`
+            atOptions = {
+              'key' : 'b6fd012836d0efc4358182fcf429e9f4',
+              'format' : 'iframe',
+              'height' : 300,
+              'width' : 160,
+              'params' : {}
+            };
+          `}
+        </Script>
+        <Script
+          src="https://www.highperformanceformat.com/b6fd012836d0efc4358182fcf429e9f4/invoke.js"
+          strategy="afterInteractive"
+        />
         <Providers>
           <ScrollToTop />
           <div className="fixed top-0 left-0 right-0 z-50 shadow-md">
