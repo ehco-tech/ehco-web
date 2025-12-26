@@ -160,6 +160,12 @@ export default function RootLayout({
           src="https://www.highperformanceformat.com/b6fd012836d0efc4358182fcf429e9f4/invoke.js"
           strategy="afterInteractive"
         />
+        <Script
+          src="https://pl28337917.effectivegatecpm.com/43cb9ad4088581450e0265e080cc75ec/invoke.js"
+          strategy="afterInteractive"
+          async
+          data-cfasync="false"
+        />
         <Providers>
           <ScrollToTop />
           <div className="fixed top-0 left-0 right-0 z-50 shadow-md">
@@ -175,6 +181,8 @@ export default function RootLayout({
           <footer className="mt-0 bg-white dark:bg-[#1d1d1f] border-t border-gray-200 dark:border-gray-800 py-8">
             <div className="w-[90%] md:w-[80%] mx-auto px-4">
               <div className="text-center">
+                {/* Ad Container */}
+                <div id="container-43cb9ad4088581450e0265e080cc75ec" className="mb-4"></div>
                 <p className="text-xs md:text-sm mb-4 text-gray-600 dark:text-gray-400">© 2025 EHCO. All rights reserved.</p>
                 <div className="flex flex-col md:flex-row flex-wrap justify-center items-center gap-3 md:gap-4 text-xs md:text-sm text-gray-600 dark:text-gray-400">
                   <Link
