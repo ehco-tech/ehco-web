@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Providers } from './providers';
 import ScrollToTop from '@/components/ScrollToTop';
+import Script from 'next/script';
 
 const queryClient = new QueryClient();
 
@@ -127,9 +128,23 @@ export default function RootLayout({
         <meta name="naver-site-verification" content="264ce0fdcec0f8516f15473b626bad62bc29202e" />
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1708240738390806"
           crossOrigin="anonymous"></script>
-        
       </head>
       <body className={inter.className}>
+        <Script id="ad-config" strategy="afterInteractive">
+          {`
+            atOptions = {
+              'key' : '4b77689bf7394b9ee645a2a752c04a33',
+              'format' : 'iframe',
+              'height' : 50,
+              'width' : 320,
+              'params' : {}
+            };
+          `}
+        </Script>
+        <Script
+          src="https://www.highperformanceformat.com/4b77689bf7394b9ee645a2a752c04a33/invoke.js"
+          strategy="afterInteractive"
+        />
         <Providers>
           <ScrollToTop />
           <div className="fixed top-0 left-0 right-0 z-50 shadow-md">
