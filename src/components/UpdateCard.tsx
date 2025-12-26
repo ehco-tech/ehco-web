@@ -55,6 +55,7 @@ export default function UpdateCardBatch({ update, formatTimeAgo }: UpdateCardPro
     const [sources, setSources] = useState<Article[]>([]);
     const [loadingSources, setLoadingSources] = useState(false);
     const [sourcesError, setSourcesError] = useState<string | null>(null);
+    const [imageError, setImageError] = useState(false);
 
     const getVerificationBadge = (status: string) => {
         switch (status) {
@@ -195,11 +196,24 @@ export default function UpdateCardBatch({ update, formatTimeAgo }: UpdateCardPro
                     <div className="flex items-start space-x-4">
                         {/* Avatar */}
                         <div className="flex-shrink-0">
-                            {update.figureProfilePic ? (
+                            {update.figureProfilePic && !imageError ? (
                                 <Link href={`/${createUrlSlug(update.figureName)}`}>
                                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
                                         <Image
                                             src={update.figureProfilePic}
+                                            alt={update.figureName}
+                                            width={48}
+                                            height={48}
+                                            className="object-cover w-full h-full"
+                                            onError={() => setImageError(true)}
+                                        />
+                                    </div>
+                                </Link>
+                            ) : update.figureProfilePic && imageError ? (
+                                <Link href={`/${createUrlSlug(update.figureName)}`}>
+                                    <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                                        <Image
+                                            src="/images/default-profile.png"
                                             alt={update.figureName}
                                             width={48}
                                             height={48}
