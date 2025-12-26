@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>An Yujin Wiki | EHCO</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif; background: #ffffff; color: #1a1a1a; line-height: 1.7; min-height: 100vh; }
+        .main-content { max-width: 800px; margin: 0 auto; padding: 48px 24px 80px; }
+        .page-header { margin-bottom: 40px; padding-bottom: 24px; border-bottom: 1px solid #e5e7eb; }
+        .page-title { font-size: 2.25rem; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; letter-spacing: -0.02em; }
+        .page-subtitle { font-size: 1.125rem; color: #9ca3af; font-weight: 400; }
+        .quick-facts-section { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 16px; margin-bottom: 48px; overflow: hidden; }
+        .quick-facts-header { display: flex; align-items: center; justify-content: space-between; padding: 20px 24px; cursor: pointer; transition: background 0.2s ease; }
+        .quick-facts-header:hover { background: #f5f5f5; }
+        .quick-facts-title { display: flex; align-items: center; gap: 10px; font-size: 1.125rem; font-weight: 600; color: #1a1a1a; }
+        .quick-facts-title span.icon { font-size: 1.25rem; }
+        .quick-facts-count { font-size: 0.8rem; color: #9ca3af; font-weight: 400; margin-left: 8px; }
+        .collapse-icon { color: #9ca3af; transition: transform 0.3s ease; font-size: 1.25rem; }
+        .quick-facts-section.collapsed .collapse-icon { transform: rotate(180deg); }
+        .quick-facts-content { padding: 0 24px 24px; max-height: 3000px; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; }
+        .quick-facts-section.collapsed .quick-facts-content { max-height: 0; padding-top: 0; padding-bottom: 0; }
+        .facts-grid { display: grid; gap: 10px; }
+        .fact-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; background: #ffffff; border: 1px solid #f0f0f0; border-radius: 10px; font-size: 0.925rem; color: #374151; line-height: 1.5; }
+        .fact-bullet { color: #D10041; font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+        .fact-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; font-weight: 500; vertical-align: middle; }
+        .fact-badge.verified { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .fact-badge.community { background: rgba(168, 85, 247, 0.1); color: #9333ea; }
+        .fact-badge.self-reported { background: rgba(59, 130, 246, 0.1); color: #2563eb; }
+        .show-more-facts { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 14px; margin-top: 16px; background: rgba(209, 0, 65, 0.05); border: 1px solid rgba(209, 0, 65, 0.15); border-radius: 10px; color: #D10041; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: all 0.2s ease; }
+        .show-more-facts:hover { background: rgba(209, 0, 65, 0.1); border-color: rgba(209, 0, 65, 0.25); }
+        .curated-section { margin-bottom: 48px; }
+        .curated-header { margin-bottom: 36px; padding-bottom: 20px; border-bottom: 1px solid #e5e7eb; }
+        .curated-title { font-size: 1.5rem; font-weight: 700; color: #1a1a1a; margin-bottom: 6px; display: flex; align-items: center; gap: 12px; }
+        .curated-title .ehco-badge { background: linear-gradient(135deg, #D10041, #ff6b9d); color: #fff; font-size: 0.65rem; padding: 4px 10px; border-radius: 4px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
+        .curated-subtitle { font-size: 0.875rem; color: #9ca3af; }
+        .article-section { margin-bottom: 40px; }
+        .article-section-title { font-size: 1.25rem; font-weight: 600; color: #1a1a1a; margin-bottom: 16px; letter-spacing: -0.01em; }
+        .article-paragraph { font-size: 1rem; color: #4b5563; line-height: 1.9; margin-bottom: 20px; }
+        .article-paragraph:last-child { margin-bottom: 0; }
+        .footnote-ref { color: #D10041; font-size: 0.75rem; font-weight: 600; vertical-align: super; cursor: pointer; text-decoration: none; transition: color 0.2s ease; }
+        .footnote-ref:hover { color: #ff6b9d; text-decoration: underline; }
+        .footnotes-section { margin-top: 48px; padding-top: 32px; border-top: 1px solid #e5e7eb; }
+        .footnotes-title { font-size: 0.875rem; font-weight: 600; color: #9ca3af; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.08em; }
+        .footnote-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.875rem; }
+        .footnote-item:last-child { border-bottom: none; }
+        .footnote-number { color: #D10041; font-weight: 600; flex-shrink: 0; min-width: 24px; }
+        .footnote-text { color: #6b7280; line-height: 1.6; }
+        .footnote-text a { color: #6b7280; text-decoration: none; word-break: break-all; transition: color 0.2s ease; }
+        .footnote-text a:hover { color: #D10041; text-decoration: underline; }
+        .bottom-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 40px; border-top: 1px solid #e5e7eb; margin-top: 48px; }
+        .nav-button { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; color: #4b5563; text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: all 0.2s ease; }
+        .nav-button:hover { background: #f5f5f5; border-color: #d1d5db; color: #1a1a1a; }
+        .nav-button.primary { background: linear-gradient(135deg, rgba(209, 0, 65, 0.08), rgba(255, 107, 157, 0.08)); border-color: rgba(209, 0, 65, 0.2); color: #D10041; }
+        .nav-button.primary:hover { background: linear-gradient(135deg, rgba(209, 0, 65, 0.15), rgba(255, 107, 157, 0.15)); border-color: rgba(209, 0, 65, 0.35); }
+        .footnote-item.highlighted { background: rgba(209, 0, 65, 0.05); border-radius: 8px; margin: 0 -12px; padding-left: 12px; padding-right: 12px; }
+        a { color: #D10041; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (max-width: 640px) { .main-content { padding: 24px 16px 60px; } .page-title { font-size: 1.75rem; } .quick-facts-header { padding: 16px 18px; } .quick-facts-content { padding: 0 18px 18px; } .fact-item { padding: 10px 12px; font-size: 0.875rem; } .article-paragraph { font-size: 0.95rem; } .bottom-nav { flex-direction: column; gap: 12px; } .nav-button { width: 100%; justify-content: center; } }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+
+        <header class="page-header">
+            <h1 class="page-title">An Yujin (IVE) Wiki</h1>
+            <p class="page-subtitle">Leader of IVE • Variety Star • Fendi Ambassador</p>
+        </header>
+
+        <section class="quick-facts-section" id="quickFacts">
+            <div class="quick-facts-header" onclick="toggleFacts()">
+                <div class="quick-facts-title">
+                    <span class="icon">🐶</span>
+                    <span>Quick Facts</span>
+                    <span class="quick-facts-count">Verified Details</span>
+                </div>
+                <span class="collapse-icon">▼</span>
+            </div>
+            <div class="quick-facts-content">
+                <div class="facts-grid">
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Full Name: An Yujin (안유진)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Birth Date: September 1, 2003 (Cheongju, North Chungcheong Province)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Agency: Starship Entertainment<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Group: <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> (Leader, Vocalist)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Previous Group: IZ*ONE (2018–2021)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Debut Date: October 29, 2018 (IZ*ONE) / December 1, 2021 (IVE)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Survival Show Rank: 5th Place, Mnet's <i>Produce 48</i> (280,487 votes)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Representative Emoji: 🐶 (Puppy/Deng-deng)<span class="fact-badge community">Fan community</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Global Ambassadorship: Fendi (joined January 2023)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Variety Breakout: Cast member of <i>Earth Arcade</i> (produced by Na Young-seok)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Notable Awards: Prizm Popularity Award (60th Baeksang Arts Awards), Female Variety Idol of the Year (2023 Brand of the Year)<span class="fact-badge verified">Verified</span></span></div>
+                    <div class="fact-item"><span class="fact-bullet">•</span><span>Nicknames: An Daengdaeng (Puppy), Clear-Eyed Maniac (맑은 눈의 광인)<span class="fact-badge community">Fan community</span></span></div>
+                 </div>
+                <button class="show-more-facts" onclick="showMoreFacts()">Show More Facts <span>→</span></button>
+            </div>
+        </section>
+
+        <section class="curated-section">
+            <div class="curated-header">
+                <h2 class="curated-title">EHCO Curated <span class="ehco-badge">EDITORIAL</span></h2>
+                <p class="curated-subtitle">Last edited: December 24, 2025</p>
+            </div>
+
+            <article class="article-section">
+                <h3 class="article-section-title">From "Contact Lens Girl" to Starship's Ace</h3>
+                <p class="article-paragraph">
+                    Long before her official debut, An Yujin was already a familiar face to the Korean public. While still a trainee at Starship Entertainment, she was selected as the model for Acuvue Vita contact lenses, a high-profile commercial gig typically reserved for established actresses. The campaign, which featured her playing a confident college student (despite being a middle schooler at the time), earned her the moniker "Contact Lens Girl" across online communities.<a href="#fn1" class="footnote-ref">1</a>
+                </p>
+                <p class="article-paragraph">
+                    Her path to Starship was remarkably digital for the era. Unlike many peers who were street-cast, Yujin sent an email application to the agency, attaching a video of herself singing. She passed the subsequent auditions effortlessly. By 2017, the agency had begun soft-launching her through appearances in major music videos, including <a href="https://www.ehco.ai/soyou" target="_blank" rel="noopener noreferrer">Soyou</a> and <a href="https://www.ehco.ai/baekhyun" target="_blank" rel="noopener noreferrer">Baekhyun</a>'s duet "Rain" and Mad Clown's "Thirst."<a href="#fn1" class="footnote-ref">1</a> This pre-debut visibility positioned her as an early favorite when she joined Mnet's survival show <i>Produce 48</i> in 2018, where she ultimately ranked 5th, securing her place in the project group <a href="https://www.ehco.ai/izone" target="_blank" rel="noopener noreferrer">IZ*ONE</a>.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> Transformation: Defining the "Narcissistic" Leader</h3>
+                <p class="article-paragraph">
+                    Following the disbandment of IZ*ONE in April 2021, industry observers waited to see how the members would redebut. When Starship Entertainment unveiled <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> in late 2021, Yujin was not just a member but the leader—a role she hadn't held in her previous group. The group's debut track "Eleven" and subsequent hits "Love Dive" and "After LIKE" introduced a concept of confident, self-assured narcissism ("I love me"), a sharp departure from the delicate floral imagery of her previous act.<a href="#fn2" class="footnote-ref">2</a>
+                </p>
+                <p class="article-paragraph">
+                    Critics noted that Yujin's vocal tone and commanding stage presence became the anchor for <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s sound. In interviews, she admitted that the leadership role initially felt heavy, as she had been one of the younger members in IZ*ONE. However, she credited the responsibility with maturing her artistic outlook. "I used to think being a leader meant pulling everyone along, but now I see it as being the one who listens most attentively," she told <i>Harper's Bazaar Korea</i>.<a href="#fn3" class="footnote-ref">3</a> Her leadership was validated when <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a> won the Song of the Year Daesang at the 2022 Melon Music Awards, cementing their status as leaders of the 4th generation.
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">The "Clear-Eyed Maniac": A Variety Renaissance</h3>
+                <p class="article-paragraph">
+                    While her stage persona is polished and chic, Yujin's variety show appearances revealed a chaotic, witty alter ego that endeared her to the general public. Her casting in tvN's <i>Earth Arcade</i> (Bbangbbang Earth Arcade), directed by legendary producer Na Young-seok, became a cultural turning point. Paired with comedian Lee Eun-ji, rapper Lee Young-ji, and Oh My Girl's Mimi, Yujin shattered the "polite idol" stereotype.<a href="#fn4" class="footnote-ref">4</a>
+                </p>
+                <p class="article-paragraph">
+                    She earned the nickname "Clear-Eyed Maniac" (맑은 눈의 광인) for her fearless, often defiant banter with the production team and her obsessive competitiveness during games. In one viral moment, she boldly negotiated with Na PD, leveraging her idol status for game advantages, a dynamic rarely seen between a rookie idol and a senior producer. The show's success won her the "Female Variety Idol of the Year" at the 2023 Brand of the Year Awards and the Prizm Popularity Award at the 60th Baeksang Arts Awards, proving she was a dual threat in both music and entertainment.<a href="#fn5" class="footnote-ref">5</a>
+                </p>
+            </article>
+
+            <article class="article-section">
+                <h3 class="article-section-title">Artistry and Ambassadorship</h3>
+                <p class="article-paragraph">
+                    Beyond performance and variety, Yujin has begun to stake her claim as a creative. For <a href="https://www.ehco.ai/ive" target="_blank" rel="noopener noreferrer">IVE</a>'s first full-length album <i>I've IVE</i> (2023), she wrote the lyrics for the track "Heroine." The lyrics, which describe overcoming trials to become the main character of one's own story, were interpreted by fans as autobiographical, reflecting the intense scrutiny she has faced since middle school.<a href="#fn6" class="footnote-ref">6</a>
+                </p>
+                <p class="article-paragraph">
+                    Her influence extends to the fashion world, where she was appointed as the South Korean ambassador for the Italian luxury house Fendi in January 2023. The brand cited her "overflowing charisma and trend-setting style" as alignment with their Gen Z target demographic. Whether appearing on the cover of <i>Esquire</i> or sitting front row at Milan Fashion Week, Yujin has effectively transitioned from a teen idol to a high-fashion icon, embodying the modern "It Girl" archetype.<a href="#fn7" class="footnote-ref">7</a>
+                </p>
+            </article>
+
+            <div class="footnotes-section">
+                <h4 class="footnotes-title">References</h4>
+                <div class="footnote-item" id="fn1"><span class="footnote-number">1</span><span class="footnote-text"><a href="https://kpopherald.koreaherald.com/view.php?ud=201809021454014894073_2" target="_blank" rel="noopener">Meet the 12 members of IZ*ONE as ‘Produce 48’ wraps up</a></span></div>
+                <div class="footnote-item" id="fn2"><span class="footnote-number">2</span><span class="footnote-text"><a href="https://www.hellokpop.com/kpop/ive-eleven-debut-showcase/" target="_blank" rel="noopener">hellokpop: IVE Shares Meaning Behind Team Name, Expresses Gratitude To Fans, And More In Media Showcase For Grand Debut</a></span></div>
+                <div class="footnote-item" id="fn3"><span class="footnote-number">3</span><span class="footnote-text"><a href="https://www.harpersbazaar.co.kr/article/74257" target="_blank" rel="noopener">Harper's Bazaar Korea: An Yujin, The Brave New World (February 2023 Issue Interview)</a></span></div>
+                <div class="footnote-item" id="fn4"><span class="footnote-number">4</span><span class="footnote-text"><a href="https://koreajoongangdaily.joins.com/2022/08/22/entertainment/kpop/Korea-Kpop-IVE/20220822155712723.html" target="_blank" rel="noopener">Korea JoongAng Daily: IVE member An Yu-jin shows she has it all in 'Earth Arcade' game show (August 22, 2022)</a></span></div>
+                <div class="footnote-item" id="fn5"><span class="footnote-number">5</span><span class="footnote-text"><a href="https://www.youtube.com/watch?v=hyawGVxnDHA" target="_blank" rel="noopener">[60회 백상] PRIZM 인기상 - 김수현&안유진 | JTBC 240507 방송</a></span></div>
+                <div class="footnote-item" id="fn6"><span class="footnote-number">6</span><span class="footnote-text"><a href="https://www.soompi.com/article/1576947wpp/ive-unveils-track-list-for-1st-full-length-album-ive-ive" target="_blank" rel="noopener">Soompi: IVE Drops Track List For 1st Full Album “I’ve IVE”; Reveals Members Wrote Lyrics For 7 Songs (April 10, 2023)</a></span></div>
+                <div class="footnote-item" id="fn7"><span class="footnote-number">7</span><span class="footnote-text"><a href="https://www.fashion-headline.com/en/article/222784" target="_blank" rel="noopener">FASHIONHEADLINE: Fendi appoints Ahn Yu-jin of K-pop girl group IVE as brand ambassador in Korea</a></span></div>
+            </div>
+        </section>
+
+        <nav class="bottom-nav">
+            <a href="https://www.ehco.ai/starship-entertainment" class="nav-button">← Starship Entertainment</a>
+            <a href="https://www.ehco.ai/ive" class="nav-button primary">View Full Timeline →</a>
+        </nav>
+    </main>
+
+    <script>
+        function toggleFacts() { document.getElementById('quickFacts').classList.toggle('collapsed'); }
+        function showMoreFacts() { alert('This would load more facts from the database'); }
+        document.querySelectorAll('.footnote-ref').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) { target.scrollIntoView({ behavior: 'smooth', block: 'center' }); target.classList.add('highlighted'); setTimeout(() => target.classList.remove('highlighted'), 2000); }
+            });
+        });
+    </script>
+</body>
+</html>
