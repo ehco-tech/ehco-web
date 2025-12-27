@@ -113,16 +113,6 @@ const LoadingOverlay = () => (
   </div>
 );
 
-// Generate initials from a name
-const getInitials = (name: string): string => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2);
-};
-
 // Slugify function for creating URL-friendly hash anchors
 const slugify = (text: string) =>
   text
@@ -591,7 +581,7 @@ export default function Home() {
         {/* </section> */}
 
         {/* Hero Section with Search - Full Height */}
-        <section ref={searchSectionRef} className="hero-section flex flex-col justify-center mb-12 pt-16 md:pt-24">
+        <section ref={searchSectionRef} className="hero-section flex flex-col justify-center mb-12 pt-14 md:pt-16">
           <div className="text-center mb-8">
             <h1 className="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
               Understanding <span className="text-key-color">Their Story</span>
