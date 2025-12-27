@@ -12,7 +12,6 @@ import { Providers } from './providers';
 import ScrollToTop from '@/components/ScrollToTop';
 import Script from 'next/script';
 import AdBanner from '@/components/AdBanner';
-import AdSidebar from '@/components/AdSidebar';
 
 const queryClient = new QueryClient();
 
@@ -155,24 +154,12 @@ export default function RootLayout({
             </div>
           </div>
 
-          {/* Main Content with Sidebar Layout */}
+          {/* Main Content */}
           <div className="min-h-screen bg-gray-50 dark:bg-black">
-            <div className="flex flex-col lg:flex-row max-w-[1400px] mx-auto">
-              {/* Main Content */}
-              <main className="flex-1 w-full lg:w-auto">
-                {children}
-                <JsonLd data={websiteSchema} />
-              </main>
-
-              {/* Right Sidebar Ad - Desktop Only (160x300) */}
-              <aside className="hidden lg:block w-[180px] sticky self-start p-4" style={{ top: 'calc(4rem + 70px)' }}>
-                <AdSidebar
-                  adKey="b6fd012836d0efc4358182fcf429e9f4"
-                  width={160}
-                  height={300}
-                />
-              </aside>
-            </div>
+            <main className="w-full">
+              {children}
+              <JsonLd data={websiteSchema} />
+            </main>
           </div>
 
           {/* Footer - white background with only copyright and links */}

@@ -21,6 +21,7 @@ import { useProfileData } from '@/context/ProfileDataContext';
 import { removeFromScrappedEvents } from '@/lib/scrapping-service';
 import LoadingOverlay from '@/components/LoadingOverlay';
 import { updateNotificationPreferences } from '@/lib/notification-service';
+import AdSidebar from '@/components/AdSidebar';
 
 type TabType = 'account' | 'favorites' | 'scrapped';
 
@@ -600,7 +601,8 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
 
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="hidden lg:block w-64 flex-shrink-0">
-              <nav className="lg:sticky lg:top-20">
+              <nav className="lg:sticky lg:top-20 space-y-4">
+                {/* Navigation Menu */}
                 <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4">
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-4 px-3">Navigation</h3>
                   <ul className="space-y-1">
@@ -635,8 +637,19 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
                     </div>
                   </div>
                 </div>
+
+                {/* Ad Below Navigation */}
+                <div className="flex justify-center">
+                  <AdSidebar
+                    adKey="b6fd012836d0efc4358182fcf429e9f4"
+                    width={160}
+                    height={300}
+                  />
+                </div>
               </nav>
             </div>
+
+            {/* Main Content Area */}
             <div className="hidden lg:block flex-1">
               <div className={activeTab === 'account' ? 'block' : 'hidden'}>
                 {renderAccountSection()}

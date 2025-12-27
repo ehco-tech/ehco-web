@@ -1,6 +1,7 @@
 // app/terms-of-service/page.tsx
 
 import { Metadata } from "next";
+import AdBannerResponsive from "@/components/AdBannerResponsive";
 
 export const metadata: Metadata = {
     title: 'Terms of Service',
@@ -219,8 +220,15 @@ export default function TermsOfService() {
                     </p>
 
 
-                    <hr id="ads" className="my-12 border-gray-300 dark:border-gray-700" />
+                    <hr id="ads" className="border-gray-300 dark:border-gray-700" />
 
+                    {/* Ad Banner - Responsive (728x90 desktop, 468x60 mobile) */}
+                    <div className="py-8 -mx-4 px-4 overflow-hidden">
+                        <AdBannerResponsive
+                            desktopAdKey="3fa73f7563d87b7c0f5d250844483399"
+                            mobileAdKey="30047d82f39b4acbb2048058f41436aa"
+                        />
+                    </div>
 
                     <h1 className="text-3xl font-bold text-center mb-8 text-key-color">Copyright and Attribution Policy</h1>
 
