@@ -158,7 +158,7 @@ export default function ContactForm() {
     };
 
     return (
-        <div className="min-h-screen bg-white dark:bg-black">
+        <div className="min-h-screen bg-gray-50 dark:bg-black">
             <main className="max-w-3xl mx-auto px-4 py-16">
                 <h1 className="text-4xl font-bold text-center text-key-color mb-8">Contact Us</h1>
 
