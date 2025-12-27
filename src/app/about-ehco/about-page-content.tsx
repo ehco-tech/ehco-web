@@ -3,6 +3,7 @@
 import { Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import AdBannerResponsive from '@/components/AdBannerResponsive';
 
 export default function AboutPageContent() {
     // State for stats counters
@@ -192,6 +193,16 @@ export default function AboutPageContent() {
                             <p className="text-pink-100 text-sm">Source verified</p>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            {/* Ad Banner - Responsive (728x90 desktop, 468x60 mobile) */}
+            <section className="py-8 px-4 bg-gray-50 dark:bg-black overflow-hidden">
+                <div className="max-w-4xl mx-auto">
+                    <AdBannerResponsive
+                        desktopAdKey="3fa73f7563d87b7c0f5d250844483399"
+                        mobileAdKey="30047d82f39b4acbb2048058f41436aa"
+                    />
                 </div>
             </section>
 

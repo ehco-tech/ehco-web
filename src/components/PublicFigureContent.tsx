@@ -3,6 +3,8 @@
 
 import { ReactNode, useState, useEffect } from 'react';
 import TabNavigation, { Tab } from './TabNavigation';
+import AdSidebar from './AdSidebar';
+import AdBanner from './AdBanner';
 
 interface PublicFigureContentProps {
     tabs: Tab[];
@@ -70,15 +72,36 @@ export default function PublicFigureContent({ tabs, activeTab: initialActiveTab,
 
     return (
         <>
+            {/* Mobile Ad Above Tab Navigation (468x60) - Mobile Only */}
+            <div className="lg:hidden w-full overflow-hidden mb-4">
+                <AdBanner
+                    adKey="30047d82f39b4acbb2048058f41436aa"
+                    width={468}
+                    height={60}
+                />
+            </div>
+
             {/* Sticky Tab Navigation */}
             <TabNavigation tabs={tabs} activeTab={activeTab} onTabChange={handleTabChange} />
 
-            {/* Tab Content */}
-            <div>
-                {activeTab === 'curation' && <div key="curation">{children.curation}</div>}
-                {activeTab === 'timeline' && <div key="timeline">{children.timeline}</div>}
-                {activeTab === 'discography' && <div key="discography">{children.discography}</div>}
-                {activeTab === 'filmography' && <div key="filmography">{children.filmography}</div>}
+            {/* Tab Content with Sidebar Layout */}
+            <div className="flex flex-col lg:flex-row max-w-[1400px] mx-auto">
+                {/* Main Content Area */}
+                <div className="flex-1 w-full lg:w-auto">
+                    {activeTab === 'curation' && <div key="curation">{children.curation}</div>}
+                    {activeTab === 'timeline' && <div key="timeline">{children.timeline}</div>}
+                    {activeTab === 'discography' && <div key="discography">{children.discography}</div>}
+                    {activeTab === 'filmography' && <div key="filmography">{children.filmography}</div>}
+                </div>
+
+                {/* Right Sidebar Ad - Desktop Only (160x600) */}
+                <aside className="hidden lg:block w-[180px] sticky self-start p-4" style={{ top: 'calc(4rem + 70px)' }}>
+                    <AdSidebar
+                        adKey="f31d2a8f52b88e41424de632d40c9a67"
+                        width={160}
+                        height={600}
+                    />
+                </aside>
             </div>
         </>
     );
