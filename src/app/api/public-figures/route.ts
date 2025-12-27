@@ -1,15 +1,15 @@
 import { db } from "@/lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import { NextResponse } from "next/server";
 
-// Cache for all figures data
+// Cache for all figures data - now fetched from a single aggregated document
 let cachedFigures: PublicFigure[] | null = null;
 let cacheTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_DURATION = 60 * 60 * 1000; // 60 minutes - can be longer since data is pre-aggregated
 
-// Additional cache for filtered results to avoid reprocessing
+// Cache for filtered results to avoid reprocessing
 const filteredCache = new Map<string, { data: PublicFigure[], timestamp: number }>();
-const FILTERED_CACHE_DURATION = 2 * 60 * 1000; // 2 minutes for filtered results
+const FILTERED_CACHE_DURATION = 60 * 60 * 1000; // 60 minutes
 
 // Optimized interface with only necessary fields
 interface PublicFigureBase {
@@ -111,14 +111,15 @@ function matchesCategoryFilters(figure: PublicFigure, filters: CategoryFilters):
         }
     }
 
-    // Check occupation filters - figure must have ALL selected occupations
+    // Check occupation filters - figure must have AT LEAST ONE of the selected occupations
+    // Changed from "every" to "some" to handle Actor/Actress filter correctly
     if (filters.occupation && filters.occupation.length > 0) {
-        const hasAllOccupations = filters.occupation.every(filterOccupation =>
+        const hasAnyOccupation = filters.occupation.some(filterOccupation =>
             figure.occupation?.some(figureOccupation =>
                 figureOccupation.toLowerCase().includes(filterOccupation.toLowerCase())
             )
         );
-        if (!hasAllOccupations) {
+        if (!hasAnyOccupation) {
             return false;
         }
     }
@@ -166,6 +167,21 @@ function parseCategoryFilters(url: URL): CategoryFilters {
     return filters;
 }
 
+// Helper function to fetch all figures from the aggregated document
+async function fetchAllFigures(): Promise<PublicFigure[]> {
+    console.log('Fetching all figures from aggregated document...');
+
+    const docRef = doc(db, 'all-figures-data', 'figures-list');
+    const docSnap = await getDoc(docRef);
+
+    if (!docSnap.exists()) {
+        throw new Error('Aggregated figures document not found. Please run the aggregation script first.');
+    }
+
+    const data = docSnap.data();
+    return (data.figures || []) as PublicFigure[];
+}
+
 export async function GET(request: Request) {
     try {
         const url = new URL(request.url);
@@ -178,38 +194,20 @@ export async function GET(request: Request) {
 
         // Parse category filters
         const categoryFilters = parseCategoryFilters(url);
-
-        // console.log('Category filters:', categoryFilters);
-
-        const collectionRef = collection(db, 'selected-figures');
-
-        // Generate cache key for filtered results
-        const filterKey = JSON.stringify(categoryFilters);
         const now = Date.now();
+
+        // Generate cache key for filtered/sorted results
+        const filterKey = JSON.stringify({ filters: categoryFilters, sort: sortParam });
 
         // Check if we have cached filtered results
         const cachedFiltered = filteredCache.get(filterKey);
         if (cachedFiltered && (now - cachedFiltered.timestamp) < FILTERED_CACHE_DURATION) {
-            // Use cached filtered results
-            const sortedFigures = [...cachedFiltered.data].sort((a, b) => {
-                switch (sortParam) {
-                    case 'za':
-                        return b.name.localeCompare(a.name);
-                    case 'recent':
-                        return (b.lastUpdated || '').localeCompare(a.lastUpdated || '');
-                    case 'popular':
-                        return 0;
-                    default: // 'az'
-                        return a.name.localeCompare(b.name);
-                }
-            });
-
-            // Apply pagination
-            const totalCount = sortedFigures.length;
+            console.log('Using cached filtered results');
+            const totalCount = cachedFiltered.data.length;
             const totalPages = Math.ceil(totalCount / pageSize);
             const startIndex = (page - 1) * pageSize;
             const endIndex = startIndex + pageSize;
-            const paginatedFigures = sortedFigures.slice(startIndex, endIndex);
+            const paginatedFigures = cachedFiltered.data.slice(startIndex, endIndex);
 
             return NextResponse.json({
                 publicFigures: paginatedFigures,
@@ -220,114 +218,30 @@ export async function GET(request: Request) {
                 appliedFilters: categoryFilters
             }, {
                 headers: {
-                    'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=240',
+                    'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
                 }
             });
         }
 
-        // Check if base cache is valid
-        const isCacheValid = cachedFigures !== null && (now - cacheTimestamp) < CACHE_DURATION;
-
+        // Fetch all figures (from cache or aggregated document)
         let allFigures: PublicFigure[];
 
-        if (isCacheValid && cachedFigures) {
-            // Use cached data
-            // console.log('Using cached figures data');
+        if (cachedFigures && (now - cacheTimestamp) < CACHE_DURATION) {
+            console.log('Using cached all figures data');
             allFigures = cachedFigures;
         } else {
-            // Fetch fresh data from Firestore
-            // console.log('Fetching fresh figures data from Firestore');
-            const firestoreQuery = query(collectionRef, orderBy('name'));
-            const allDocsSnapshot = await getDocs(firestoreQuery);
-
-            // Transform all documents to our interface
-            allFigures = allDocsSnapshot.docs.map(docRef => {
-                const data = docRef.data();
-
-            // Parse occupation array - split combined occupations
-            const occupations: string[] = [];
-            if (data.occupation && Array.isArray(data.occupation)) {
-                data.occupation.forEach((occ: string) => {
-                    // Split by " / " and trim each part
-                    const splitOccs = occ.split(' / ').map((part: string) => part.trim());
-                    occupations.push(...splitOccs);
-                });
-            }
-
-            // For groups, determine nationality from members
-            let nationality = data.nationality || '';
-            if (data.is_group && data.members && Array.isArray(data.members)) {
-                // Get nationalities from all members
-                const memberNationalities = data.members
-                    .map((member: { nationality?: string }) => member.nationality)
-                    .filter((nat: string | undefined): nat is string => Boolean(nat));
-
-                // If all members have the same nationality, use that
-                if (memberNationalities.length > 0) {
-                    const uniqueNationalities = [...new Set(memberNationalities)];
-                    if (uniqueNationalities.length === 1) {
-                        nationality = uniqueNationalities[0];
-                    } else {
-                        nationality = 'Mixed'; // Multiple nationalities in group
-                    }
-                }
-            }
-
-            const publicFigureBase: PublicFigureBase = {
-                id: docRef.id,
-                name: data.name || '',
-                name_kr: data.name_kr || '',
-                gender: data.gender || '',
-                nationality: nationality,
-                occupation: occupations,
-                profilePic: data.profilePic || '',
-                company: data.company || '',
-                debutDate: data.debutDate || '',
-                lastUpdated: data.lastUpdated || '',
-            };
-
-            if (data.is_group) {
-                return {
-                    ...publicFigureBase,
-                    is_group: true,
-                    members: data.members || []
-                } as GroupProfile;
-            } else {
-                return {
-                    ...publicFigureBase,
-                    is_group: false,
-                    birthDate: data.birthDate || '',
-                    group: data.group || ''
-                } as IndividualPerson;
-            }
-            });
+            console.log('Fetching all figures from aggregated document');
+            allFigures = await fetchAllFigures();
 
             // Update cache
             cachedFigures = allFigures;
             cacheTimestamp = now;
         }
 
-        // Apply category filters
+        // Apply filters
         const filteredFigures = allFigures.filter(figure =>
             matchesCategoryFilters(figure, categoryFilters)
         );
-
-        // Cache the filtered results
-        filteredCache.set(filterKey, {
-            data: filteredFigures,
-            timestamp: now
-        });
-
-        // console.log(`Filtered ${allFigures.length} figures down to ${filteredFigures.length} after applying AND logic`);
-        if (filteredFigures.length > 0 && filteredFigures.length < 6) {
-            // console.log('Sample filtered figures:', filteredFigures.map(f => ({
-            //     name: f.name,
-            //     gender: f.gender,
-            //     is_group: f.is_group,
-            //     occupation: f.occupation,
-            //     nationality: f.nationality
-            // })));
-        }
 
         // Apply sorting
         const sortedFigures = [...filteredFigures].sort((a, b) => {
@@ -337,11 +251,16 @@ export async function GET(request: Request) {
                 case 'recent':
                     return (b.lastUpdated || '').localeCompare(a.lastUpdated || '');
                 case 'popular':
-                    // Implement your popularity logic here
                     return 0;
                 default: // 'az'
                     return a.name.localeCompare(b.name);
             }
+        });
+
+        // Cache the filtered and sorted results
+        filteredCache.set(filterKey, {
+            data: sortedFigures,
+            timestamp: now
         });
 
         // Apply pagination
@@ -351,27 +270,16 @@ export async function GET(request: Request) {
         const endIndex = startIndex + pageSize;
         const paginatedFigures = sortedFigures.slice(startIndex, endIndex);
 
-        const response = {
+        return NextResponse.json({
             publicFigures: paginatedFigures,
             totalCount,
             totalPages,
             currentPage: page,
             pageSize,
             appliedFilters: categoryFilters
-        };
-
-        // console.log('Sending response:', {
-        //     figuresCount: paginatedFigures.length,
-        //     totalCount,
-        //     totalPages,
-        //     currentPage: page,
-        //     appliedFilters: categoryFilters
-        // });
-
-        // Return with cache headers
-        return NextResponse.json(response, {
+        }, {
             headers: {
-                'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+                'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200',
             }
         });
     } catch (error) {
