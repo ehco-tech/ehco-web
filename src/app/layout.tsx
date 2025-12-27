@@ -12,7 +12,7 @@ import { Providers } from './providers';
 import ScrollToTop from '@/components/ScrollToTop';
 import Script from 'next/script';
 import AdBanner from '@/components/AdBanner';
-// import AdSidebar from '@/components/AdSidebar';
+import AdSidebar from '@/components/AdSidebar';
 
 const queryClient = new QueryClient();
 
@@ -165,13 +165,13 @@ export default function RootLayout({
               </main>
 
               {/* Right Sidebar Ad - Desktop Only (160x300) */}
-              {/* <aside className="hidden lg:block w-[180px] sticky self-start p-4" style={{ top: 'calc(4rem + 70px)' }}>
+              <aside className="hidden lg:block w-[180px] sticky self-start p-4" style={{ top: 'calc(4rem + 70px)' }}>
                 <AdSidebar
                   adKey="b6fd012836d0efc4358182fcf429e9f4"
                   width={160}
                   height={300}
                 />
-              </aside> */}
+              </aside>
             </div>
           </div>
 

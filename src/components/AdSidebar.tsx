@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { adManager } from '@/lib/adManager';
 
 interface AdSidebarProps {
   adKey: string;
@@ -15,38 +16,53 @@ export default function AdSidebar({ adKey, width, height }: AdSidebarProps) {
   useEffect(() => {
     if (scriptLoadedRef.current || !adRef.current) return;
 
-    // Create a unique container for this specific ad
-    const adContainer = document.createElement('div');
-    adContainer.id = `ad-container-${adKey}`;
+    const loadAd = () => {
+      if (!adRef.current) {
+        adManager.markComplete();
+        return;
+      }
 
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.async = true;
+      // Create a unique container for this specific ad
+      const adContainer = document.createElement('div');
+      adContainer.id = `ad-container-${adKey}`;
 
-    // Create the ad configuration inline in the script
-    script.innerHTML = `
-      atOptions = {
-        'key': '${adKey}',
+      // Set global atOptions
+      (window as any).atOptions = {
+        'key': adKey,
         'format': 'iframe',
-        'height': ${height},
-        'width': ${width},
+        'height': height,
+        'width': width,
         'params': {}
       };
-    `;
 
-    // Create second script to load the ad
-    const invokeScript = document.createElement('script');
-    invokeScript.type = 'text/javascript';
-    invokeScript.src = `https://www.highperformanceformat.com/${adKey}/invoke.js`;
-    invokeScript.async = true;
+      // Create invoke script
+      const invokeScript = document.createElement('script');
+      invokeScript.type = 'text/javascript';
+      invokeScript.src = `https://www.highperformanceformat.com/${adKey}/invoke.js`;
 
-    if (adRef.current) {
-      adRef.current.appendChild(adContainer);
-      adContainer.appendChild(script);
-      adContainer.appendChild(invokeScript);
-    }
+      // Wait for script to load before processing next ad
+      invokeScript.onload = () => {
+        // Small delay to ensure ad renders before loading next one
+        setTimeout(() => {
+          adManager.markComplete();
+        }, 100);
+      };
 
-    scriptLoadedRef.current = true;
+      invokeScript.onerror = () => {
+        console.error(`Failed to load ad: ${adKey}`);
+        adManager.markComplete();
+      };
+
+      if (adRef.current) {
+        adRef.current.appendChild(adContainer);
+        adContainer.appendChild(invokeScript);
+      }
+
+      scriptLoadedRef.current = true;
+    };
+
+    // Add to shared queue
+    adManager.enqueue(loadAd);
 
     return () => {
       // Cleanup on unmount
