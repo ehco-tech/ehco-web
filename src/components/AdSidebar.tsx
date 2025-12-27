@@ -16,8 +16,11 @@ export default function AdSidebar({ adKey, width, height }: AdSidebarProps) {
   useEffect(() => {
     if (scriptLoadedRef.current || !adRef.current) return;
 
+    // Copy ref to local variable for cleanup
+    const currentAdRef = adRef.current;
+
     const loadAd = () => {
-      if (!adRef.current) {
+      if (!currentAdRef) {
         adManager.markComplete();
         return;
       }
@@ -26,8 +29,18 @@ export default function AdSidebar({ adKey, width, height }: AdSidebarProps) {
       const adContainer = document.createElement('div');
       adContainer.id = `ad-container-${adKey}`;
 
-      // Set global atOptions
-      (window as any).atOptions = {
+      // Set global atOptions - using interface extension instead of any
+      interface WindowWithAtOptions extends Window {
+        atOptions?: {
+          key: string;
+          format: string;
+          height: number;
+          width: number;
+          params: Record<string, unknown>;
+        };
+      }
+
+      (window as unknown as WindowWithAtOptions).atOptions = {
         'key': adKey,
         'format': 'iframe',
         'height': height,
@@ -53,10 +66,8 @@ export default function AdSidebar({ adKey, width, height }: AdSidebarProps) {
         adManager.markComplete();
       };
 
-      if (adRef.current) {
-        adRef.current.appendChild(adContainer);
-        adContainer.appendChild(invokeScript);
-      }
+      currentAdRef.appendChild(adContainer);
+      adContainer.appendChild(invokeScript);
 
       scriptLoadedRef.current = true;
     };
@@ -65,9 +76,9 @@ export default function AdSidebar({ adKey, width, height }: AdSidebarProps) {
     adManager.enqueue(loadAd);
 
     return () => {
-      // Cleanup on unmount
-      if (adRef.current) {
-        adRef.current.innerHTML = '';
+      // Cleanup on unmount using the copied ref
+      if (currentAdRef) {
+        currentAdRef.innerHTML = '';
       }
       scriptLoadedRef.current = false;
     };
