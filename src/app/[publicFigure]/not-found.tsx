@@ -2,7 +2,7 @@
 'use client'; // This component should be a client component
 
 import { usePathname } from 'next/navigation';
-import FigureNotFound from '@/components/FigureNotFound';
+import FigureNotFound from '@/components/errors/FigureNotFound';
 
 export default function NotFound() {
     const pathname = usePathname();

@@ -5,21 +5,21 @@ import { db } from '@/lib/firebase';
 import { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { Loader2 } from 'lucide-react';
-import HeroSection from '@/components/HeroSection';
-import BasicAndLinksSection from '@/components/BasicAndLinksSection';
-import PublicFigureContent from '@/components/PublicFigureContent';
-import CareerJourney from '@/components/CareerJourney';
-import DiscographySection from '@/components/DiscographySection';
-import FilmographySection from '@/components/FilmographySection';
+import HeroSection from '@/components/figure/HeroSection';
+import BasicAndLinksSection from '@/components/figure/BasicAndLinksSection';
+import PublicFigureContent from '@/components/figure/PublicFigureContent';
+import CareerJourney from '@/components/figure/career/CareerJourney';
+import DiscographySection from '@/components/figure/discography/DiscographySection';
+import FilmographySection from '@/components/figure/filmography/FilmographySection';
 import CurationContent from '@/components/curation/CurationContent';
-import type { JsonLdObject } from '@/components/JsonLd';
-import JsonLd from '@/components/JsonLd';
+import type { JsonLdObject } from '@/components/common/JsonLd';
+import JsonLd from '@/components/common/JsonLd';
 import { getArticlesByIds } from '@/lib/article-service';
 import { notFound } from 'next/navigation';
 import { getSpotifyData } from '@/lib/spotify-data-reader';
 import { getTMDbData } from '@/lib/tmdb-data-reader';
-import PublicFigurePageWrapper from '@/components/PublicFigurePageWrapper';
-import ScrollNavigation from '@/components/ScrollNavigation';
+import PublicFigurePageWrapper from '@/components/figure/PublicFigurePageWrapper';
+import ScrollNavigation from '@/components/figure/ScrollNavigation';
 
 // --- IMPORTED TYPES ---
 import {

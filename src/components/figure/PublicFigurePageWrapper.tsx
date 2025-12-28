@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
-import EventModal from './EventModal';
+import EventModal from '../ui/EventModal';
 import { CuratedEvent, CuratedTimelineData, Article } from '@/types/definitions';
 
 interface PublicFigurePageWrapperProps {

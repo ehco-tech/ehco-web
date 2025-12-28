@@ -2,9 +2,8 @@
 'use client';
 
 import { ReactNode, useState, useEffect } from 'react';
-import TabNavigation, { Tab } from './TabNavigation';
-import AdSidebar from './AdSidebar';
-import AdBanner from './AdBanner';
+import TabNavigation, { Tab } from '../ui/TabNavigation';
+import { AdSidebar, AdBanner } from '../ads/Ad';
 
 interface PublicFigureContentProps {
     tabs: Tab[];

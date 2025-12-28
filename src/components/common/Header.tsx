@@ -3,12 +3,12 @@
 import { Loader2, Menu, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import { useState, Suspense } from 'react';
-import SlidingMenu from './SlidingMenu';
-import SearchSlider from './SearchSlider';
-import UserMenu from './UserMenu';
+import SlidingMenu from '../layout/SlidingMenu';
+import SearchSlider from '../layout/SearchSlider';
+import UserMenu from '../layout/UserMenu';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import NotificationCenter from './NotificationCenter';
+import NotificationCenter from '../layout/NotificationCenter';
 import { useAuth } from '@/context/AuthContext';
 
 const LoadingOverlay = () => (

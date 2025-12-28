@@ -3,7 +3,7 @@
 import { Info } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import AdBannerResponsive from '@/components/AdBannerResponsive';
+import { AdBannerResponsive } from '@/components/ads/Ad';
 
 export default function AboutPageContent() {
     // State for stats counters

@@ -7,9 +7,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
 import { removeFromFavorites } from '@/lib/favorites-service';
-import ProfileScrappedSectionEnhanced from '@/components/ProfileScrappedSection';
-import DeleteAccountDialog from '@/components/DeleteAccountDialog';
-import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell } from 'lucide-react';
+import ProfileScrappedSectionEnhanced from '@/components/profile/ProfileScrappedSection';
+import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog';
+import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell, Check, CheckCheck, Filter, Search } from 'lucide-react';
 
 // --- Firebase imports for storage and profile updates ---
 import { updateProfile, sendEmailVerification } from 'firebase/auth';
@@ -19,11 +19,13 @@ import { updateUserProfile } from '@/lib/user-service';
 
 import { useProfileData } from '@/context/ProfileDataContext';
 import { removeFromScrappedEvents } from '@/lib/scrapping-service';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/common/LoadingOverlay';
 import { updateNotificationPreferences } from '@/lib/notification-service';
-import AdSidebar from '@/components/AdSidebar';
+import { AdSidebar } from '@/components/ads/Ad';
+import { useNotifications } from '@/hooks/useNotifications';
+import { Timestamp } from 'firebase/firestore';
 
-type TabType = 'account' | 'favorites' | 'scrapped';
+type TabType = 'account' | 'favorites' | 'scrapped' | 'notifications';
 
 type ProfileContentProps = {
   initialTab: TabType;
@@ -49,6 +51,17 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     setNotificationPreferences
   } = useProfileData();
 
+  // Notifications hook
+  const {
+    notifications,
+    unreadCount,
+    loading: notificationsLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotifications,
+    formatTime,
+  } = useNotifications();
+
   // UI State
   const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [openAccordionTabs, setOpenAccordionTabs] = useState<TabType[]>([initialTab]);
@@ -60,6 +73,11 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
   const [isResending, setIsResending] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isTogglingNotifications, setIsTogglingNotifications] = useState(false);
+
+  // Notifications state
+  const [selectedNotifications, setSelectedNotifications] = useState<string[]>([]);
+  const [notificationFilter, setNotificationFilter] = useState<'all' | 'unread' | 'major'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   // --- Profile picture management state ---
   const [newProfileImage, setNewProfileImage] = useState<File | null>(null);
@@ -80,7 +98,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
 
   useEffect(() => {
     const tabFromPath = pathname.split('/').pop();
-    const validTabs: TabType[] = ['account', 'favorites', 'scrapped'];
+    const validTabs: TabType[] = ['account', 'favorites', 'scrapped', 'notifications'];
 
     if (validTabs.includes(tabFromPath as TabType)) {
       if (activeTab !== tabFromPath) {
@@ -256,6 +274,68 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     });
   };
 
+  // Notification handlers
+  const toDate = (timestamp: Date | Timestamp | string): Date => {
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toDate();
+    }
+    if (timestamp instanceof Date) {
+      return timestamp;
+    }
+    return new Date(timestamp);
+  };
+
+  const handleNotificationClick = async (notificationId: string, figureId: string) => {
+    const notification = notifications.find(n => n.id === notificationId);
+    if (notification && !notification.read) {
+      await markAsRead([notificationId]);
+    }
+    router.push(`/${figureId}`);
+  };
+
+  const handleMarkAsRead = async (notificationIds: string[]) => {
+    await markAsRead(notificationIds);
+    setSelectedNotifications([]);
+  };
+
+  const handleDeleteNotifications = async (notificationIds: string[]) => {
+    await deleteNotifications(notificationIds);
+    setSelectedNotifications([]);
+  };
+
+  const toggleNotificationSelection = (notificationId: string) => {
+    setSelectedNotifications(prev =>
+      prev.includes(notificationId)
+        ? prev.filter(id => id !== notificationId)
+        : [...prev, notificationId]
+    );
+  };
+
+  const selectAllNotifications = () => {
+    setSelectedNotifications(filteredNotifications.map(n => n.id));
+  };
+
+  const clearNotificationSelection = () => {
+    setSelectedNotifications([]);
+  };
+
+  // Filter notifications based on current filter and search
+  const filteredNotifications = notifications.filter(notification => {
+    if (notificationFilter === 'unread' && notification.read) return false;
+    if (notificationFilter === 'major' && notification.significance !== 'major') return false;
+
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      return (
+        notification.figureName.toLowerCase().includes(search) ||
+        notification.eventTitle.toLowerCase().includes(search) ||
+        notification.eventSummary.toLowerCase().includes(search)
+      );
+    }
+
+    return true;
+  });
+
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
@@ -277,6 +357,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     { id: 'account' as TabType, label: 'Account Information', icon: Settings },
     { id: 'favorites' as TabType, label: 'Favorites', icon: Star },
     { id: 'scrapped' as TabType, label: 'Scrapped Events', icon: FileText },
+    { id: 'notifications' as TabType, label: 'Notifications', icon: Bell },
   ];
 
   const renderAccountSection = () => (
@@ -397,30 +478,6 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
             </div>
           </div>
         )}
-
-        {/* Notifications Toggle */}
-        <div>
-          <label className="flex items-center gap-2 text-gray-900 dark:text-white font-medium mb-3">
-            <Bell size={18} /> Notifications
-          </label>
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-gray-700 dark:text-gray-300 text-sm">
-                Get notified when your favorite figures have new updates
-              </span>
-              <span className={`text-sm px-2 py-1 rounded-full w-fit mt-1 ${notificationPreferences?.enabled ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'}`}>
-                {notificationPreferences?.enabled ? '✓ Enabled' : 'Disabled'}
-              </span>
-            </div>
-            <button
-              onClick={handleToggleNotifications}
-              disabled={isTogglingNotifications}
-              className="text-key-color hover:underline text-sm font-medium disabled:opacity-50 disabled:cursor-wait"
-            >
-              {isTogglingNotifications ? 'Updating...' : notificationPreferences?.enabled ? 'Disable' : 'Enable'}
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Account Actions */}
@@ -539,6 +596,240 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
     return <ProfileScrappedSectionEnhanced isFullView={true} isLoading={isLoading} articles={articles} figureData={figureData} scrappedEvents={scrappedEvents} onRemove={handleRemoveScrappedEvent} />;
   };
 
+  const renderNotificationsSection = () => (
+    <div className="bg-gray-50 dark:bg-[#1d1d1f] rounded-2xl p-4 md:p-8">
+      <div className="hidden md:flex md:flex-row items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Bell className="text-key-color" size={24} />
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Notifications</h2>
+        </div>
+        <span className="text-sm text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-3 py-1 mt-2 md:mt-0 rounded-full">
+          {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up!'} • {notifications.length} total
+        </span>
+      </div>
+
+      {/* Notification Settings */}
+      <div className="bg-white dark:bg-[#2c2c2e] rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Notification Settings</h3>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col flex-1">
+            <span className="text-gray-900 dark:text-white font-medium mb-1">
+              Enable Notifications
+            </span>
+            <span className="text-gray-600 dark:text-gray-400 text-sm">
+              Get notified when your favorite figures have new updates
+            </span>
+            <span className={`text-sm px-3 py-1 rounded-full w-fit mt-2 ${notificationPreferences?.enabled ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-400'}`}>
+              {notificationPreferences?.enabled ? '✓ Enabled' : 'Disabled'}
+            </span>
+          </div>
+          <button
+            onClick={handleToggleNotifications}
+            disabled={isTogglingNotifications}
+            className="bg-key-color text-white font-medium px-6 py-2 rounded-full hover:bg-pink-700 transition-colors disabled:opacity-50 disabled:cursor-wait ml-4"
+          >
+            {isTogglingNotifications ? 'Updating...' : notificationPreferences?.enabled ? 'Disable' : 'Enable'}
+          </button>
+        </div>
+      </div>
+
+      {notificationsLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="animate-spin text-gray-400 dark:text-gray-500" size={32} />
+        </div>
+      ) : (
+        <>
+          {/* Search and Filters */}
+          <div className="bg-white dark:bg-[#2c2c2e] rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search notifications..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-key-color focus:border-transparent bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <Filter size={18} className="text-gray-400" />
+                <select
+                  value={notificationFilter}
+                  onChange={(e) => setNotificationFilter(e.target.value as 'all' | 'unread' | 'major')}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-key-color focus:border-transparent bg-white dark:bg-[#1d1d1f] text-gray-900 dark:text-white"
+                >
+                  <option value="all">All notifications</option>
+                  <option value="unread">Unread only</option>
+                  <option value="major">Major events</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Bar */}
+          {filteredNotifications.length > 0 && (
+            <div className="bg-white dark:bg-[#2c2c2e] rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  {selectedNotifications.length > 0 ? (
+                    <>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {selectedNotifications.length} selected
+                      </span>
+                      <button
+                        onClick={() => handleMarkAsRead(selectedNotifications)}
+                        className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        <Check size={14} />
+                        Mark as read
+                      </button>
+                      <button
+                        onClick={() => handleDeleteNotifications(selectedNotifications)}
+                        className="flex items-center gap-1 text-sm text-red-600 dark:text-red-400 hover:underline"
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
+                      <button
+                        onClick={clearNotificationSelection}
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+                      >
+                        Clear selection
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={selectAllNotifications}
+                        className="text-sm text-gray-600 dark:text-gray-400 hover:underline"
+                      >
+                        Select all
+                      </button>
+                      {unreadCount > 0 && notificationFilter !== 'unread' && (
+                        <button
+                          onClick={markAllAsRead}
+                          className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          <CheckCheck size={14} />
+                          Mark all as read
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Showing {filteredNotifications.length} of {notifications.length}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Notifications List */}
+          <div className="space-y-4">
+            {filteredNotifications.length === 0 ? (
+              <div className="bg-white dark:bg-[#2c2c2e] rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center">
+                <Bell className="mx-auto mb-4 text-gray-300 dark:text-gray-600" size={48} />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  {searchTerm || notificationFilter !== 'all' ? 'No notifications found' : 'No notifications yet'}
+                </h3>
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  {searchTerm || notificationFilter !== 'all'
+                    ? 'Try adjusting your search or filter criteria'
+                    : 'You\'ll see notifications here when your favorites have updates'
+                  }
+                </p>
+                {(searchTerm || notificationFilter !== 'all') && (
+                  <button
+                    onClick={() => { setSearchTerm(''); setNotificationFilter('all'); }}
+                    className="text-key-color hover:underline"
+                  >
+                    Clear filters
+                  </button>
+                )}
+              </div>
+            ) : (
+              filteredNotifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`bg-white dark:bg-[#2c2c2e] rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow ${
+                    !notification.read ? 'ring-2 ring-blue-100 dark:ring-blue-900' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={selectedNotifications.includes(notification.id)}
+                      onChange={() => toggleNotificationSelection(notification.id)}
+                      className="mt-1 rounded border-gray-300 dark:border-gray-600 text-key-color focus:ring-key-color"
+                    />
+                    <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden flex-shrink-0">
+                      <User size={24} className="text-gray-400 dark:text-gray-500 w-full h-full p-3" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div
+                        className="cursor-pointer"
+                        onClick={() => handleNotificationClick(notification.id, notification.figureId)}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                            {notification.figureName}
+                          </h3>
+                          {notification.significance === 'major' && (
+                            <Star size={16} className="text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                          )}
+                          {!notification.read && (
+                            <div className="w-3 h-3 bg-blue-500 rounded-full flex-shrink-0"></div>
+                          )}
+                        </div>
+                        <h4 className="text-base font-medium text-gray-800 dark:text-gray-200 mb-2">
+                          {notification.eventTitle}
+                        </h4>
+                        <p className="text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                          {notification.eventSummary}
+                        </p>
+                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <Calendar size={14} />
+                            <span>{formatTime(toDate(notification.createdAt))}</span>
+                          </div>
+                          <span className="capitalize bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
+                            {notification.significance}
+                          </span>
+                          <span className="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full text-xs">
+                            {notification.eventCategory}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {!notification.read && (
+                        <button
+                          onClick={() => handleMarkAsRead([notification.id])}
+                          className="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
+                          title="Mark as read"
+                        >
+                          <Check size={16} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDeleteNotifications([notification.id])}
+                        className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                        title="Delete notification"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <>
       <LoadingOverlay isVisible={isRouteLoading} message="Loading..." />
@@ -591,6 +882,7 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
                         {item.id === 'account' && renderAccountSection()}
                         {item.id === 'favorites' && renderFavoritesSection()}
                         {item.id === 'scrapped' && renderScrappedSection()}
+                        {item.id === 'notifications' && renderNotificationsSection()}
                       </div>
                     </div>
                   </div>
@@ -659,6 +951,9 @@ export default function ProfileContent({ initialTab }: ProfileContentProps) {
               </div>
               <div className={activeTab === 'scrapped' ? 'block' : 'hidden'}>
                 {renderScrappedSection()}
+              </div>
+              <div className={activeTab === 'notifications' ? 'block' : 'hidden'}>
+                {renderNotificationsSection()}
               </div>
             </div>
           </div>

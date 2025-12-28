@@ -2,16 +2,16 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
-import Header from '@/components/Header';
+import Header from '@/components/common/Header';
 import { Analytics } from '@vercel/analytics/next';
 import AnalyticsProvider from './AnalyticsProvider';
-import JsonLd from '@/components/JsonLd';
+import JsonLd from '@/components/common/JsonLd';
 import Link from 'next/link';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Providers } from './providers';
-import ScrollToTop from '@/components/ScrollToTop';
+import ScrollToTop from '@/components/common/ScrollToTop';
 import Script from 'next/script';
-import AdBanner from '@/components/AdBanner';
+import { AdBanner } from '@/components/ads/Ad';
 
 const queryClient = new QueryClient();
 

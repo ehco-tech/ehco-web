@@ -1,7 +1,7 @@
 // app/terms-of-service/page.tsx
 
 import { Metadata } from "next";
-import AdBannerResponsive from "@/components/AdBannerResponsive";
+import { AdBannerResponsive } from "@/components/ads/Ad";
 
 export const metadata: Metadata = {
     title: 'Terms of Service',

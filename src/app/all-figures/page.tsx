@@ -6,7 +6,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import AllFiguresContent from './all-figures-content';
 import { AllFiguresLoadingSkeleton } from './loading-skeleton';
-import { fetchInitialFigures } from '@/lib/data/figures';
+import { fetchInitialFigures } from '@/lib/services/figures/server';
 
 // This metadata export is now valid because 'use client' is gone.
 export const metadata: Metadata = {

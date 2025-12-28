@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
-import UpdateCard from '@/components/UpdateCard';
+import UpdateCard from '@/components/common/UpdateCard';
 
 // Types
 type VerificationStatus = 'all' | '✓ Verified' | '? Reviewed' | '! Disputed';
