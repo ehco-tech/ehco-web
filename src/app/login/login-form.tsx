@@ -67,19 +67,14 @@ export default function LoginForm() {
     setShowResendVerification(false);
 
     try {
-      await signIn(formData.email, formData.password);
+      // Pass stayLoggedIn preference to signIn
+      await signIn(formData.email, formData.password, stayLoggedIn);
 
       // Handle remember me functionality
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', formData.email);
       } else {
         localStorage.removeItem('rememberedEmail');
-      }
-
-      // Handle stay logged in (you can implement session persistence here)
-      if (stayLoggedIn) {
-        // Set longer session duration or persistent storage
-        localStorage.setItem('stayLoggedIn', 'true');
       }
 
       const redirectPath = sessionStorage.getItem('redirectPath');
@@ -130,7 +125,8 @@ export default function LoginForm() {
     setError('');
 
     try {
-      await signInWithGoogle();
+      // Pass stayLoggedIn preference to Google sign-in
+      await signInWithGoogle(stayLoggedIn);
 
       const redirectPath = sessionStorage.getItem('redirectPath');
       sessionStorage.removeItem('redirectPath'); // Clean up after use
@@ -162,7 +158,7 @@ export default function LoginForm() {
 
 
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
       <main className="max-w-md mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-key-color mb-4">Welcome</h1>
@@ -266,7 +262,7 @@ export default function LoginForm() {
                 className="w-4 h-4 text-key-color border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-key-color bg-white dark:bg-[#1d1d1f]"
               />
               <label htmlFor="stayLoggedIn" className="text-sm text-gray-700 dark:text-gray-300">
-                Keep me signed in for 30 days
+                Keep me signed in
               </label>
             </div>
           </div>

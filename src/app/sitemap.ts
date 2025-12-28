@@ -2,7 +2,7 @@
 
 import { MetadataRoute } from 'next'
 import { createUrlSlug } from '@/lib/slugify';
-import { fetchAllFigureIds } from '@/lib/figures'; // Import the new function
+import { fetchAllFigureIds } from '@/lib/services/figures/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://www.ehco.ai';

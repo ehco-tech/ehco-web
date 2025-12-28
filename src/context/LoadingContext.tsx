@@ -3,7 +3,7 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
-import LoadingOverlay from '@/components/LoadingOverlay';
+import LoadingOverlay from '@/components/common/LoadingOverlay';
 
 interface LoadingContextType {
   isLoading: boolean;

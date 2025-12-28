@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Check, X, Upload, User, Star, Mail, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { createUserProfile } from '@/lib/user-service';
-import { getTopFigures, PublicFigure } from '@/lib/figures-service';
+import { getTopFigures, PublicFigure } from '@/lib/services/figures';
 // --- UPDATED: Simplified imports for email verification flow ---
 import { signOut, updateProfile, sendEmailVerification, fetchSignInMethodsForEmail, AuthError } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
@@ -253,7 +253,8 @@ export default function EnhancedSignupForm() {
     setError('');
 
     try {
-      await signInWithGoogle();
+      // For signup, default to keeping users logged in
+      await signInWithGoogle(true);
       router.push('/');
     } catch (err) {
       if (err instanceof Error) {
@@ -335,7 +336,7 @@ export default function EnhancedSignupForm() {
   // --- UPDATED: Email Verification Screen ---
   if (step === 'complete') {
     return (
-      <div className="min-h-screen bg-white dark:bg-black">
+      <div className="min-h-screen bg-gray-50 dark:bg-black">
         <main className="max-w-md mx-auto px-4 py-16">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -400,7 +401,7 @@ export default function EnhancedSignupForm() {
 
   // --- Main Signup Form (step === 'details') ---
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
+    <div className="min-h-screen bg-gray-50 dark:bg-black">
       <main className="max-w-2xl mx-auto px-4 py-16">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-key-color mb-4">Create Your Account</h1>

@@ -11,8 +11,7 @@ export default function robots(): MetadataRoute.Robots {
                 '/admin/',
                 '/login',
                 '/signup',
-                '/profile',
-                '/notifications'
+                '/profile'
             ],
         },
         sitemap: 'https://www.ehco.ai/sitemap.xml',

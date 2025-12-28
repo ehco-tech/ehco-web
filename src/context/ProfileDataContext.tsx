@@ -8,7 +8,7 @@ import { getUserProfile } from '@/lib/user-service';
 import { getUserFavorites, FavoriteItem } from '@/lib/favorites-service';
 import { getUserScrappedEvents, ScrappedEventItem } from '@/lib/scrapping-service';
 import { getArticlesByIds } from '@/lib/article-service';
-import { getFiguresByIds, PublicFigure } from '@/lib/figures-service';
+import { getFiguresByIds, PublicFigure } from '@/lib/services/figures';
 import { getNotificationPreferences, updateNotificationPreferences, NotificationPreferences } from '@/lib/notification-service';
 import { Article } from '@/types/definitions';
 

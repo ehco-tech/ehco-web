@@ -14,6 +14,7 @@ import {
   signInWithPopup,
   setPersistence,
   browserLocalPersistence,
+  browserSessionPersistence,
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
@@ -26,9 +27,9 @@ import { createUserProfile } from '@/lib/user-service';
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string, stayLoggedIn?: boolean) => Promise<void>;
   signUp: (email: string, password: string, displayName: string) => Promise<UserCredential>;
-  signInWithGoogle: () => Promise<{ isNewUser: boolean }>;
+  signInWithGoogle: (stayLoggedIn?: boolean) => Promise<{ isNewUser: boolean }>;
   signOut: () => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   deleteAccount: (password?: string) => Promise<void>;
@@ -41,11 +42,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPersistence(auth, browserLocalPersistence)
-      .catch((error) => {
-        console.error("Error setting persistence:", error);
-      });
-    
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
@@ -54,8 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return unsubscribe;
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (email: string, password: string, stayLoggedIn: boolean = false) => {
     try {
+      // Set persistence based on user preference
+      const persistence = stayLoggedIn ? browserLocalPersistence : browserSessionPersistence;
+      await setPersistence(auth, persistence);
+
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
       // Check if email is verified
@@ -106,8 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return userCredential; // <-- ADD THIS LINE
   };
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = async (stayLoggedIn: boolean = false) => {
     try {
+      // Set persistence based on user preference
+      const persistence = stayLoggedIn ? browserLocalPersistence : browserSessionPersistence;
+      await setPersistence(auth, persistence);
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
 

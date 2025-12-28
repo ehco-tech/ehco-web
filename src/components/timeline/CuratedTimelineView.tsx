@@ -10,7 +10,7 @@ import {
 } from '@/types/definitions';
 import ScrapButton from './ScrapButton';
 import ReportButton from './ReportButton';
-import HighlightedText from './HighlightedText';
+import HighlightedText from '../ui/HighlightedText';
 
 // --- TYPE DEFINITIONS ---
 interface EventSourcesProps {
