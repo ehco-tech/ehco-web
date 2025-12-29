@@ -7,7 +7,7 @@ from typing import Union, Optional, Dict, Any, List
 from datetime import datetime
 import re
 
-from notification_service import notify_timeline_update
+from utilities.notification_service import notify_timeline_update
 
 # --- CONFIGURATION ---
 CURATED_TIMELINE_COLLECTION = "curated-timeline"
