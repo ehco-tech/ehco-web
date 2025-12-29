@@ -1,14 +1,14 @@
-// src/lib/scrapping-service.ts
-import { 
-  doc, 
-  getDoc, 
-  setDoc, 
+// src/lib/services/scraping/scrapping-service.ts
+import {
+  doc,
+  getDoc,
+  setDoc,
   updateDoc,
   arrayUnion,
   arrayRemove,
   Timestamp
 } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from '../../config/firebase';
 
 interface TimelinePoint {
   date: string;
