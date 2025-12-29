@@ -1,7 +1,7 @@
 import asyncio
 import argparse
 from datetime import datetime, timedelta
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from typing import Optional
 from firebase_admin import firestore
 

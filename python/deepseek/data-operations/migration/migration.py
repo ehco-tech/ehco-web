@@ -2,7 +2,7 @@ import asyncio
 import json
 import argparse
 from collections import defaultdict
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from typing import Union, Optional, Dict, Any, List
 
 # --- CONFIGURATION ---

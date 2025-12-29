@@ -3,7 +3,7 @@ import argparse
 
 # We will reuse your existing extractor and its powerful methods
 from predefined_public_figure_extractor import PredefinedPublicFigureExtractor
-from setup_firebase_deepseek import news_manager
+from utilities.setup_firebase_deepseek import news_manager
 
 
 async def backfill_articles_for_figures(target_figure_names, article_id=None):

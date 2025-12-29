@@ -24,7 +24,7 @@ logging.basicConfig(
 logger = logging.getLogger('run_update_for_new_figures')
 
 # Import the same updater classes as run_full_update.py
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from UPDATE_article_categorizer import PublicFigureSummaryCategorizer as ArticleCategorizer
 from UPDATE_wiki_content import PublicFigureWikiUpdater as WikiContentUpdater
 from UPDATE_timeline import CurationEngine

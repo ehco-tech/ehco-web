@@ -5,7 +5,7 @@ This will show you which events have the compaction markers and which don't.
 """
 
 import asyncio
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 async def diagnose_compaction_status(figure_id: str):
     """Check the compaction status of all events for a figure."""

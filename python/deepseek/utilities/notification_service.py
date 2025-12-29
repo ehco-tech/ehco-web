@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import uuid
 
 class NotificationService:

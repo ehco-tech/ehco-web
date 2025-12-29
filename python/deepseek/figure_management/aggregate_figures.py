@@ -11,7 +11,7 @@ Usage:
 
 import sys
 from datetime import datetime
-from setup_firebase_deepseek import news_manager
+from utilities.setup_firebase_deepseek import news_manager
 
 # Get the Firestore database instance
 db = news_manager.db

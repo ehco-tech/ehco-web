@@ -1,7 +1,7 @@
 import asyncio
 import argparse
 import re # Import the regular expressions module
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 class CompanyUrlFinder:
     """

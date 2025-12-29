@@ -8,7 +8,7 @@ this script will remove those markers so compaction can run again.
 
 import asyncio
 import argparse
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 async def reset_compaction_markers(figure_id: str, dry_run: bool = True):
     """Reset all compaction markers for a figure."""

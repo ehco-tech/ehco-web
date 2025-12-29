@@ -9,7 +9,7 @@ from find_company_urls import CompanyUrlFinder
 from migration import CurationEngine
 from compact_overview import CompactOverview
 from compact_event_summaries_descriptions import DataUpdater
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 # Define the curated timeline collection name globally for consistency
 CURATED_TIMELINE_COLLECTION = "curated-timeline"

@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Any, Optional
 import logging
 
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from firestore_utils import FirestoreScanner
 
 logging.basicConfig(
