@@ -47,24 +47,24 @@ jobs:
         # echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> $GITHUB_ENV
         
     - name: Run master updater script
-      run: python python/deepseek/run_full_update.py
+      run: python python/deepseek/core/run_full_update.py
 
     - name: Update article counter
-      run: python python/deepseek/UPDATE_article_counter.py
+      run: python python/deepseek/core/UPDATE_article_counter.py
       continue-on-error: true
 
     - name: Update figure stats
-      run: python python/deepseek/count_figure_stats.py
+      run: python python/deepseek/core/count_figure_stats.py
       continue-on-error: true
 
     - name: Compact recent update descriptions
-      run: python python/deepseek/compact_recent_updates.py --recent 100
+      run: python python/deepseek/core/compact_recent_updates.py --recent 100
       continue-on-error: true
 
     - name: Figure specific recent updates
-      run: python python/deepseek/UPDATE_figure_updates.py
+      run: python python/deepseek/core/UPDATE_figure_updates.py
       continue-on-error: true
 
     - name: Process newsletter queue
-      run: python python/deepseek/newsletter_service.py --action process
+      run: python python/deepseek/core/newsletter_service.py --action process
       continue-on-error: true

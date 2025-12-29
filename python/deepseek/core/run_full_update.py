@@ -15,19 +15,24 @@ logging.basicConfig(
 logger = logging.getLogger('run_full_update')
 
 # --- Core Dependencies ---
-from setup_firebase_deepseek import NewsManager
-from predefined_public_figure_extractor import PredefinedPublicFigureExtractor
+import sys
+from pathlib import Path
+# Add parent directory to path to allow imports from sibling directories
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utilities.setup_firebase_deepseek import NewsManager
+from figure_management.predefined_public_figure_extractor import PredefinedPublicFigureExtractor
 
 # --- Import Updater Classes from Their Respective Files ---
 # Note: These imports should use your actual filenames, which may or may not include "_integrated"
-from UPDATE_article_categorizer import (
+from updates.UPDATE_article_categorizer import (
     PublicFigureSummaryCategorizer as ArticleCategorizer,
 )
-from UPDATE_wiki_content import PublicFigureWikiUpdater as WikiContentUpdater
-from UPDATE_timeline import CurationEngine
-from compact_overview import CompactOverview
-from compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
-from related_figures import RelatedFiguresUpdater
+from updates.UPDATE_wiki_content import PublicFigureWikiUpdater as WikiContentUpdater
+from updates.UPDATE_timeline import CurationEngine
+from maintenance.compact.compact_overview import CompactOverview
+from maintenance.compact.compact_event_summaries_descriptions import DataUpdater as TimelineCompactor
+from research.related_figures import RelatedFiguresUpdater
 
 # The orchestrator class
 class MasterUpdater:

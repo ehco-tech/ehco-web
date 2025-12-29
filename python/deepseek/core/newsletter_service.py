@@ -3,7 +3,11 @@
 import asyncio
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Any, Optional
-from setup_firebase_deepseek import NewsManager
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utilities.setup_firebase_deepseek import NewsManager
 import os
 from dotenv import load_dotenv
 import smtplib
