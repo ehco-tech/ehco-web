@@ -1,6 +1,6 @@
 # wiki_updater.py
 
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import asyncio
 from firebase_admin import firestore
 import argparse

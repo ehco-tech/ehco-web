@@ -1,4 +1,5 @@
-from .public_figure_extractor import PublicFigureExtractor, NewsManager
+from figure_management.public_figure_extractor import PublicFigureExtractor
+from utilities.setup_firebase_deepseek import NewsManager
 import asyncio
 import json
 import re

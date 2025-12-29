@@ -1,6 +1,6 @@
 import asyncio
 import argparse
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 # --- CONFIGURATION ---
 CURATED_TIMELINE_COLLECTION = "curated-timeline"
