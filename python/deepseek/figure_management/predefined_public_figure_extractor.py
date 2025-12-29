@@ -1,4 +1,4 @@
-from public_figure_extractor import PublicFigureExtractor, NewsManager
+from .public_figure_extractor import PublicFigureExtractor, NewsManager
 import asyncio
 import json
 import re
