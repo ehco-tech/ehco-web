@@ -8,7 +8,7 @@ import { Loader2, Eye, EyeOff, Mail } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useLoading } from '@/context/LoadingContext'; // 1. Import useLoading
 import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/config/firebase';
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({

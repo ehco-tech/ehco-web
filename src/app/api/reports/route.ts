@@ -1,7 +1,7 @@
 // src/app/api/reports/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
-import { getAdminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/config/firebase-admin';
 import ReportNotification from '@/emails/report-notification';
 import ReportConfirmation from '@/emails/report-confirmation';
 

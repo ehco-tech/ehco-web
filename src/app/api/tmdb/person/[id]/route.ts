@@ -1,7 +1,7 @@
 // src/app/api/tmdb/person/[id]/route.ts
 
 import { NextResponse } from 'next/server';
-import { getPersonDetails, getPersonFilmography } from '@/lib/tmdb';
+import { getPersonDetails, getPersonFilmography } from '@/lib/api/tmdb/client';
 
 export async function GET(
     request: Request,

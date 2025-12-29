@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { doc, collection, getDoc, query, where, getDocs } from 'firebase/firestore';
 
 interface ArticleSummaryData {

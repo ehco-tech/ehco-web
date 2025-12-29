@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { collection, query, orderBy, limit, getDocs, doc, updateDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { useAuth } from '@/context/AuthContext';
 import { Flag, Eye, Check, X, Clock } from 'lucide-react';
 

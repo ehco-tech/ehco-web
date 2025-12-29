@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { deleteUserData } from '@/lib/user-service';
+import { deleteUserData } from '@/lib/services/users/user-service';
 import { AlertTriangle, Loader2, X } from 'lucide-react';
 
 interface DeleteAccountDialogProps {

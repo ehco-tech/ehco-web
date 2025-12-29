@@ -1,9 +1,9 @@
 // src/lib/tmdb-data-reader.ts
 // Simple database reader for TMDb data - no API calls, no cache checking
 
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { TMDbCredit } from '@/lib/tmdb';
+import { TMDbCredit } from '@/lib/api/tmdb/client';
 
 export interface TMDbFilmographyData {
     cast: TMDbCredit[];

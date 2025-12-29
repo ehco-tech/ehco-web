@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 // Slugify function for creating URL-friendly hash anchors
 const slugify = (text: string) =>

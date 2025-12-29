@@ -1,5 +1,5 @@
 // src/app/api/updates/route.ts
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/config/firebase";
 import { collection, getDocs, query, where, orderBy, limit, startAfter, QueryConstraint, Timestamp } from "firebase/firestore";
 import { NextResponse } from "next/server";
 

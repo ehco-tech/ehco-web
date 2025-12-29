@@ -6,7 +6,7 @@ import { Search, X, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import algoliasearch from 'algoliasearch';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 // Setup Algolia client
 const searchClient = algoliasearch(

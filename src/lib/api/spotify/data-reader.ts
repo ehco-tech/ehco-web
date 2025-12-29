@@ -1,9 +1,9 @@
 // src/lib/spotify-data-reader.ts
 // Simple database reader for Spotify data - no API calls, no cache checking
 
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { SpotifyAlbum } from '@/lib/spotify';
+import { SpotifyAlbum } from '@/lib/api/spotify/client';
 
 export interface ArtistAlbumData {
     artistId: string;

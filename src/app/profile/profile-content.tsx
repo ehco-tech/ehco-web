@@ -6,7 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { removeFromFavorites } from '@/lib/favorites-service';
+import { removeFromFavorites } from '@/lib/services/favorites/favorites-service';
 import ProfileScrappedSectionEnhanced from '@/components/profile/ProfileScrappedSection';
 import DeleteAccountDialog from '@/components/profile/DeleteAccountDialog';
 import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, FileText, ChevronDown, Upload, Bell, Check, CheckCheck, Filter, Search } from 'lucide-react';
@@ -14,13 +14,13 @@ import { User, Mail, Calendar, Loader2, Phone, Star, Trash2, Heart, Settings, Fi
 // --- Firebase imports for storage and profile updates ---
 import { updateProfile, sendEmailVerification } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, storage } from '@/lib/firebase';
-import { updateUserProfile } from '@/lib/user-service';
+import { auth, storage } from '@/lib/config/firebase';
+import { updateUserProfile } from '@/lib/services/users/user-service';
 
 import { useProfileData } from '@/context/ProfileDataContext';
-import { removeFromScrappedEvents } from '@/lib/scrapping-service';
+import { removeFromScrappedEvents } from '@/lib/services/scraping/scrapping-service';
 import LoadingOverlay from '@/components/common/LoadingOverlay';
-import { updateNotificationPreferences } from '@/lib/notification-service';
+import { updateNotificationPreferences } from '@/lib/services/notifications/notification-service';
 import { AdSidebar } from '@/components/ads/Ad';
 import { useNotifications } from '@/hooks/useNotifications';
 import { Timestamp } from 'firebase/firestore';

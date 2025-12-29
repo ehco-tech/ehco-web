@@ -2,8 +2,8 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-// import { initializeAnalytics } from '@/lib/firebase';
-import { analytics } from '@/lib/firebase';
+// import { initializeAnalytics } from '@/lib/config/firebase';
+import { analytics } from '@/lib/config/firebase';
 import { logEvent } from 'firebase/analytics';
 
 export default function AnalyticsProvider() {

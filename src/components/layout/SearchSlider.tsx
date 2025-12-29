@@ -7,7 +7,7 @@ import { debounce } from 'lodash';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import algoliasearch from 'algoliasearch';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 const searchClient = algoliasearch(
     "B1QF6MLIU5",

@@ -2,7 +2,7 @@
 // Server-side figures fetching (direct Firestore access)
 // Use these ONLY in Server Components, API routes, or server actions
 
-import { db } from "@/lib/firebase";
+import { db } from "@/lib/config/firebase";
 import { collection, getDocs, query, orderBy, limit as firestoreLimit } from "firebase/firestore";
 import { PublicFigure, FigureId, FiguresResult } from './types';
 

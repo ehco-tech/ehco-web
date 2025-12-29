@@ -4,12 +4,12 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { getUserProfile } from '@/lib/user-service';
-import { getUserFavorites, FavoriteItem } from '@/lib/favorites-service';
-import { getUserScrappedEvents, ScrappedEventItem } from '@/lib/scrapping-service';
-import { getArticlesByIds } from '@/lib/article-service';
+import { getUserProfile } from '@/lib/services/users/user-service';
+import { getUserFavorites, FavoriteItem } from '@/lib/services/favorites/favorites-service';
+import { getUserScrappedEvents, ScrappedEventItem } from '@/lib/services/scraping/scrapping-service';
+import { getArticlesByIds } from '@/lib/services/articles/article-service';
 import { getFiguresByIds, PublicFigure } from '@/lib/services/figures';
-import { getNotificationPreferences, updateNotificationPreferences, NotificationPreferences } from '@/lib/notification-service';
+import { getNotificationPreferences, updateNotificationPreferences, NotificationPreferences } from '@/lib/services/notifications/notification-service';
 import { Article } from '@/types/definitions';
 
 interface UserProfile {

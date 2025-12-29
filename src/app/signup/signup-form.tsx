@@ -6,12 +6,12 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff, Check, X, Upload, User, Star, Mail, CheckCircle2, XCircle, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { createUserProfile } from '@/lib/user-service';
+import { createUserProfile } from '@/lib/services/users/user-service';
 import { getTopFigures, PublicFigure } from '@/lib/services/figures';
 // --- UPDATED: Simplified imports for email verification flow ---
 import { signOut, updateProfile, sendEmailVerification, fetchSignInMethodsForEmail, AuthError } from 'firebase/auth';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, storage } from '@/lib/firebase';
+import { auth, storage } from '@/lib/config/firebase';
 import { getFunctions, httpsCallable } from 'firebase/functions';
 
 interface PasswordRequirement {

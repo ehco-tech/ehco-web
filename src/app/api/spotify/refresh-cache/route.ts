@@ -1,8 +1,8 @@
 // src/app/api/spotify/refresh-cache/route.ts
 
 import { NextResponse } from 'next/server';
-import { refreshSpotifyCache, getSpotifyCacheInfo } from '@/lib/spotify-cache-service';
-import { getAdminDb } from '@/lib/firebase-admin';
+import { refreshSpotifyCache, getSpotifyCacheInfo } from '@/lib/api/spotify/cache';
+import { getAdminDb } from '@/lib/config/firebase-admin';
 
 /**
  * API endpoint to manually refresh Spotify cache for a figure

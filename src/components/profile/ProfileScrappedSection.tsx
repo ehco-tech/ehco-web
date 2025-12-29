@@ -5,9 +5,9 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/context/AuthContext';
-import { getUserScrappedEvents, removeFromScrappedEvents, ScrappedEventItem } from '@/lib/scrapping-service';
+import { getUserScrappedEvents, removeFromScrappedEvents, ScrappedEventItem } from '@/lib/services/scraping/scrapping-service';
 import { Bookmark, Trash2, ExternalLink, Calendar, Tag, Loader2, ChevronDown, ChevronUp, Clock, User as UserIcon } from 'lucide-react';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 interface ProfileScrappedSectionEnhancedProps {
     maxItems?: number;

@@ -20,9 +20,9 @@ import {
   updatePassword,
   deleteUser
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/config/firebase';
 import { doc, getDoc } from 'firebase/firestore';
-import { createUserProfile } from '@/lib/user-service';
+import { createUserProfile } from '@/lib/services/users/user-service';
 
 interface AuthContextType {
   user: User | null;

@@ -1,7 +1,7 @@
 // src/app/sitemap.ts
 
 import { MetadataRoute } from 'next'
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 import { fetchAllFigureIds } from '@/lib/services/figures/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
