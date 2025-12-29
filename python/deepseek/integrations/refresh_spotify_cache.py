@@ -17,8 +17,13 @@ import requests
 import base64
 import argparse
 from datetime import datetime, timezone
+from pathlib import Path
 from dotenv import load_dotenv
-from setup_firebase_deepseek import NewsManager
+
+# Add parent directory to path to allow imports from sibling directories
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from utilities.setup_firebase_deepseek import NewsManager
 
 class SpotifyRefresher:
     def __init__(self):

@@ -17,7 +17,7 @@ import requests
 import argparse
 from datetime import datetime, timezone
 from dotenv import load_dotenv
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 class TMDbRefresher:
     def __init__(self):

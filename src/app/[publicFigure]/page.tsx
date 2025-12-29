@@ -66,6 +66,7 @@ export interface PublicFigureBase {
     weverseLink?: string;
     berrizLink?: string;
     fansLink?: string;
+    fanCommunityLink?: string;
     totalAwards?: string;
     tmdb_id?: number | null;
     tmdb_verified?: boolean;
@@ -229,6 +230,7 @@ async function getPublicFigureData(publicFigureSlug: string): Promise<PublicFigu
         weverseLink: data.weverseLink || '',
         berrizLink: data.berrizLink || '',
         fansLink: data.fansLink || '',
+        fanCommunityLink: data.fanCommunityLink || '',
         totalAwards: data.totalAwards || '',
         tmdb_id: data.tmdb_id || null,
         tmdb_verified: data.tmdb_verified || false,
