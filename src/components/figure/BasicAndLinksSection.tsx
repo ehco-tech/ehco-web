@@ -175,14 +175,14 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                         )}
 
                         {/* Official Colors */}
-                        {publicFigure.officialColors && (
+                        {/* {publicFigure.officialColors && (
                             <div className="flex justify-between py-3">
                                 <span className="text-gray-600 dark:text-gray-400 font-medium">Official Colors</span>
                                 <span className="text-gray-900 dark:text-white text-right">
                                     {publicFigure.officialColors}
                                 </span>
                             </div>
-                        )}
+                        )} */}
                     </div>
                 </div>
 
@@ -281,16 +281,16 @@ export default function BasicAndLinksSection({ publicFigure, spotifyArtistNames 
                         )}
 
                         {/* Fan Community */}
-                        {(publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink) && (
+                        {(publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink || publicFigure.fanCommunityLink) && (
                             <div className="flex justify-between py-3 border-b border-gray-100 dark:border-gray-700">
                                 <span className="text-gray-600 dark:text-gray-400 font-medium">Fan Community</span>
                                 <a
-                                    href={publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink}
+                                    href={publicFigure.weverseLink || publicFigure.berrizLink || publicFigure.fansLink || publicFigure.fanCommunityLink}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-key-color dark:text-key-color-dark hover:underline text-right"
                                 >
-                                    {publicFigure.weverseLink ? 'Weverse' : publicFigure.berrizLink ? 'Berriz' : 'FANS'}
+                                    {publicFigure.weverseLink ? 'Weverse' : publicFigure.berrizLink ? 'Berriz' : publicFigure.fansLink ? 'FANS' : 'Fan Community'}
                                 </a>
                             </div>
                         )}
