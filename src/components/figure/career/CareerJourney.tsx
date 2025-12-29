@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from 'react';
 import CuratedTimelineView from '../../timeline/CuratedTimelineView';
-import TimelineFilters from '../../career/TimelineFilters';
+import TimelineFilters from './TimelineFilters';
 import { useProgressiveArticles } from '@/hooks/useProgressiveArticles';
 import { useTimelineFilters } from '@/hooks/useTimelineFilters';
 import { useHashScroll } from '@/hooks/useHashScroll';
