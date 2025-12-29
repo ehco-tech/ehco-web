@@ -16,7 +16,7 @@ from typing import List, Dict, Any
 import logging
 from datetime import datetime
 
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 logging.basicConfig(
     level=logging.INFO,

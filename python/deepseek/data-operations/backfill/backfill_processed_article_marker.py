@@ -1,6 +1,6 @@
 import sys
 import argparse
-from setup_firebase_deepseek import NewsManager # Assuming this is your setup file
+from utilities.setup_firebase_deepseek import NewsManager # Assuming this is your setup file
 
 class BackfillProcessor:
     """

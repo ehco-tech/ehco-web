@@ -2,7 +2,7 @@ import asyncio
 import argparse
 import sys
 from google.cloud.firestore_v1.base_query import FieldFilter
-from setup_firebase_deepseek import NewsManager # Assuming this sets up your clients
+from utilities.setup_firebase_deepseek import NewsManager # Assuming this sets up your clients
 
 # --- CONFIGURATION (Must match compact_event_summaries_descriptions.py) ---
 CURATED_TIMELINE_COLLECTION = "curated-timeline"

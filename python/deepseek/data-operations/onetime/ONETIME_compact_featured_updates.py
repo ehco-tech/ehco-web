@@ -17,7 +17,7 @@ Usage:
 import asyncio
 import argparse
 from firebase_admin import firestore
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 
 class FeaturedUpdateCompactor:

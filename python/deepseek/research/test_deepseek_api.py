@@ -3,7 +3,7 @@ Quick test script to verify DeepSeek API is working properly
 """
 
 import asyncio
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import json
 
 

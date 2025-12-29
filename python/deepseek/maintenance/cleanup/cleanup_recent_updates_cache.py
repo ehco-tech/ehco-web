@@ -9,7 +9,7 @@ slightly different descriptions.
 
 import asyncio
 import argparse
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from typing import List, Dict, Any
 from collections import defaultdict
 

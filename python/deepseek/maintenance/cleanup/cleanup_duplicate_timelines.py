@@ -13,7 +13,7 @@ Usage:
 
 import asyncio
 import argparse
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import json
 from typing import List, Dict, Any
 from firebase_admin import firestore

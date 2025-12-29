@@ -8,7 +8,7 @@ import asyncio
 import argparse
 from typing import List, Set
 from predefined_public_figure_extractor import PredefinedPublicFigureExtractor
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from firebase_admin import firestore
 import time
 

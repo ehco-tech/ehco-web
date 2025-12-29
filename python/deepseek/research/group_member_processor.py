@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 import pytz
 from public_figure_extractor import PublicFigureExtractor
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 
 
 class GroupMemberProcessor:

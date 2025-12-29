@@ -2,7 +2,7 @@ import asyncio
 import argparse
 import sys
 from google.cloud.firestore_v1.base_query import FieldFilter
-from setup_firebase_deepseek import NewsManager # Assuming this sets up your clients
+from utilities.setup_firebase_deepseek import NewsManager # Assuming this sets up your clients
 from typing import Dict, Any, List
 
 # --- CONFIGURATION ---

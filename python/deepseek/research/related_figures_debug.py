@@ -2,7 +2,7 @@
 import firebase_admin
 from firebase_admin import firestore
 from firebase_admin.firestore import FieldFilter
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 from collections import Counter
 
 class FigureNameDebugger:
