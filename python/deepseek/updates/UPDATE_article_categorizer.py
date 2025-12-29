@@ -1,4 +1,4 @@
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import asyncio
 import json
 import re

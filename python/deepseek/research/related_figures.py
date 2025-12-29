@@ -6,7 +6,7 @@ from firebase_admin.firestore import FieldFilter
 from collections import defaultdict
 import operator
 import argparse
-from setup_firebase_deepseek import NewsManager
+from utilities.setup_firebase_deepseek import NewsManager
 import asyncio
 
 class RelatedFiguresUpdater:
