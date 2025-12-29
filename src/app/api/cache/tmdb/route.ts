@@ -2,7 +2,7 @@
 // API route for updating TMDb cache in the background
 
 import { NextRequest, NextResponse } from 'next/server';
-import { refreshTMDbCache } from '@/lib/tmdb-cache-service';
+import { refreshTMDbCache } from '@/lib/api/tmdb/cache';
 
 /**
  * POST /api/cache/tmdb

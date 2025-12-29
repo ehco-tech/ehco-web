@@ -1,7 +1,7 @@
 // src/app/api/spotify/artist/[id]/route.ts
 
 import { NextResponse } from 'next/server';
-import { getArtistDiscography, getSpotifyArtist } from '@/lib/spotify';
+import { getArtistDiscography, getSpotifyArtist } from '@/lib/api/spotify/client';
 
 export async function GET(
     request: Request,

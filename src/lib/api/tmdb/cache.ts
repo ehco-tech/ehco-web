@@ -1,12 +1,12 @@
 // src/lib/tmdb-cache-service.ts
 
-import { getAdminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/config/firebase-admin';
 import {
     getPersonFilmography,
     getPersonDetails,
     TMDbFilmography,
     TMDbPerson
-} from '@/lib/tmdb';
+} from '@/lib/api/tmdb/client';
 
 // Configuration
 const CACHE_DURATION_DAYS = 30; // Refresh cache after 30 days

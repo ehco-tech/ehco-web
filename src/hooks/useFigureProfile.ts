@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 
 interface FigureProfile {
     profilePic?: string;

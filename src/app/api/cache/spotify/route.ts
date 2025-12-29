@@ -2,7 +2,7 @@
 // API route for updating Spotify cache in the background
 
 import { NextRequest, NextResponse } from 'next/server';
-import { refreshSpotifyCache } from '@/lib/spotify-cache-service';
+import { refreshSpotifyCache } from '@/lib/api/spotify/cache';
 
 /**
  * POST /api/cache/spotify

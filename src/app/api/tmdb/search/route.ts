@@ -1,7 +1,7 @@
 // src/app/api/tmdb/search/route.ts
 
 import { NextResponse } from 'next/server';
-import { searchPerson } from '@/lib/tmdb';
+import { searchPerson } from '@/lib/api/tmdb/client';
 
 export async function GET(request: Request) {
     try {

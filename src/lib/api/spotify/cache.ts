@@ -1,13 +1,13 @@
 // src/lib/spotify-cache-service.ts
 
-import { getAdminDb } from '@/lib/firebase-admin';
+import { getAdminDb } from '@/lib/config/firebase-admin';
 import {
     getArtistDiscography,
     extractSpotifyArtistId,
     getSpotifyArtist,
     getAlbumDetails,
     SpotifyAlbum
-} from '@/lib/spotify';
+} from '@/lib/api/spotify/client';
 
 // Configuration
 const CACHE_DURATION_DAYS = 7; // Refresh cache after 7 days

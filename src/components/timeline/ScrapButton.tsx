@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bookmark, BookmarkCheck, LogIn, X } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import { addToScrappedEvents, removeFromScrappedEvents, isScrapped } from '@/lib/scrapping-service';
+import { addToScrappedEvents, removeFromScrappedEvents, isScrapped } from '@/lib/services/scraping/scrapping-service';
 import { createPortal } from 'react-dom';
 
 interface EventGroupData {

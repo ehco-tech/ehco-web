@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Loader2, ArrowLeft, CheckCircle } from 'lucide-react';
 import { sendPasswordResetEmail, AuthError } from 'firebase/auth'; // It's good practice to use AuthError type if available, but checking properties is also fine.
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/config/firebase';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');

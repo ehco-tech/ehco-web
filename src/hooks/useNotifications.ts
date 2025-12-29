@@ -18,7 +18,7 @@ import {
     getNotificationSummary,
     groupNotificationsByFigure,
     formatNotificationTime
-} from '@/lib/notification-service';
+} from '@/lib/services/notifications/notification-service';
 
 interface UseNotificationsReturn {
     // State

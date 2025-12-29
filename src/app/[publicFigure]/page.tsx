@@ -1,7 +1,7 @@
 // src/app/[publicFigure]/page.tsx
 import { Suspense } from 'react';
 import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { Metadata, Viewport } from 'next';
 import { headers } from 'next/headers';
 import { Loader2 } from 'lucide-react';
@@ -14,10 +14,10 @@ import FilmographySection from '@/components/figure/filmography/FilmographySecti
 import CurationContent from '@/components/curation/CurationContent';
 import type { JsonLdObject } from '@/components/common/JsonLd';
 import JsonLd from '@/components/common/JsonLd';
-import { getArticlesByIds } from '@/lib/article-service';
+import { getArticlesByIds } from '@/lib/services/articles/article-service';
 import { notFound } from 'next/navigation';
-import { getSpotifyData } from '@/lib/spotify-data-reader';
-import { getTMDbData } from '@/lib/tmdb-data-reader';
+import { getSpotifyData } from '@/lib/api/spotify/data-reader';
+import { getTMDbData } from '@/lib/api/tmdb/data-reader';
 import PublicFigurePageWrapper from '@/components/figure/PublicFigurePageWrapper';
 import ScrollNavigation from '@/components/figure/ScrollNavigation';
 

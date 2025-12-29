@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import type { PublicFigure } from '@/app/[publicFigure]/page';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 interface BasicAndLinksSectionProps {
     publicFigure: PublicFigure;

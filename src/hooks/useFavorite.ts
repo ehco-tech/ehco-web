@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { addToFavorites, removeFromFavorites, isInFavorites } from '@/lib/favorites-service';
+import { addToFavorites, removeFromFavorites, isInFavorites } from '@/lib/services/favorites/favorites-service';
 
 interface UseFavoriteProps {
     figureId: string;

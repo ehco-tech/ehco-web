@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { adManager } from '@/lib/adManager';
+import { adManager } from '@/lib/utils/adManager';
 
 type AdVariant = 'banner' | 'sidebar' | 'responsive';
 

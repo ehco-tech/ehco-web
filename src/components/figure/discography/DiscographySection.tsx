@@ -4,8 +4,8 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { X, ExternalLink } from 'lucide-react';
-import { SpotifyAlbum, SpotifyAlbumDetails } from '@/lib/spotify';
-import { ArtistAlbumData } from '@/lib/spotify-cache-service';
+import { SpotifyAlbum, SpotifyAlbumDetails } from '@/lib/api/spotify/client';
+import { ArtistAlbumData } from '@/lib/api/spotify/cache';
 
 interface DiscographySectionProps {
     albums: SpotifyAlbum[];

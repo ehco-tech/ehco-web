@@ -1,6 +1,6 @@
 // src/lib/article-service.ts
 
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/config/firebase';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 
 // Define the shape of an article, which you can expand later if needed

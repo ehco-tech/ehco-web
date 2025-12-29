@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-import { TMDbCredit } from '@/lib/tmdb';
+import { TMDbCredit } from '@/lib/api/tmdb/client';
 
 interface FilmographySectionProps {
     cast: TMDbCredit[];

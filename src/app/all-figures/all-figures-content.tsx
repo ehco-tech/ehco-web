@@ -9,7 +9,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import algoliasearch from 'algoliasearch';
 import { useQuery, keepPreviousData, useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 // Setup Algolia client
 const searchClient = algoliasearch(

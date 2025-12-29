@@ -1,6 +1,6 @@
-// src/lib/user-service.ts
+// src/lib/services/users/user-service.ts
 import { doc, setDoc, getDoc, updateDoc, deleteDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from './firebase';
+import { db } from '../../config/firebase';
 import { User } from 'firebase/auth';
 
 export interface UserProfile {

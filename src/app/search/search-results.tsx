@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import algoliasearch from 'algoliasearch';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 const searchClient = algoliasearch(
     "B1QF6MLIU5",

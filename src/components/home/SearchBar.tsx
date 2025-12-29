@@ -4,7 +4,7 @@ import React from 'react';
 import { Search, Loader2, X } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 import { renderHighlightedText } from '@/lib/utils/htmlUtils';
 import { AlgoliaPublicFigure } from '@/hooks/useHomeSearch';
 

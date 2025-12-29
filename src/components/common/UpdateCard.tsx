@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { ChevronDown, ChevronUp, ExternalLink, Calendar, Loader2 } from 'lucide-react';
 import { Timestamp } from 'firebase/firestore';
 import Link from 'next/link';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 
 interface Article {
     id: string;

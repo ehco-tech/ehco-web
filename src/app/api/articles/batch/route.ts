@@ -1,7 +1,7 @@
 // src/app/api/articles/batch/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getArticlesByIds } from '@/lib/article-service';
+import { getArticlesByIds } from '@/lib/services/articles/article-service';
 
 interface BatchArticleRequest {
     articleIds: string[];

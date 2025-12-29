@@ -3,7 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { createUrlSlug } from '@/lib/slugify';
+import { createUrlSlug } from '@/lib/utils/slugify';
 import { formatEventDate } from '@/lib/utils/dateUtils';
 
 // Slugify function for creating URL-friendly hash anchors
