@@ -1,4 +1,4 @@
-// src/components/career/TimelineFilters.tsx
+// src/components/figure/career/TimelineFilters.tsx
 'use client';
 
 import React from 'react';
