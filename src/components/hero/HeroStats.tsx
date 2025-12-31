@@ -47,7 +47,7 @@ const HeroStats: React.FC<HeroStatsProps> = ({
             )}
 
             {/* Spotify Monthly Listeners */}
-            {isValidStat(spotifyMonthlyListeners) && (
+            {/* {isValidStat(spotifyMonthlyListeners) && (
                 <div className="text-center">
                     <div className="text-4xl md:text-5xl font-bold mb-1" style={{ color: textColor }}>
                         {spotifyMonthlyListeners?.split(" ")[0]}
@@ -57,7 +57,7 @@ const HeroStats: React.FC<HeroStatsProps> = ({
                         Spotify Monthly
                     </div>
                 </div>
-            )}
+            )} */}
 
             {/* Instagram Followers */}
             {isValidStat(instagramFollowers) && (
