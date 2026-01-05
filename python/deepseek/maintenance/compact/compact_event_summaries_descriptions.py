@@ -1,5 +1,11 @@
 import asyncio
 import argparse
+import sys
+from pathlib import Path
+
+# Add the parent directory (deepseek) to the Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 from utilities.setup_firebase_deepseek import NewsManager
 
 # --- CONFIGURATION ---
