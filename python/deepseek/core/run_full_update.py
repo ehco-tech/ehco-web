@@ -1,18 +1,35 @@
 # Modified version that uses the singleton UpdateTracker pattern
 
+# Suppress Python 3.9 compatibility warnings from packages expecting 3.10+
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+warnings.filterwarnings("ignore", message=".*packages_distributions.*")
+
+# Patch importlib.metadata for Python 3.9 compatibility (packages_distributions added in 3.10)
+import sys
+if sys.version_info < (3, 10):
+    import importlib.metadata
+    if not hasattr(importlib.metadata, 'packages_distributions'):
+        def _packages_distributions():
+            return {}
+        importlib.metadata.packages_distributions = _packages_distributions
+
 import asyncio
 import argparse
 from typing import List
 import json
 import logging
-import pprint
 
-# Set up logging
+# Set up logging - suppress verbose HTTP client logs
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.WARNING,
     format='%(asctime)s - %(levelname)s - %(name)s - %(message)s'
 )
+# Suppress verbose logs from HTTP clients and async libraries
+for noisy_logger in ['urllib3', 'httpcore', 'httpx', 'openai', 'asyncio', 'google']:
+    logging.getLogger(noisy_logger).setLevel(logging.WARNING)
 logger = logging.getLogger('run_full_update')
+logger.setLevel(logging.WARNING)  # Also suppress our own logger's INFO messages
 
 # --- Core Dependencies ---
 import sys
@@ -56,72 +73,28 @@ class MasterUpdater:
         """
         Runs the complete, ordered update and compaction pipeline for a single figure.
         """
-        # logger.info(f"STARTING FULL UPDATE FOR: {figure_id.upper()}")
-
         # STEP 1: Categorize new article summaries
         logger.info("STEP 1 of 6: Categorizing new articles")
         categorizer = ArticleCategorizer()
         categorization_result = await categorizer.process_summaries(figure_id=figure_id)
-        
-        print("Categorization result full data:")
-        pprint.pprint(vars(categorization_result) if hasattr(categorization_result, '__dict__') else categorization_result)
-        
-        # Debug the categorization result structure
-        # logger.debug(f"Categorization result type: {type(categorization_result)}")
-        if categorization_result:
-            if hasattr(categorization_result, 'new_articles'):
-                logger.info(f"Found {len(categorization_result.new_articles)} new articles")
-                # for i, article in enumerate(categorization_result.new_articles[:3]):
-                    # logger.debug(f"Article {i+1} data: {article}")
-        #     else:
-        #         logger.warning("categorization_result has no 'new_articles' attribute")
-        # else:
-        #     logger.warning("categorization_result is None or empty")
-        
-        # Note: Article categorizer now handles its own update tracking
+        if categorization_result and hasattr(categorization_result, 'new_articles'):
+            logger.info(f"Found {len(categorization_result.new_articles)} new articles")
 
         # STEP 2: Update Wiki Content with new summaries
         logger.info("STEP 2 of 6: Updating wiki content")
         wiki_updater = WikiContentUpdater()
         wiki_result = await wiki_updater.update_all_wiki_content(specific_figure_id=figure_id)
-        
-        print("Wiki result full data:")
-        pprint.pprint(vars(wiki_result) if hasattr(wiki_result, '__dict__') else wiki_result)
-        
-        # Debug the wiki result structure
-        # logger.debug(f"Wiki result type: {type(wiki_result)}")
-        if wiki_result:
-            if hasattr(wiki_result, 'updated_sections'):
-                logger.info(f"Found {len(wiki_result.updated_sections)} updated wiki sections")
-                # for i, section in enumerate(wiki_result.updated_sections):
-                    # logger.debug(f"Section {i+1} data: {section}")
-            else:
-                logger.warning("wiki_result has no 'updated_sections' attribute")
-        else:
-            logger.warning("wiki_result is None or empty")
-        
-        # Note: Wiki updater now handles its own update tracking
+        if wiki_result and hasattr(wiki_result, 'updated_sections'):
+            logger.info(f"Found {len(wiki_result.updated_sections)} updated wiki sections")
 
         # STEP 3: Update Curated Timeline and mark articles as processed
         logger.info("STEP 3 of 6: Updating curated timeline")
         curation_engine = CurationEngine(figure_id=figure_id)
         timeline_result = await curation_engine.run_incremental_update()
-        
-        print("Timeline result full data:")
-        pprint.pprint(timeline_result if timeline_result else "None")
-        
-        # Debug the timeline result structure
-        # logger.debug(f"Timeline result type: {type(timeline_result)}")
         if timeline_result and isinstance(timeline_result, dict) and 'new_events' in timeline_result:
             logger.info(f"Found {len(timeline_result['new_events'])} new timeline events")
-            # for i, event in enumerate(timeline_result['new_events'][:5]):
-            #     logger.debug(f"Event {i+1} data: {event}")
-        else:
-            logger.warning("timeline_result has no 'new_events' key or is None")
-        
-        # Note: CurationEngine now handles its own update tracking
 
-        # STEP 4: Run the document compactor (better code/content organization)
+        # STEP 4: Run the document compactor
         logger.info("STEP 4 of 6: Running document compactor")
         compactor = CompactOverview()
         compaction_result = await compactor.compact_figure_overview(figure_id=figure_id)
@@ -182,9 +155,8 @@ async def main():
     parser.add_argument(
         '--csv',
         type=str,
-        # default="./python/deepseek/k_celebrities_master.csv",
-        default="k_celebrities_master.csv",
-        help="Path to the CSV file for the article ingestion process."
+        default=None,  # Let PredefinedPublicFigureExtractor use its default path
+        help="Path to the CSV file for the article ingestion process. If not specified, uses data/csv/k_celebrities_master.csv"
     )
 
     args = parser.parse_args()

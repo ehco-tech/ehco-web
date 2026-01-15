@@ -199,27 +199,26 @@ class PublicFigureSummaryCategorizer:
                 result = result[3:-3].strip()
                 
             categories_data = json.loads(result)
-            
+
             if not isinstance(categories_data, dict) or "category" not in categories_data or "subcategory" not in categories_data:
                 print("Error: Response from AI is not a valid JSON with required 'category' and 'subcategory' fields.")
                 return None
-            
+
             valid_categories = list(self.categories.keys())
             if categories_data["category"] not in valid_categories:
                 print(f"Error: Invalid category '{categories_data['category']}' received from AI.")
                 return None
-            
+
             selected_category = categories_data["category"]
             valid_subcategories = self.categories[selected_category]
             if categories_data["subcategory"] not in valid_subcategories:
                 print(f"Error: Subcategory '{categories_data['subcategory']}' does not belong to category '{selected_category}'.")
                 return None
-            
+
             return categories_data
-        
+
         except Exception as e:
             print(f"Error categorizing summary for {public_figure_name}: {e}")
-            print(f"Summary excerpt: {summary_text[:100]}...")
             return None
 
 

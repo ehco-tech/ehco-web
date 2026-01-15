@@ -9,10 +9,15 @@ from datetime import datetime
 import pytz
 import csv
 import os
+from pathlib import Path
+
+# Get the directory containing this module for resolving relative paths (use resolve() for absolute path)
+_MODULE_DIR = Path(__file__).resolve().parent.parent
+_DEFAULT_CSV_PATH = _MODULE_DIR / "data" / "csv" / "k_celebrities_master.csv"
 
 
 class PredefinedPublicFigureExtractor(PublicFigureExtractor):
-    def __init__(self, predefined_names=None, csv_filepath="k_celebrities_master.csv"):
+    def __init__(self, predefined_names=None, csv_filepath=None):
         """
         Initialize the predefined public figure extractor.
 
@@ -21,11 +26,15 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                                             If None, loads names from CSV file.
             csv_filepath (str, optional): Path to the CSV file containing predefined figures.
                                         Only used if predefined_names is None.
-                                        Default is "k_celebrities_master.csv" in the current directory.
+                                        Default is "data/csv/k_celebrities_master.csv" relative to module.
         """
         super().__init__()
         self.predefined_names = predefined_names or []
         self.celebrity_data = {}  # Dictionary mapping names to their attributes
+
+        # Resolve CSV path: use provided path, or default to module-relative path
+        if csv_filepath is None:
+            csv_filepath = str(_DEFAULT_CSV_PATH)
 
         # Define group hierarchies - parent group -> list of sub-groups
         self.group_hierarchies = {
@@ -98,7 +107,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
             "aespa", "TWICE", "Stray Kids", "NCT", "EXO"
         ]
 
-    def _load_predefined_names_from_csv(self, csv_filepath="k_celebrities_master.csv"):
+    def _load_predefined_names_from_csv(self, csv_filepath):
         """
         Load predefined public figure names from a CSV file.
 
@@ -116,11 +125,18 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
             predefined_names = []
             predefined_data = {}  # Store all celebrity data for easier access
 
+            # Try the provided path first, then fallback to legacy root location
             if not os.path.exists(csv_filepath):
-                print(f"CSV file not found: {csv_filepath}")
-                print(f"Current working directory: {os.getcwd()}")
-                print("Falling back to default hardcoded list")
-                return self._load_default_predefined_names(), {}
+                # Try legacy location at project root (for backward compatibility)
+                legacy_path = os.path.join(os.getcwd(), "k_celebrities_master.csv")
+                if os.path.exists(legacy_path):
+                    print(f"Using legacy CSV path: {legacy_path}")
+                    csv_filepath = legacy_path
+                else:
+                    print(f"CSV file not found: {csv_filepath}")
+                    print(f"Current working directory: {os.getcwd()}")
+                    print("Falling back to default hardcoded list")
+                    return self._load_default_predefined_names(), {}
 
             print(f"Loading public figures from CSV: {csv_filepath}")
 
@@ -152,11 +168,13 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                     predefined_names.append(name)
 
                     # Store complete data in dictionary for this name
+                    # Note: Use (value or '') pattern for optional fields since csv.DictReader
+                    # returns None for missing columns, not empty string
                     predefined_data[name] = {
-                        'occupation': row.get('Occupation', '').strip(),
-                        'type': row.get('Type', '').strip(),
-                        'nationality': row.get('Nationality', '').strip(),
-                        'group': row.get('Group', '').strip()  # Optional Group column for units
+                        'occupation': (row.get('Occupation') or '').strip(),
+                        'type': (row.get('Type') or '').strip(),
+                        'nationality': (row.get('Nationality') or '').strip(),
+                        'group': (row.get('Group') or '').strip()  # Optional Group column for units
                     }
 
             print(f"Successfully loaded {len(predefined_names)} public figures from CSV")
@@ -179,16 +197,13 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         Returns:
             dict: Dictionary with public figure information
         """
-        print(f"Researching details for predefined public figure: {name}")
-        
         # Initialize with data we might already have from the CSV
         initial_data = {}
-        
+
         if name in self.celebrity_data:
             # Pre-fill with data from our CSV
             csv_data = self.celebrity_data[name]
-            print(f"Using pre-existing CSV data for {name}: {csv_data}")
-            
+
             # Convert CSV data to fields for our database
             occupation_str = csv_data.get('occupation', '')
             if occupation_str:
@@ -222,8 +237,6 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
             if nationality:
                 initial_data['nationality'] = nationality
 
-            print(f"Pre-filled data for {name}: {json.dumps(initial_data, indent=2)}")
-        
         # Call the original research method from the parent class
         # We use super() to access the parent class method
         research_results = await super().research_public_figure(name)
@@ -243,9 +256,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
         # Check if it's already a valid date format
         if re.match(r'^\d{4}(-\d{2}){0,2}$', date_str):
             return date_str
-                
-        print("Normalizing date format: '{0}'".format(date_str))
-            
+
         # Try to extract year and possible month and day
         date_match = re.search(r'(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?', date_str)
         if date_match:
@@ -278,12 +289,9 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                 date_str = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
                 parsed_date = datetime.strptime(date_str, "%B %d, %Y")
                 return parsed_date.strftime("%Y-%m-%d")
-            except Exception as e:
-                print("Error parsing date string: {0}".format(e))
+            except Exception:
                 return ""
-                    
-        # If we got here, couldn't parse the date
-        print("Could not extract valid date from '{0}'".format(date_str))
+
         return ""
     
     
@@ -390,9 +398,7 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                     "event_contents": event_contents
                 }
                 
-            except json.JSONDecodeError as e:
-                print(f"Error parsing JSON response: {e}")
-                print(f"Raw response: {result}")
+            except json.JSONDecodeError:
                 # Fall back to just returning the text as summary without date or events
                 return {"summary": result.strip(), "content_date": [], "event_contents": {}}
                 
@@ -484,16 +490,9 @@ class PredefinedPublicFigureExtractor(PublicFigureExtractor):
                         for name in chunk_mentioned_figures:
                             if isinstance(name, str) and name in valid_names_set:
                                 all_mentioned_figures.add(name)
-                            else:
-                                print(f"Warning: Invalid name returned: {name}")
-                                
-                        print(f"Found {len(chunk_mentioned_figures)} mentions in chunk {chunk_index+1}")
-                    else:
-                        print(f"Warning: Expected list but got {type(chunk_mentioned_figures)} for chunk {chunk_index+1}")
-                
-                except json.JSONDecodeError as e:
-                    print(f"Error parsing JSON response for chunk {chunk_index+1}: {e}")
-                    print(f"Raw response: {result}")
+
+                except json.JSONDecodeError:
+                    pass
             
             # Convert set back to list for final result
             mentioned_figures = list(all_mentioned_figures)
