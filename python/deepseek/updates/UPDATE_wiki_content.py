@@ -287,7 +287,7 @@ You are a meticulous editor responsible for updating the biographical profile of
             return response.choices[0].message.content.strip()
         except Exception as e:
             print(f"Error calling LLM for content update: {e}")
-            return existing_content # On error, return original to prevent data loss
+            return existing_content  # On error, return original to prevent data loss
 
 def parse_arguments():
     """Parse command line arguments."""

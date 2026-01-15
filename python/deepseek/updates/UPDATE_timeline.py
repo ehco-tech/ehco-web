@@ -12,6 +12,53 @@ from utilities.notification_service import notify_timeline_update
 # --- CONFIGURATION ---
 CURATED_TIMELINE_COLLECTION = "curated-timeline"
 
+
+def _safe_parse_json(response_text: str) -> Optional[Dict[str, Any]]:
+    """
+    Safely parse JSON from AI response, handling common malformed cases.
+
+    Args:
+        response_text: Raw text response from AI
+
+    Returns:
+        Parsed dict or None if parsing fails
+    """
+    if not response_text:
+        return None
+
+    # Try 1: Direct parse
+    try:
+        return json.loads(response_text)
+    except json.JSONDecodeError:
+        pass
+
+    # Try 2: Remove markdown code blocks
+    cleaned = re.sub(r'^```(?:json)?\s*|\s*```$', '', response_text.strip(), flags=re.MULTILINE)
+    try:
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        pass
+
+    # Try 3: Extract JSON object from text (find first { to last })
+    try:
+        start = response_text.find('{')
+        end = response_text.rfind('}')
+        if start != -1 and end != -1 and end > start:
+            json_str = response_text[start:end+1]
+            return json.loads(json_str)
+    except json.JSONDecodeError:
+        pass
+
+    # Try 4: Fix common JSON issues (trailing commas, unquoted values)
+    try:
+        # Remove trailing commas before } or ]
+        fixed = re.sub(r',\s*([}\]])', r'\1', response_text)
+        return json.loads(fixed)
+    except json.JSONDecodeError:
+        pass
+
+    return None
+
 class EventDeduplicator:
     """Handles deduplication of similar events from multiple articles."""
     
@@ -53,10 +100,11 @@ Respond ONLY with valid JSON in this exact format:
                 response_format={"type": "json_object"},
                 temperature=0.1  # Low temperature for consistency
             )
-            result = json.loads(response.choices[0].message.content)
+            result = _safe_parse_json(response.choices[0].message.content)
+            if result is None:
+                return {"is_duplicate": False, "confidence": 0.0, "merged_description": None}
             return result
-        except Exception as e:
-            print(f"    -> Warning: Duplicate detection failed: {e}")
+        except Exception:
             return {"is_duplicate": False, "confidence": 0.0, "merged_description": None}
     
     def group_events_by_date_and_similarity(self, event_points: List[Dict[str, Any]]) -> List[List[Dict[str, Any]]]:
@@ -188,16 +236,22 @@ class CurationEngine:
         Your response must be a single JSON object with two keys: "main_category" and "subcategory".
         """
         try:
-            response = await self.ai_client.chat.completions.create(model=self.ai_model, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}], response_format={"type": "json_object"})
-            result = json.loads(response.choices[0].message.content)
+            response = await self.ai_client.chat.completions.create(
+                model=self.ai_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"}
+            )
+            result = _safe_parse_json(response.choices[0].message.content)
+            if result is None:
+                return None, None
             main_cat, sub_cat = result.get("main_category"), result.get("subcategory")
             if main_cat and sub_cat and main_cat in all_categories and sub_cat in all_categories[main_cat]:
                 return main_cat, sub_cat
-            else:
-                print(f"    Warning: AI returned an invalid category pairing: {main_cat} / {sub_cat}. Will skip.")
-                return None, None
-        except Exception as e:
-            print(f"    Error during event re-categorization: {e}")
+            return None, None
+        except Exception:
             return None, None
 
     def _create_mini_event(self, source_id: str, date: str, summary: str) -> Dict[str, Any]:
@@ -258,8 +312,22 @@ class CurationEngine:
         }}
         """
         try:
-            response = await self.ai_client.chat.completions.create(model=self.ai_model, messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_prompt}], response_format={"type": "json_object"})
-            return json.loads(response.choices[0].message.content)
+            response = await self.ai_client.chat.completions.create(
+                model=self.ai_model,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                response_format={"type": "json_object"}
+            )
+            response_text = response.choices[0].message.content
+
+            # Use safe parsing to handle malformed JSON responses
+            result = _safe_parse_json(response_text)
+            if result is None or "action" not in result:
+                print(f"    Error during curation API call: Could not parse valid JSON response")
+                return None
+            return result
         except Exception as e:
             print(f"    Error during curation API call: {e}")
             return None
